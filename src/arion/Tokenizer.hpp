@@ -1,3 +1,5 @@
+#ifndef ARION_TOKENIZER_H
+#define ARION_TOKENIZER_H
 #include "DFA.hpp"
 
 namespace arion {
@@ -18,3 +20,5 @@ namespace arion {
         DFA dfa_;
     };
 }
+
+#endif
