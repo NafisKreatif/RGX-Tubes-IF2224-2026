@@ -11,6 +11,7 @@ Tokenizer::Tokenizer()
     dfa_.addState(TOKEN_STRING_CHAR, "string_char");
     dfa_.addState(TOKEN_STRING_ESCAPE_CHAR, "string_escape_char");
     dfa_.addState(TOKEN_STRING_END, "string_end");
+    dfa_.setFinalState(TOKEN_STRING_END, true);
 
     dfa_.addTransition(START, '\'', TOKEN_STRING_START);
     std::string allChars = "";
