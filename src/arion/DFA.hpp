@@ -1,5 +1,5 @@
-#ifndef RGX_DFA_H
-#define RGX_DFA_H
+#ifndef ARION_DFA_H
+#define ARION_DFA_H
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
