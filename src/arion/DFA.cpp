@@ -2,10 +2,21 @@
 #include <stdexcept>
 using namespace arion;
 
+// Constructor
+DFA::DFA()
+{
+    addState(-1, "invalid");
+}
+
 // Current state
 int DFA::getCurrentState() const
 {
     return currentState_;
+}
+
+bool DFA::isCurrentStateInvalid() const
+{
+    return currentState_ == INVALID_STATE;
 }
 
 // Start state
