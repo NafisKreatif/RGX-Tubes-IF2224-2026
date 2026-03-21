@@ -31,6 +31,10 @@ void DFA::setStartState(int stateId)
     }
     startState_ = stateId;
 }
+void DFA::resetToStartState()
+{
+    currentState_ = startState_;
+}
 
 // State
 bool DFA::hasState(int stateId) const

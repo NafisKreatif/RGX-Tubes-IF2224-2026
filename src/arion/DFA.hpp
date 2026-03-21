@@ -8,16 +8,17 @@
 namespace arion {
     class DFA {
     public:
-        // Constructor
-        DFA();
-
         // Constant(s)
         const int INVALID_STATE = -1;
+
+        // Constructor
+        DFA();
 
         // Current state
         int getCurrentState() const;
         bool isCurrentStateInvalid() const;
-
+        void resetToStartState();
+        
         // Start state
         int getStartState() const;
         void setStartState(int stateId);
