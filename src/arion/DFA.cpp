@@ -5,7 +5,7 @@ using namespace arion;
 // Constructor
 DFA::DFA()
 {
-    addState(-1, "invalid");
+    states_[INVALID_STATE] = "invalid";
 }
 
 // Current state
