@@ -59,12 +59,21 @@ run: all
 # Clean build files
 clean:
 	@echo "Cleaning build files..."
+ifeq ($(DETECTED_OS), Windows)
+	@if exist "$(BUILD_DIR)" @rmdir /Q /S "$(BUILD_DIR)"
+	@if exist "$(subst /,\,$(TARGET)).exe" @del "$(subst /,\,$(TARGET)).exe"
+else
 	rm -rf $(BUILD_DIR) $(TARGET)
+endif
 
 # Clean binary file
 clean-bin:
 	@echo "Removing bin directory..."
+ifeq ($(DETECTED_OS), Windows)
+	@rmdir /Q /S "bin\"
+else
 	rm -rf bin
+endif
 
 clean-all: clean clean-bin
 
