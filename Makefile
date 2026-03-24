@@ -1,14 +1,22 @@
-# This is a makefile for compiling your whole project.
-# It is used to compile all the source files in the src directory and link them together.
-# It is also used to clean up the build directory and remove all the object files and the executable.
-# The makefile is used to compile the project using the gcc compiler.
+# Detect the os: windows or linux, other os is not supported
+DETECTED_OS := 
+ifdef OS
+	DETECTED_OS = Windows
+else
+	DETECTED_OS = $(shell uname)
+endif
 
 TARGET      := bin/main
 SRC_DIR     := src
 BUILD_DIR   := build
 
-SRC_FILES   := $(shell find $(SRC_DIR) -name "*.cpp")
-OBJ_FILES   := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
+SRC_FILES   := 
+ifeq ($(DETECTED_OS), Windows)
+	SRC_FILES = $(foreach dir,src,$(wildcard $(dir)/*.cpp) $(wildcard $(dir)/*/*.cpp))
+else
+	SRC_FILES = $(shell find $(SRC_DIR) -name "*.cpp")
+endif
+OBJ_FILES   := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
 # Compiler and Flags
 CC          := g++
@@ -23,12 +31,21 @@ all: $(TARGET)
 
 # link the final executable
 $(TARGET): $(OBJ_FILES)
+ifeq ($(DETECTED_OS), Windows)
+	@if not exist "$(dir $@)" md "$(dir $@)"
+	$(CC) $(OBJ_FILES) -o $@.exe
+else
 	@mkdir -p $(dir $@)
 	$(CC) $(OBJ_FILES) -o $@
+endif
 
 # compile each .c into .o under build/
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+ifeq ($(DETECTED_OS), Windows)
+	@if not exist "$(dir $@)" md "$(dir $@)"
+else
 	@mkdir -p $(dir $@)
+endif
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) -c $< -o $@
 
 # Debug build
@@ -52,5 +69,6 @@ clean-bin:
 clean-all: clean clean-bin
 
 print:
+	@echo $(DETECTED_OS)
 	@echo $(SRC_FILES)
 	@echo $(OBJ_FILES)
