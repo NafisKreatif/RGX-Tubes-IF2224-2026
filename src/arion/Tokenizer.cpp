@@ -26,6 +26,7 @@ Tokenizer::Tokenizer(std::string in) : input(in)
     dfa_.addState(TOKEN_REAL_PERIOD, "real_period");
     dfa_.addTransition(TOKEN_INT, '.', TOKEN_REAL_PERIOD);
     dfa_.addTransition(TOKEN_REAL_PERIOD, digits, TOKEN_REAL);
+    dfa_.addTransition(TOKEN_REAL, digits, TOKEN_REAL);
     dfa_.setFinalState(TOKEN_REAL, true);
     
 
