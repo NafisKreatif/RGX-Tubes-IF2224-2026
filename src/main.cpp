@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/tokenized-" + inputPath.filename().string();
+    std::filesystem::path outputPath = "test/milestone-1/tokenized-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
     std::stringstream buffer;
