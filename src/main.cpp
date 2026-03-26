@@ -5,11 +5,15 @@
 #include <filesystem>
 using namespace std;
 
-int main() {
+int main(int argc, char** argv) {
     std::filesystem::path inputPath = "test/input.txt";
     std::cout << "Input file path: ";
     std::cin >> inputPath;
     std::ifstream in(inputPath);
+    if (!in.is_open()) {
+        std::cout << "File not found" << std::endl;
+        return 1;
+    }
 
     std::filesystem::path outputPath = "test/tokenized-" + inputPath.filename().string();
     std::ofstream out(outputPath);
@@ -18,8 +22,9 @@ int main() {
     buffer << in.rdbuf();
 
     arion::Tokenizer tokenizer(buffer.str());
-    tokenizer.setDebug(true);
-
+    if (argc > 1 && std::string(argv[1]) == "debug") {
+        tokenizer.setDebug(true);
+    }
     while (true) {
         arion::Token t = tokenizer.getNextToken();
 

@@ -56,6 +56,10 @@ debug: all
 run: all
 	@./$(TARGET)
 
+# Run the program with debug
+run-debug: all
+	@./$(TARGET) debug
+
 # Clean build files
 clean:
 	@echo "Cleaning build files..."
