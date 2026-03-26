@@ -82,7 +82,7 @@ void DFA::setFinalState(int stateId, bool isFinalState)
 }
 
 // Transition
-bool DFA::transition(char input)
+bool DFA::transition(int input)
 {
     if (!canTransition(input)) {
         currentState_ = INVALID_STATE;
@@ -93,18 +93,18 @@ bool DFA::transition(char input)
         return true;
     }
 }
-bool DFA::canTransition(char input)
+bool DFA::canTransition(int input)
 {
     return transitionMap_.count({currentState_, input});
 }
-bool DFA::canTransition(int from, char input)
+bool DFA::canTransition(int from, int input)
 {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
     return transitionMap_.count({from, input});
 }
-void DFA::addTransition(int from, char input, int to)
+void DFA::addTransition(int from, int input, int to)
 {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
@@ -126,11 +126,11 @@ void DFA::addTransition(int from, std::string inputs, int to)
     if (!hasState(to)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(to));
     }
-    for (char input : inputs) {
+    for (int input : inputs) {
         addTransition(from, input, to);
     }
 }
-void DFA::removeTransition(int from, char input)
+void DFA::removeTransition(int from, int input)
 {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
@@ -142,7 +142,7 @@ void DFA::removeTransition(int from, std::string inputs)
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
-    for (char input : inputs) {
+    for (int input : inputs) {
         transitionMap_.erase({from, input});
     }
 }
