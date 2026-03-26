@@ -2,7 +2,6 @@
 #include <iostream>
 using namespace arion;
 
-// TODO: initialize all the state and transition to the dfa_
 Tokenizer::Tokenizer(std::string in) : input(in)
 {
     dfa_.addState(START, "start");
