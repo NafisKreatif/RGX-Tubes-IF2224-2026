@@ -1,8 +1,9 @@
 #include "Tokenizer.hpp"
+#include <fstream>
 #include <iostream>
 using namespace arion;
 
-Tokenizer::Tokenizer(std::string in) : input(in)
+Tokenizer::Tokenizer()
 {
     dfa_.addState(START, "start");
     dfa_.setStartState(START);
@@ -39,34 +40,35 @@ Tokenizer::Tokenizer(std::string in) : input(in)
 
     // char states
     dfa_.addState(TOKEN_CHAR_CONTENT, "char_content");
-    dfa_.addState(TOKEN_ESCAPE_CHAR, "escape_char");
+    dfa_.addState(TOKEN_CHAR_ESCAPE_OR_END, "char_escape_or_end");
     dfa_.addState(TOKEN_CHAR_END, "char_end");
+    dfa_.setFinalState(TOKEN_CHAR_ESCAPE_OR_END, true);
     dfa_.setFinalState(TOKEN_CHAR_END, true);
 
     // string states
     dfa_.addState(TOKEN_STRING_CONTENT, "string_content");
-    dfa_.addState(TOKEN_STRING_ESCAPE_CHAR, "string_escape_char");
-    dfa_.addState(TOKEN_STRING_END, "string_end");
-    dfa_.setFinalState(TOKEN_STRING_END, true);
+    dfa_.addState(TOKEN_STRING_ESCAPE_OR_END, "string_escape_or_end");
+    dfa_.setFinalState(TOKEN_STRING_ESCAPE_OR_END, true);
 
     // char and string transition
     dfa_.addTransition(START, '\'', TOKEN_CHAR_AND_STRING_START);
+
     // char transition
     dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, allChars, TOKEN_CHAR_CONTENT);
-    dfa_.removeTransition(TOKEN_CHAR_AND_STRING_START, "\'\\"); // Selain ' dan \ boleh dimasukin string
-    dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, '\\', TOKEN_ESCAPE_CHAR);
-    dfa_.addTransition(TOKEN_ESCAPE_CHAR, allChars, TOKEN_CHAR_CONTENT);
+    dfa_.removeTransition(TOKEN_CHAR_AND_STRING_START, '\''); // ' untuk escape char
+    dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, '\'', TOKEN_CHAR_ESCAPE_OR_END);
+    dfa_.addTransition(TOKEN_CHAR_ESCAPE_OR_END, '\'', TOKEN_CHAR_CONTENT);
 
-    // string transition
+    // char to string transition
     dfa_.addTransition(TOKEN_CHAR_CONTENT, allChars, TOKEN_STRING_CONTENT);
     dfa_.removeTransition(TOKEN_CHAR_CONTENT, '\'');
     dfa_.addTransition(TOKEN_CHAR_CONTENT, '\'', TOKEN_CHAR_END);
+
+    // string transition
     dfa_.addTransition(TOKEN_STRING_CONTENT, allChars, TOKEN_STRING_CONTENT);
     dfa_.removeTransition(TOKEN_STRING_CONTENT, '\'');
-    dfa_.removeTransition(TOKEN_STRING_CONTENT, '\\');
-    dfa_.addTransition(TOKEN_STRING_CONTENT, '\\', TOKEN_STRING_ESCAPE_CHAR);
-    dfa_.addTransition(TOKEN_STRING_ESCAPE_CHAR, allChars, TOKEN_STRING_CONTENT);
-    dfa_.addTransition(TOKEN_STRING_CONTENT, '\'', TOKEN_STRING_END);
+    dfa_.addTransition(TOKEN_STRING_CONTENT, '\'', TOKEN_STRING_ESCAPE_OR_END);
+    dfa_.addTransition(TOKEN_STRING_ESCAPE_OR_END, '\'', TOKEN_STRING_CONTENT);
 
     // operator
     dfa_.addState(TOKEN_PLUS, "plus");
@@ -176,6 +178,23 @@ Tokenizer::Tokenizer(std::string in) : input(in)
     dfa_.setFinalState(TOKEN_COMMENT_PARENTHESES_END, true);
 }
 
+void Tokenizer::setStream(const std::string &inputPath)
+{
+    input_ = std::ifstream(inputPath);
+}
+void Tokenizer::setStream(std::ifstream &inputStream)
+{
+    input_ = std::move(inputStream);
+}
+bool Tokenizer::isStreamOpen()
+{
+    return input_.is_open();
+}
+void Tokenizer::closeStream()
+{
+    input_.close();
+}
+
 void Tokenizer::setDebug(bool debug)
 {
     debug_ = debug;
@@ -183,20 +202,14 @@ void Tokenizer::setDebug(bool debug)
 
 char Tokenizer::peekChar()
 {
-    if (pos >= (int)input.size()) return '\0';
-    return input[pos];
+    return input_.peek();
 }
 
 char Tokenizer::getChar()
 {
-    if (pos >= (int)input.size()) return '\0';
-    return input[pos++];
+    return input_.get();
 }
 
-void Tokenizer::retract()
-{
-    if (pos > 0) pos--;
-}
 std::string Tokenizer::toLower(const std::string &s)
 {
     std::string result = s;
@@ -204,6 +217,7 @@ std::string Tokenizer::toLower(const std::string &s)
         c = std::tolower(static_cast<unsigned char>(c));
     return result;
 }
+
 void Tokenizer::skipWhitespace()
 {
     while (isspace(peekChar())) {
@@ -219,42 +233,43 @@ Token Tokenizer::getNextToken()
     skipWhitespace();
 
     dfa_.resetToStartState();
-    lexeme.clear();
+    lexeme_.clear();
 
-    if (peekChar() == '\0') {
+    if (peekChar() == EOF) {
         return {TOKEN_EOF, ""};
     }
 
-    int startPos = pos;
-    int lastFinalState = -1;
-    int lastFinalPos = pos;
+    int lastFinalState = TOKEN_UNKNOWN;
 
     char c;
     while (true) {
         c = peekChar();
-        if (c == '\0') {
+        if (c == EOF) {
             if (dfa_.isFinalState(dfa_.getCurrentState())) {
                 lastFinalState = dfa_.getCurrentState();
-                lastFinalPos = pos;
             }
             else {
-                lastFinalState = -1;
+                lastFinalState = TOKEN_EOF;
             }
             break;
         };
 
         if (!dfa_.canTransition(c)) break;
 
+        if (dfa_.getCurrentState() != TOKEN_CHAR_ESCAPE_OR_END && dfa_.getCurrentState() != TOKEN_STRING_ESCAPE_OR_END) {
+            lexeme_ += getChar();
+        }
+        else {
+            getChar();
+        }
         dfa_.transition(c);
-        getChar();
 
         if (debug_) {
-            std::string tempLexeme = input.substr(startPos, pos - startPos);
-            std::string lower = toLower(tempLexeme);
-            auto it = wordTokens.find(lower);
-            if (it != wordTokens.end()) {
+            std::string lower = toLower(lexeme_);
+            auto it = wordTokens_.find(lower);
+            if (it != wordTokens_.end()) {
                 std::cout << c << " -> "
-                          << "State : " << tokenToString({it->second, tempLexeme}) << std::endl;
+                          << "State : " << tokenToString({it->second, lexeme_}) << std::endl;
             }
             else {
                 std::cout << c << " -> "
@@ -264,46 +279,43 @@ Token Tokenizer::getNextToken()
 
         if (dfa_.isFinalState(dfa_.getCurrentState())) {
             lastFinalState = dfa_.getCurrentState();
-            lastFinalPos = pos;
         }
         else {
-            lastFinalState = -1;
+            lastFinalState = TOKEN_UNKNOWN;
         }
     }
 
-    if (lastFinalState == -1) {
-        if (pos >= (int)input.size()) {
-            if (debug_) {
-                std::cout << c << " -> "
-                            << "Got Token : " << tokenToString({TOKEN_UNKNOWN, input.substr(startPos, pos - startPos)}) << std::endl;
-            }
-            return {TOKEN_EOF, ""};
+    if (lastFinalState == TOKEN_EOF) {
+        if (debug_) {
+            std::cout << c << " -> "
+                      << "Got Token : " << tokenToString({TOKEN_UNKNOWN, lexeme_}) << std::endl;
         }
+        return {TOKEN_EOF, ""};
+    }
+
+    if (lastFinalState == TOKEN_UNKNOWN) {
         char unknown = getChar(); // consume!
         return {TOKEN_UNKNOWN, std::string(1, unknown)};
     }
-
-    pos = lastFinalPos;
-    lexeme = input.substr(startPos, lastFinalPos - startPos);
 
     if (lastFinalState == TOKEN_COMMENT_CURLY_END ||
         lastFinalState == TOKEN_COMMENT_PARENTHESES_END) {
         if (debug_) {
             std::cout << c << " -> "
-                      << "Got Token : " << "comment(" << getLexeme() << ")" << std::endl;
+                      << "Comment: " << getLexeme() << std::endl;
         }
         return getNextToken();
     }
 
     if (lastFinalState == TOKEN_IDENT) {
-        std::string lower = toLower(lexeme);
-        auto it = wordTokens.find(lower);
-        if (it != wordTokens.end()) {
+        std::string lower = toLower(lexeme_);
+        auto it = wordTokens_.find(lower);
+        if (it != wordTokens_.end()) {
             if (debug_) {
                 std::cout << c << " -> "
                           << "Got Token : " << tokenToString({it->second, getLexeme()}) << std::endl;
             }
-            return {it->second, lexeme};
+            return {it->second, lexeme_};
         }
     }
 
@@ -312,7 +324,7 @@ Token Tokenizer::getNextToken()
                   << "Got Token : " << tokenToString({lastFinalState, getLexeme()}) << std::endl;
     }
 
-    return {lastFinalState, lexeme};
+    return {lastFinalState, lexeme_};
 }
 
 std::string Tokenizer::tokenToString(Token type)
@@ -324,7 +336,7 @@ std::string Tokenizer::tokenToString(Token type)
             return "realcon (" + type.value + ")";
         case TOKEN_CHAR_END:
             return "charcon (" + type.value + ")";
-        case TOKEN_STRING_END:
+        case TOKEN_STRING_ESCAPE_OR_END:
             return "string (" + type.value + ")";
         case TOKEN_NOT:
             return "notsy";
