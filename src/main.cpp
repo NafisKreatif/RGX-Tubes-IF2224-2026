@@ -1,11 +1,12 @@
 #include "arion/Tokenizer.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 using namespace std;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
     std::filesystem::path inputPath = "test/input.txt";
     std::cout << "Input file path: ";
     std::cin >> inputPath;
@@ -18,10 +19,8 @@ int main(int argc, char** argv) {
     std::filesystem::path outputPath = "test/milestone-1/tokenized-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
-    std::stringstream buffer;
-    buffer << in.rdbuf();
-
-    arion::Tokenizer tokenizer(buffer.str());
+    arion::Tokenizer tokenizer;
+    tokenizer.setStream(in);
     if (argc > 1 && std::string(argv[1]) == "debug") {
         tokenizer.setDebug(true);
     }

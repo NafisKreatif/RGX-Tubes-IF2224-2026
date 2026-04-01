@@ -1,0 +1,13 @@
+times
+rparent
+unknown (})
+unknown (_)
+ident (snake)
+unknown (_)
+casesy
+unknown (_)
+ident (kebab)
+minus
+casesy
+ident (camelCase)
+ident (PascalCase)

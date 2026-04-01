@@ -1,6 +1,8 @@
 #ifndef ARION_TOKENIZER_H
 #define ARION_TOKENIZER_H
 #include "DFA.hpp"
+#include <fstream>
+
 namespace arion {
     struct Token {
         int type;
@@ -17,10 +19,10 @@ namespace arion {
             TOKEN_CHAR_AND_STRING_START,
             TOKEN_CHAR_CONTENT,
             TOKEN_CHAR_END,
-            TOKEN_ESCAPE_CHAR,
+            TOKEN_CHAR_ESCAPE_OR_END,
             TOKEN_STRING_CONTENT,
             TOKEN_STRING_ESCAPE_CHAR,
-            TOKEN_STRING_END,
+            TOKEN_STRING_ESCAPE_OR_END,
             TOKEN_PLUS,
             TOKEN_MINUS,
             TOKEN_TIMES,
@@ -80,31 +82,36 @@ namespace arion {
             TOKEN_EOF,
             TOKEN_UNKNOWN
         };
-        Tokenizer(std::string);
+        Tokenizer();
+
+        void setStream(const std::string &);
+        void setStream(std::ifstream &);
+        bool isStreamOpen();
+        void closeStream();
+
+        void setDebug(bool);
         Token getNextToken();
-        void setDebug(bool debug);
+        std::string tokenToString(Token type);
+        std::string getLexeme() { return lexeme_; };
+
+    private:
         char peekChar();
         char getChar();
-        void retract();
         void skipWhitespace();
-        int getKeywordOrIdent(const std::string&);
-        std::string toLower(const std::string&);
-        std::string tokenToString(Token type);
-        std::string getLexeme(){return lexeme;};
-    private:
+        std::string toLower(const std::string &);
+
         bool debug_ = false;
-        std::string input;
-        int pos = 0;
         DFA dfa_;
-        std::string lexeme;
-        std::unordered_map<std::string, int> wordTokens = {
+        std::ifstream input_;
+        std::string lexeme_;
+        std::unordered_map<std::string, int> wordTokens_ = {
             {"not", TOKEN_NOT},
             {"div", TOKEN_IDIV},
             {"mod", TOKEN_MOD},
             {"and", TOKEN_AND},
             {"or", TOKEN_OR},
             {"const", TOKEN_CONST},
-            {"type",TOKEN_TYPE},
+            {"type", TOKEN_TYPE},
             {"var", TOKEN_VAR},
             {"function", TOKEN_FUNCTION},
             {"procedure", TOKEN_PROCEDURE},
@@ -124,8 +131,7 @@ namespace arion {
             {"do", TOKEN_DO},
             {"to", TOKEN_TO},
             {"downto", TOKEN_DOWNTO},
-            {"then", TOKEN_THEN}
-        };
+            {"then", TOKEN_THEN}};
     };
 }
 
