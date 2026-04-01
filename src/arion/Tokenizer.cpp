@@ -294,8 +294,10 @@ Token Tokenizer::getNextToken()
     }
 
     if (lastFinalState == TOKEN_UNKNOWN) {
-        char unknown = getChar(); // consume!
-        return {TOKEN_UNKNOWN, std::string(1, unknown)};
+        if (!isspace(c)) {
+            lexeme_ += getChar();
+        }
+        return {TOKEN_UNKNOWN, lexeme_};
     }
 
     if (lastFinalState == TOKEN_COMMENT_CURLY_END ||
