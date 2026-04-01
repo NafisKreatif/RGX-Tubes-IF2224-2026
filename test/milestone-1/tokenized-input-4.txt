@@ -1,0 +1,17 @@
+beginsy
+ident (a)
+becomes
+ident (b)
+leq
+ident (c)
+geq
+ident (d)
+neq
+ident (e)
+lss
+ident (f)
+gtr
+ident (g)
+semicolon
+endsy
+period

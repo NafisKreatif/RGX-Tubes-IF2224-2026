@@ -1,0 +1,5 @@
+programsy
+ident (programbegin)
+ident (beginx)
+ident (endy)
+ident (var1)
