@@ -1,0 +1,22 @@
+unknown (`)
+unknown (~)
+unknown (!)
+unknown (@)
+unknown (#)
+unknown ($)
+unknown (%)
+unknown (^)
+unknown (&)
+times
+lparent
+rparent
+minus
+unknown (_)
+unknown (=)
+plus
+lbrack
+rbrack
+unknown (\)
+unknown (|)
+semicolon
+colon
