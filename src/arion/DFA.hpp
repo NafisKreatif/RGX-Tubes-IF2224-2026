@@ -34,26 +34,26 @@ namespace arion {
         void setFinalState(int stateId, bool isFinalState);
 
         // Transition
-        bool transition(char input);
-        bool canTransition(char input);
-        bool canTransition(int from, char input);
-        void addTransition(int from, char input, int to);
+        bool transition(int input);
+        bool canTransition(int input);
+        bool canTransition(int from, int input);
+        void addTransition(int from, int input, int to);
         void addTransition(int from, std::string inputs, int to);
-        void removeTransition(int from, char input);
+        void removeTransition(int from, int input);
         void removeTransition(int from, std::string inputs);
 
     private:
         struct hash {
-            std::size_t operator()(const std::pair<int, char> &p) const
+            std::size_t operator()(const std::pair<int, int> &p) const
             {
-                return ((long long)p.first << 8) ^ p.second;
+                return ((unsigned long long)p.first << 32) ^ p.second;
             }
         };
         int currentState_ = 0;
         int startState_ = 0;
         std::unordered_map<int, std::string> states_;
         std::unordered_set<int> finalStates_;
-        std::unordered_map<std::pair<int, char>, int, DFA::hash> transitionMap_;
+        std::unordered_map<std::pair<int, int>, int, DFA::hash> transitionMap_;
     };
 }
 

@@ -82,15 +82,17 @@ namespace arion {
         };
         Tokenizer(std::string);
         Token getNextToken();
+        void setDebug(bool debug);
         char peekChar();
         char getChar();
         void retract();
         void skipWhitespace();
         int getKeywordOrIdent(const std::string&);
         std::string toLower(const std::string&);
-        std::string tokenToString(Token type, const std::string& lexeme);
+        std::string tokenToString(Token type);
         std::string getLexeme(){return lexeme;};
     private:
+        bool debug_ = false;
         std::string input;
         int pos = 0;
         DFA dfa_;

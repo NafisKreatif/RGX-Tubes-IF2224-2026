@@ -1,0 +1,10 @@
+program Hello;
+
+var
+  a, b: integer;
+
+begin
+  a := { Hello Saya Nafis }  5;
+  b := a + 10;
+  writeln('Result = ', b); 
+end.
