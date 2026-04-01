@@ -1,0 +1,4 @@
+const type var function
+ procedure array record
+begin if case repeat while for
+ end else until of do to downto then

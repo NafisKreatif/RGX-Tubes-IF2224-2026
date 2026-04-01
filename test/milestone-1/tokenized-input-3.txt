@@ -1,0 +1,15 @@
+beginsy
+ident (a)
+becomes
+ident (b)
+plus
+ident (c)
+times
+ident (d)
+minus
+ident (e)
+rdiv
+ident (f)
+semicolon
+endsy
+period
