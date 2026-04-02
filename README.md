@@ -6,6 +6,8 @@ Analisis leksikal (lexical analysis) adalah tahap pertama dalam proses kompilasi
 
 Proses ini dilakukan oleh komponen yang disebut lexer. Agar proses pembacaan tersebut dapat dijalankan secara otomatis oleh komputer, lexer harus diimplementasikan ke dalam bentuk Finite Automata, khususnya Deterministic Finite Automata (DFA).
 
+Program akan membaca input file (.txt) lalu meng-output-kannya ke dalam file (.txt) lain berisi token-token yang telah dibaca.
+
 ## Requirements
 
 - C++17 atau lebih
@@ -39,6 +41,9 @@ make all
 
 # Melakukan compile sekaligus menjalankan program
 make run
+
+# Melakukan compile sekaligus menjalankan program dengan output untuk debug
+make run-debug
 ```
 
 ## Author
