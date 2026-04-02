@@ -44,7 +44,7 @@ Tokenizer::Tokenizer()
     dfa_.addState(TOKEN_CHAR_END, "char_end");
     dfa_.setFinalState(TOKEN_CHAR_ESCAPE_OR_END, true);
     dfa_.setFinalState(TOKEN_CHAR_END, true);
-
+    
     // string states
     dfa_.addState(TOKEN_STRING_CONTENT, "string_content");
     dfa_.addState(TOKEN_STRING_ESCAPE_OR_END, "string_escape_or_end");
@@ -58,11 +58,12 @@ Tokenizer::Tokenizer()
     dfa_.removeTransition(TOKEN_CHAR_AND_STRING_START, '\''); // ' untuk escape char
     dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, '\'', TOKEN_CHAR_ESCAPE_OR_END);
     dfa_.addTransition(TOKEN_CHAR_ESCAPE_OR_END, '\'', TOKEN_CHAR_CONTENT);
-
+    
     // char to string transition
     dfa_.addTransition(TOKEN_CHAR_CONTENT, allChars, TOKEN_STRING_CONTENT);
     dfa_.removeTransition(TOKEN_CHAR_CONTENT, '\'');
     dfa_.addTransition(TOKEN_CHAR_CONTENT, '\'', TOKEN_CHAR_END);
+    dfa_.addTransition(TOKEN_CHAR_END, '\'', TOKEN_STRING_CONTENT);
 
     // string transition
     dfa_.addTransition(TOKEN_STRING_CONTENT, allChars, TOKEN_STRING_CONTENT);
