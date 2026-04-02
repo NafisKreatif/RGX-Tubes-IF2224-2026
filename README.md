@@ -1,12 +1,5 @@
 # Lexical Analysis - Milestone 1 - Tugas Besar 1 IF2224 Strategi Algoritma 2025/2026 
 
-## Oleh Kelompok ReguExceptional - RGX:
-
-1. Wafiq Hibban Robbany	-	13524016 - @wafhr
-2. Muhammad Nafis Habibi - 13524018 - @NafisKreatif
-3. An-Dafa Anza Avansyah - 13524038 - @An-Dafa
-4. Wildan Abdurrahman Ghazali -	13524054 - @wzlyy
-
 ## Deskripsi Program
 
 Analisis leksikal (lexical analysis) adalah tahap pertama dalam proses kompilasi atau interpretasi bahasa pemrograman. Pada tahap ini, compiler membaca kode sumber mentah yang pada dasarnya hanyalah rangkaian karakter dan mengubahnya menjadi rangkaian satuan makna yang disebut token. Token merupakan unit terkecil yang memiliki arti dalam sebuah program, misalnya kata kunci (keyword), nama variabel (identifier), operator, angka, atau tanda baca.
@@ -47,6 +40,15 @@ make all
 # Melakukan compile sekaligus menjalankan program
 make run
 ```
+
+## Author
+
+Kelompok ReguExceptional - RGX:
+
+1. Wafiq Hibban Robbany	-	13524016 - @wafhr
+2. Muhammad Nafis Habibi - 13524018 - @NafisKreatif
+3. An-Dafa Anza Avansyah - 13524038 - @An-Dafa
+4. Wildan Abdurrahman Ghazali -	13524054 - @wzlyy
 
 ## Pembagian Tugas
 
