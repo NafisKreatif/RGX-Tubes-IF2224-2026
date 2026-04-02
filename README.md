@@ -1,4 +1,4 @@
-# Lexical Analysis - Milestone 1 - Tugas Besar 1 IF2224 Strategi Algoritma 2025/2026 
+# Lexical Analysis - Milestone 1 - Tugas Besar 1 IF2224 Teori Bahasa Formal dan Otomata 2025/2026 
 
 ## Deskripsi Program
 
