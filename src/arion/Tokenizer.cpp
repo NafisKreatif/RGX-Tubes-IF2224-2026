@@ -56,18 +56,21 @@ Tokenizer::Tokenizer()
     // char transition
     dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, allChars, TOKEN_CHAR_CONTENT);
     dfa_.removeTransition(TOKEN_CHAR_AND_STRING_START, '\''); // ' untuk escape char
+    dfa_.removeTransition(TOKEN_CHAR_AND_STRING_START, '\n');
     dfa_.addTransition(TOKEN_CHAR_AND_STRING_START, '\'', TOKEN_CHAR_ESCAPE_OR_END);
     dfa_.addTransition(TOKEN_CHAR_ESCAPE_OR_END, '\'', TOKEN_CHAR_CONTENT);
     
     // char to string transition
     dfa_.addTransition(TOKEN_CHAR_CONTENT, allChars, TOKEN_STRING_CONTENT);
     dfa_.removeTransition(TOKEN_CHAR_CONTENT, '\'');
+    dfa_.removeTransition(TOKEN_CHAR_CONTENT, '\n');
     dfa_.addTransition(TOKEN_CHAR_CONTENT, '\'', TOKEN_CHAR_END);
     dfa_.addTransition(TOKEN_CHAR_END, '\'', TOKEN_STRING_CONTENT);
 
     // string transition
     dfa_.addTransition(TOKEN_STRING_CONTENT, allChars, TOKEN_STRING_CONTENT);
     dfa_.removeTransition(TOKEN_STRING_CONTENT, '\'');
+    dfa_.removeTransition(TOKEN_STRING_CONTENT, '\n');
     dfa_.addTransition(TOKEN_STRING_CONTENT, '\'', TOKEN_STRING_ESCAPE_OR_END);
     dfa_.addTransition(TOKEN_STRING_ESCAPE_OR_END, '\'', TOKEN_STRING_CONTENT);
 
@@ -257,14 +260,14 @@ Token Tokenizer::getNextToken()
 
         if (!dfa_.canTransition(c)) break;
 
-        if (dfa_.getCurrentState() != TOKEN_CHAR_ESCAPE_OR_END && dfa_.getCurrentState() != TOKEN_STRING_ESCAPE_OR_END) {
+        if (dfa_.getCurrentState() != TOKEN_CHAR_ESCAPE_OR_END && dfa_.getCurrentState() != TOKEN_STRING_ESCAPE_OR_END && dfa_.getCurrentState() != TOKEN_CHAR_END) {
             lexeme_ += getChar();
         }
         else {
             getChar();
         }
         dfa_.transition(c);
-
+        
         if (debug_) {
             std::string lower = toLower(lexeme_);
             auto it = wordTokens_.find(lower);
@@ -332,6 +335,8 @@ std::string Tokenizer::tokenToString(Token type)
         case TOKEN_CHAR_END:
             return "charcon (" + type.value + ")";
         case TOKEN_STRING_ESCAPE_OR_END:
+            return "string (" + type.value + ")";
+        case TOKEN_CHAR_ESCAPE_OR_END:
             return "string (" + type.value + ")";
         case TOKEN_NOT:
             return "notsy";
