@@ -300,14 +300,6 @@ Token Tokenizer::getNextToken()
         return {TOKEN_UNKNOWN, lexeme_};
     }
 
-    if (lastFinalState == TOKEN_COMMENT_CURLY_END ||
-        lastFinalState == TOKEN_COMMENT_PARENTHESES_END) {
-        if (debug_) {
-            std::cout << c << " -> "
-                      << "Comment: " << getLexeme() << std::endl;
-        }
-        return getNextToken();
-    }
 
     if (lastFinalState == TOKEN_IDENT) {
         std::string lower = toLower(lexeme_);
@@ -434,6 +426,10 @@ std::string Tokenizer::tokenToString(Token type)
             return "downtosy";
         case TOKEN_THEN:
             return "thensy";
+        case TOKEN_COMMENT_CURLY_END:
+            return "comment(" + type.value.substr(1, type.value.length()-2)+")";
+        case TOKEN_COMMENT_PARENTHESES_END:
+            return "comment(" + type.value.substr(2, type.value.length()-4)+")";
         case TOKEN_UNKNOWN:
             return "unknown (" + type.value + ")";
         default:
