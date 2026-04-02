@@ -11,6 +11,7 @@ semicolon
 beginsy
 ident (a)
 becomes
+comment( Hello Saya Nafis )
 intcon (5)
 semicolon
 ident (b)

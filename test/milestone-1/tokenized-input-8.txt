@@ -20,3 +20,11 @@ unknown (\)
 unknown (|)
 semicolon
 colon
+unknown (')
+unknown (")
+comma
+period
+lss
+gtr
+rdiv
+unknown (?)

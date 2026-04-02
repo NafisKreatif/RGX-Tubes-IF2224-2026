@@ -13,5 +13,5 @@ string ('Berlari')
 string ('Hingga hilang pedih peri')
 string ('Dan aku akan lebih tidak perduli')
 string ('Aku mau hidup seribu tahun lagi')
-string ('{----------------------------------}       
-            - Chairil Anwar, Maret 1943')
+string ('{----------------------------------}')
+string ('- Chairil Anwar, Maret 1943')
