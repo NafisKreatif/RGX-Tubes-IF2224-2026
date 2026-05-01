@@ -7,7 +7,7 @@ std::string CFG::Terminal::toString() const {
     return name;
 }
 
-std::string CFG::Terminal::toString() const {
+std::string CFG::Variable::toString() const {
     return Tokenizer::tokenToString(Token{id, name});
 }
 
