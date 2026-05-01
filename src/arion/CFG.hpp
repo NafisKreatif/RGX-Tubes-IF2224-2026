@@ -16,7 +16,7 @@ namespace arion {
 
         struct Terminal {
             int id;
-            int value;
+            std::string value;
             std::string name;
             std::string toString() const;
         };

@@ -3,12 +3,12 @@
 
 using namespace arion;
 
-std::string CFG::Terminal::toString() const {
+std::string CFG::Variable::toString() const {
     return name;
 }
 
-std::string CFG::Variable::toString() const {
-    return Tokenizer::tokenToString(Token{id, name});
+std::string CFG::Terminal::toString() const {
+    return Tokenizer::tokenToString(Token{id, value});
 }
 
 void CFG::addVariable(Variable v) {
