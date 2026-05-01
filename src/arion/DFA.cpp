@@ -3,109 +3,91 @@
 using namespace arion;
 
 // Constructor
-DFA::DFA()
-{
+DFA::DFA() {
     states_[INVALID_STATE] = "invalid";
 }
 
 // Current state
-int DFA::getCurrentState() const
-{
+int DFA::getCurrentState() const {
     return currentState_;
 }
 
-bool DFA::isCurrentStateInvalid() const
-{
+bool DFA::isCurrentStateInvalid() const {
     return currentState_ == INVALID_STATE;
 }
 
 // Start state
-int DFA::getStartState() const
-{
+int DFA::getStartState() const {
     return startState_;
 }
-void DFA::setStartState(int stateId)
-{
+void DFA::setStartState(int stateId) {
     if (!hasState(stateId)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(stateId));
     }
     startState_ = stateId;
 }
-void DFA::resetToStartState()
-{
+void DFA::resetToStartState() {
     currentState_ = startState_;
 }
 
 // State
-bool DFA::hasState(int stateId) const
-{
+bool DFA::hasState(int stateId) const {
     return states_.count(stateId);
 }
-std::string DFA::getStateName(int stateId)
-{
+std::string DFA::getStateName(int stateId) {
     if (!hasState(stateId)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(stateId));
     }
     return states_[stateId];
 }
-void DFA::addState(int stateId, std::string name)
-{
+void DFA::addState(int stateId, std::string name) {
     if (stateId < 0) {
         throw std::invalid_argument("State id must not be negative");
     }
     states_[stateId] = std::move(name);
 }
-void DFA::removeState(int stateId)
-{
+void DFA::removeState(int stateId) {
     states_.erase(stateId);
 }
 
 // Final State
-bool DFA::isFinalState(int stateId) const
-{
+bool DFA::isFinalState(int stateId) const {
     if (!hasState(stateId)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(stateId));
     }
     return finalStates_.count(stateId);
 }
-void DFA::setFinalState(int stateId, bool isFinalState)
-{
+void DFA::setFinalState(int stateId, bool isFinalState) {
     if (!hasState(stateId)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(stateId));
     }
     if (isFinalState) {
         finalStates_.insert(stateId);
-    }
-    else {
+    } else {
         finalStates_.erase(stateId);
     }
 }
 
 // Transition
-bool DFA::transition(int input)
-{
+bool DFA::transition(int input) {
     if (!canTransition(input)) {
         currentState_ = INVALID_STATE;
         return false;
-    }
-    else {
+    } else {
         currentState_ = transitionMap_[{currentState_, input}];
         return true;
     }
 }
-bool DFA::canTransition(int input)
-{
+bool DFA::canTransition(int input) {
     return transitionMap_.count({currentState_, input});
 }
-bool DFA::canTransition(int from, int input)
-{
+bool DFA::canTransition(int from, int input) {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
     return transitionMap_.count({from, input});
 }
-void DFA::addTransition(int from, int input, int to)
-{
+void DFA::addTransition(int from, int input, int to) {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
@@ -118,8 +100,7 @@ void DFA::addTransition(int from, int input, int to)
     }
     transitionMap_[{from, input}] = to;
 }
-void DFA::addTransition(int from, std::string inputs, int to)
-{
+void DFA::addTransition(int from, std::string inputs, int to) {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
@@ -130,15 +111,13 @@ void DFA::addTransition(int from, std::string inputs, int to)
         addTransition(from, input, to);
     }
 }
-void DFA::removeTransition(int from, int input)
-{
+void DFA::removeTransition(int from, int input) {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
     transitionMap_.erase({from, input});
 }
-void DFA::removeTransition(int from, std::string inputs)
-{
+void DFA::removeTransition(int from, std::string inputs) {
     if (!hasState(from)) {
         throw std::invalid_argument("DFA doesn't have state " + std::to_string(from));
     }
