@@ -60,7 +60,7 @@ const std::vector<std::vector<int>> &CFG::getProductions(int variableId) const {
     if (!hasVariable(variableId)) {
         throw std::runtime_error("Producer must be a valid variable in CFG.");
     }
-    return productions_[variableId];
+    return productions_.at(variableId);
 }
 
 int CFG::getStartSymbol() {
