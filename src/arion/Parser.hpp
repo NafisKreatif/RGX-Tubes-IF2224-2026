@@ -80,10 +80,10 @@ namespace arion {
 
         const Token &peek() const;
         const Token &peekNext() const;
-        const Token &previous() const;
+        const Token &lookahead(std::size_t offset) const;
         bool isAtEnd() const;
         bool check(int tokenType) const;
-        bool match(int tokenType);
+        bool checkNext(int tokenType) const;
         Token advance();
         Token expect(int tokenType);
 

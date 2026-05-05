@@ -47,28 +47,29 @@ ParseNode Parser::parse() {
 }
 
 const Token &Parser::peek() const {
-    if (current_ >= tokens_.size()) {
-        return eofToken_;
-    }
-    return tokens_[current_];
+    return lookahead(0);
 }
 
 const Token &Parser::peekNext() const {
-    std::size_t next = current_ + 1;
-    while (next < tokens_.size() && (tokens_[next].type == Tokenizer::TOKEN_COMMENT_CURLY_END || tokens_[next].type == Tokenizer::TOKEN_COMMENT_PARENTHESES_END)) {
-        ++next;
-    }
-    if (next >= tokens_.size()) {
-        return eofToken_;
-    }
-    return tokens_[next];
+    return lookahead(1);
 }
 
-const Token &Parser::previous() const {
-    if (current_ == 0 || current_ - 1 >= tokens_.size()) {
-        return eofToken_;
+const Token &Parser::lookahead(std::size_t offset) const {
+    std::size_t index = current_;
+    std::size_t skipped = 0;
+
+    while (index < tokens_.size()) {
+        if (tokens_[index].type != Tokenizer::TOKEN_COMMENT_CURLY_END &&
+            tokens_[index].type != Tokenizer::TOKEN_COMMENT_PARENTHESES_END) {
+            if (skipped == offset) {
+                return tokens_[index];
+            }
+            ++skipped;
+        }
+        ++index;
     }
-    return tokens_[current_ - 1];
+
+    return eofToken_;
 }
 
 bool Parser::isAtEnd() const {
@@ -79,12 +80,8 @@ bool Parser::check(int tokenType) const {
     return peek().type == tokenType;
 }
 
-bool Parser::match(int tokenType) {
-    if (!check(tokenType)) {
-        return false;
-    }
-    advance();
-    return true;
+bool Parser::checkNext(int tokenType) const {
+    return peekNext().type == tokenType;
 }
 
 Token Parser::advance() {
@@ -94,7 +91,7 @@ Token Parser::advance() {
         skipIgnoredTokens();
         return consumed;
     }
-    return previous();
+    return eofToken_;
 }
 
 Token Parser::expect(int tokenType) {
@@ -263,47 +260,182 @@ ParseNode Parser::parseDeclarationPart() {
 }
 
 ParseNode Parser::parseConstDeclaration() {
-    throw ParserError("parseConstDeclaration is not implemented yet");
+    ParseNode node = variableNode(CONST_DECLARATION);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_CONST)));
+    do {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_EQUAL_END)));
+        node.addChild(parseConstant());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+    } while (check(Tokenizer::TOKEN_IDENT));
+
+    return node;
 }
 
 ParseNode Parser::parseConstant() {
-    throw ParserError("parseConstant is not implemented yet");
+    ParseNode node = variableNode(CONSTANT);
+
+    if (check(Tokenizer::TOKEN_CHAR_END)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_CHAR_END)));
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_STRING_ESCAPE_OR_END)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_STRING_ESCAPE_OR_END)));
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END)));
+        return node;
+    }
+
+    if (check(Tokenizer::TOKEN_PLUS) || check(Tokenizer::TOKEN_MINUS)) {
+        node.addChild(terminalNode(advance()));
+    }
+
+    if (check(Tokenizer::TOKEN_IDENT) || check(Tokenizer::TOKEN_INT) || check(Tokenizer::TOKEN_REAL)) {
+        node.addChild(terminalNode(advance()));
+        return node;
+    }
+
+    syntaxError("constant");
+    return node;
 }
 
 ParseNode Parser::parseTypeDeclaration() {
-    throw ParserError("parseTypeDeclaration is not implemented yet");
+    ParseNode node = variableNode(TYPE_DECLARATION);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_TYPE)));
+    do {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_EQUAL_END)));
+        node.addChild(parseType());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+    } while (check(Tokenizer::TOKEN_IDENT));
+
+    return node;
 }
 
 ParseNode Parser::parseVarDeclaration() {
-    throw ParserError("parseVarDeclaration is not implemented yet");
+    ParseNode node = variableNode(VAR_DECLARATION);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_VAR)));
+    do {
+        node.addChild(parseIdentifierList());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_COLON)));
+        node.addChild(parseType());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+    } while (check(Tokenizer::TOKEN_IDENT));
+
+    return node;
 }
 
 ParseNode Parser::parseIdentifierList() {
-    throw ParserError("parseIdentifierList is not implemented yet");
+    ParseNode node = variableNode(IDENTIFIER_LIST);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    while (check(Tokenizer::TOKEN_COMMA)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_COMMA)));
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseType() {
-    throw ParserError("parseType is not implemented yet");
+    ParseNode node = variableNode(TYPE);
+
+    if (check(Tokenizer::TOKEN_ARRAY)) {
+        node.addChild(parseArrayType());
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_LEFT_PARENTHESES)) {
+        node.addChild(parseEnumerated());
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_RECORD)) {
+        node.addChild(parseRecordType());
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_PLUS) ||
+        check(Tokenizer::TOKEN_MINUS) ||
+        check(Tokenizer::TOKEN_INT) ||
+        check(Tokenizer::TOKEN_REAL) ||
+        check(Tokenizer::TOKEN_CHAR_END) ||
+        check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END) ||
+        check(Tokenizer::TOKEN_STRING_ESCAPE_OR_END)) {
+        node.addChild(parseRange());
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_IDENT)) {
+        if (checkNext(Tokenizer::TOKEN_PERIOD)) {
+            node.addChild(parseRange());
+        } else {
+            node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+        }
+        return node;
+    }
+
+    syntaxError("type");
+    return node;
 }
 
 ParseNode Parser::parseArrayType() {
-    throw ParserError("parseArrayType is not implemented yet");
+    ParseNode node = variableNode(ARRAY_TYPE);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_ARRAY)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_BRACKET)));
+    if (check(Tokenizer::TOKEN_IDENT) && !checkNext(Tokenizer::TOKEN_PERIOD)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    } else {
+        node.addChild(parseRange());
+    }
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_BRACKET)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_OF)));
+    node.addChild(parseType());
+
+    return node;
 }
 
 ParseNode Parser::parseRange() {
-    throw ParserError("parseRange is not implemented yet");
+    ParseNode node = variableNode(RANGE);
+    node.addChild(parseConstant());
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_PERIOD)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_PERIOD)));
+    node.addChild(parseConstant());
+
+    return node;
 }
 
 ParseNode Parser::parseEnumerated() {
-    throw ParserError("parseEnumerated is not implemented yet");
+    ParseNode node = variableNode(ENUMERATED);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_PARENTHESES)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    while (check(Tokenizer::TOKEN_COMMA)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_COMMA)));
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    }
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_PARENTHESES)));
+
+    return node;
 }
 
 ParseNode Parser::parseRecordType() {
-    throw ParserError("parseRecordType is not implemented yet");
+    ParseNode node = variableNode(RECORD_TYPE);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_RECORD)));
+    node.addChild(parseFieldList());
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_END)));
+
+    return node;
 }
 
 ParseNode Parser::parseFieldList() {
-    throw ParserError("parseFieldList is not implemented yet");
+    ParseNode node = variableNode(FIELD_LIST);
+    node.addChild(parseFieldPart());
+    while (check(Tokenizer::TOKEN_SEMICOLON)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+        if (check(Tokenizer::TOKEN_END)) {
+            break;
+        }
+        node.addChild(parseFieldPart());
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseFieldPart() {
