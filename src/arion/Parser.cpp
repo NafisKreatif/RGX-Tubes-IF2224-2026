@@ -438,7 +438,7 @@ ParseNode Parser::parseFieldList() {
     return node;
 }
 
-Parser::parseFieldPart() {
+ParseNode Parser::parseFieldPart() {
     ParseNode node = variableNode(FIELD_PART);
     node.addChild(parseIdentifierList());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_COLON)));
