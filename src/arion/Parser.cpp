@@ -438,8 +438,13 @@ ParseNode Parser::parseFieldList() {
     return node;
 }
 
-ParseNode Parser::parseFieldPart() {
-    throw ParserError("parseFieldPart is not implemented yet");
+Parser::parseFieldPart() {
+    ParseNode node = variableNode(FIELD_PART);
+    node.addChild(parseIdentifierList());
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_COLON)));
+    node.addChild(parseType());
+
+    return node;
 }
 
 ParseNode Parser::parseSubprogramDeclaration() {
@@ -499,60 +504,245 @@ ParseNode Parser::parseWhileStatement() {
 }
 
 ParseNode Parser::parseRepeatStatement() {
-    throw ParserError("parseRepeatStatement is not implemented yet");
+    ParseNode node = variableNode(REPEAT_STATEMENT);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_REPEAT)));
+    node.addChild(parseStatementList());
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_UNTIL)));
+    node.addChild(parseExpression());
+
+    return node;
 }
 
 ParseNode Parser::parseForStatement() {
-    throw ParserError("parseForStatement is not implemented yet");
+    ParseNode node = variableNode(FOR_STATEMENT);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_FOR)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_BECOMES)));
+    node.addChild(parseExpression());
+    if (check(Tokenizer::TOKEN_TO)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_TO)));
+    } else if (check(Tokenizer::TOKEN_DOWNTO)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_DOWNTO)));
+    } else {
+        syntaxError("tosy or downtosy");
+    }
+    node.addChild(parseExpression());
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
+    node.addChild(parseStatement());
+
+    return node;
 }
 
 ParseNode Parser::parseProcedureOrFunctionCall() {
-    throw ParserError("parseProcedureOrFunctionCall is not implemented yet");
+    ParseNode node = variableNode(PROCEDURE_FUNCTION_CALL);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_PARENTHESES)));
+    if (check(Tokenizer::TOKEN_PLUS) ||
+        check(Tokenizer::TOKEN_MINUS) ||
+        check(Tokenizer::TOKEN_IDENT) ||
+        check(Tokenizer::TOKEN_INT) ||
+        check(Tokenizer::TOKEN_REAL) ||
+        check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END) ||
+        check(Tokenizer::TOKEN_CHAR_END) ||
+        check(Tokenizer::TOKEN_STRING_ESCAPE_OR_END) ||
+        check(Tokenizer::TOKEN_LEFT_PARENTHESES) ||
+        check(Tokenizer::TOKEN_NOT)) {
+        node.addChild(parseParameterList());
+    }
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_PARENTHESES)));
+
+    return node;
 }
 
 ParseNode Parser::parseParameterList() {
+    ParseNode node = variableNode(PARAMETER_LIST);
+    node.addChild(parseExpression());
+    while (check(Tokenizer::TOKEN_COMMA)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_COMMA)));
+        node.addChild(parseExpression());
+    }
 
-    throw ParserError("parseParameterList is not implemented yet");
+    return node;
 }
 
 ParseNode Parser::parseExpression() {
+    ParseNode node = variableNode(EXPRESSION);
+    node.addChild(parseSimpleExpression());
+    if (check(Tokenizer::TOKEN_EQUAL_END) ||
+        check(Tokenizer::TOKEN_NOT_EQUAL) ||
+        check(Tokenizer::TOKEN_GREATER_THAN) ||
+        check(Tokenizer::TOKEN_GREATER_THAN_OR_EQUAL) ||
+        check(Tokenizer::TOKEN_LESS_THAN) ||
+        check(Tokenizer::TOKEN_LESS_THAN_OR_EQUAL)) {
+        node.addChild(parseRelationalOperator());
+        node.addChild(parseSimpleExpression());
+    }
 
-    throw ParserError("parseExpression is not implemented yet");
+    return node;
 }
 
 ParseNode Parser::parseSimpleExpression() {
+    ParseNode node = variableNode(SIMPLE_EXPRESSION);
+    if (check(Tokenizer::TOKEN_PLUS) || check(Tokenizer::TOKEN_MINUS)) {
+        node.addChild(terminalNode(advance()));
+    }
+    node.addChild(parseTerm());
+    while (check(Tokenizer::TOKEN_PLUS) ||
+           check(Tokenizer::TOKEN_MINUS) ||
+           check(Tokenizer::TOKEN_OR)) {
+        node.addChild(parseAdditiveOperator());
+        node.addChild(parseTerm());
+    }
 
-    throw ParserError("parseSimpleExpression is not implemented yet");
+    return node;
 }
 
 ParseNode Parser::parseTerm() {
-    throw ParserError("parseTerm is not implemented yet");
+    ParseNode node = variableNode(TERM);
+    node.addChild(parseFactor());
+    while (check(Tokenizer::TOKEN_TIMES) ||
+           check(Tokenizer::TOKEN_RDIV) ||
+           check(Tokenizer::TOKEN_IDIV) ||
+           check(Tokenizer::TOKEN_MOD) ||
+           check(Tokenizer::TOKEN_AND)) {
+        node.addChild(parseMultiplicativeOperator());
+        node.addChild(parseFactor());
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseFactor() {
-    throw ParserError("parseFactor is not implemented yet");
+    ParseNode node = variableNode(FACTOR);
+
+    if (check(Tokenizer::TOKEN_IDENT)) {
+        if (checkNext(Tokenizer::TOKEN_LEFT_PARENTHESES)) {
+            node.addChild(parseProcedureOrFunctionCall());
+        } 
+        else if (checkNext(Tokenizer::TOKEN_LEFT_BRACKET) ||
+                checkNext(Tokenizer::TOKEN_PERIOD)) {
+            node.addChild(parseVariable());
+        } 
+        else {
+            node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+        }
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_INT) ||
+        check(Tokenizer::TOKEN_REAL) ||
+        check(Tokenizer::TOKEN_CHAR_END) ||
+        check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END) ||
+        check(Tokenizer::TOKEN_STRING_ESCAPE_OR_END)) {
+        node.addChild(terminalNode(advance()));
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_LEFT_PARENTHESES)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_PARENTHESES)));
+        node.addChild(parseExpression());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_PARENTHESES)));
+        return node;
+    }
+    if (check(Tokenizer::TOKEN_NOT)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_NOT)));
+        node.addChild(parseFactor());
+        return node;
+    }
+
+    syntaxError("factor");
+    return node;
 }
 
 ParseNode Parser::parseVariable() {
-    throw ParserError("parseVariable is not implemented yet");
+    ParseNode node = variableNode(VARIABLE);
+    node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    while (check(Tokenizer::TOKEN_LEFT_BRACKET) ||
+           check(Tokenizer::TOKEN_PERIOD)) {
+        node.addChild(parseComponentVariable());
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseComponentVariable() {
-    throw ParserError("parseComponentVariable is not implemented yet");
+    ParseNode node = variableNode(COMPONENT_VARIABLE);
+    if (check(Tokenizer::TOKEN_LEFT_BRACKET)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_BRACKET)));
+        node.addChild(parseIndexList());
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_BRACKET)));
+    } 
+    else if (check(Tokenizer::TOKEN_PERIOD)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_PERIOD)));
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
+    } 
+    else {
+        syntaxError("component variable");
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseIndexList() {
-    throw ParserError("parseIndexList is not implemented yet");
+    ParseNode node = variableNode(INDEX_LIST);
+    if (check(Tokenizer::TOKEN_INT) ||
+        check(Tokenizer::TOKEN_IDENT) ||
+        check(Tokenizer::TOKEN_CHAR_END) ||
+        check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END)) {
+        node.addChild(terminalNode(advance()));
+    } 
+    else {
+        syntaxError("index element");
+    }
+    while (check(Tokenizer::TOKEN_COMMA)) {
+        node.addChild(terminalNode(expect(Tokenizer::TOKEN_COMMA)));
+        node.addChild(parseIndexList());
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseRelationalOperator() {
-    throw ParserError("parseRelationalOperator is not implemented yet");
+    ParseNode node = variableNode(RELATIONAL_OPERATOR);
+    if (check(Tokenizer::TOKEN_EQUAL_END) ||
+        check(Tokenizer::TOKEN_NOT_EQUAL) ||
+        check(Tokenizer::TOKEN_GREATER_THAN) ||
+        check(Tokenizer::TOKEN_GREATER_THAN_OR_EQUAL) ||
+        check(Tokenizer::TOKEN_LESS_THAN) ||
+        check(Tokenizer::TOKEN_LESS_THAN_OR_EQUAL)) {
+        node.addChild(terminalNode(advance()));
+    } 
+    else {
+        syntaxError("relational operator");
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseAdditiveOperator() {
-    throw ParserError("parseAdditiveOperator is not implemented yet");
+    ParseNode node = variableNode(ADDITIVE_OPERATOR);
+    if (check(Tokenizer::TOKEN_PLUS) ||
+        check(Tokenizer::TOKEN_MINUS) ||
+        check(Tokenizer::TOKEN_OR)) {
+        node.addChild(terminalNode(advance()));
+    } 
+    else {
+        syntaxError("additive operator");
+    }
+
+    return node;
 }
 
 ParseNode Parser::parseMultiplicativeOperator() {
-    throw ParserError("parseMultiplicativeOperator is not implemented yet");
+    ParseNode node = variableNode(MULTIPLICATIVE_OPERATOR);
+    if (check(Tokenizer::TOKEN_TIMES) ||
+        check(Tokenizer::TOKEN_RDIV) ||
+        check(Tokenizer::TOKEN_IDIV) ||
+        check(Tokenizer::TOKEN_MOD) ||
+        check(Tokenizer::TOKEN_AND)) {
+        node.addChild(terminalNode(advance()));
+    } 
+    else {
+        syntaxError("multiplicative operator");
+    }
+
+    return node;
 }
