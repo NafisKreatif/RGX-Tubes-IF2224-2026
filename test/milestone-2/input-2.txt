@@ -1,0 +1,26 @@
+program Palindrome;
+
+type
+  CharArray == array[1 .. 5] of char;
+
+var
+  chars: CharArray;
+  left, right: integer;
+  isPalindrome: boolean;
+
+begin
+  chars[1] := 'r';
+  chars[2] := 'a';
+  chars[3] := 'd';
+  chars[4] := 'a';
+  chars[5] := 'r';
+  left := 1;
+  right := 5;
+  isPalindrome := true;
+  repeat
+    if chars[left] <> chars[right] then isPalindrome := false;
+    left := left + 1;
+    right := right - 1
+  until left >= right;
+  writeln('Palindrome = ', isPalindrome)
+end.

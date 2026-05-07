@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace arion {
+    // Representasi satu simbol grammar, baik terminal dari lexer maupun non-terminal parser.
     class Symbol {
     private:
         int id_;
@@ -21,6 +22,7 @@ namespace arion {
         bool isTerminal() const;
     };
 
+    // Node parse tree yang menyimpan satu simbol dan anak-anak hasil ekspansi grammar.
     class ParseNode {
     public:
         ParseNode() = default;

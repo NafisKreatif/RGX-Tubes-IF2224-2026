@@ -40,6 +40,8 @@ std::string ParseNode::toString() const {
     std::vector<bool> isLast;
     return toStringHelper(0, isLast);
 }
+
+// Mencetak parse tree dengan prefix cabang sesuai posisi anak pada level yang sama.
 std::string ParseNode::toStringHelper(int depth, std::vector<bool> &isLast) const {
     std::ostringstream out;
     for (int i = 0; i < depth; i++) {
@@ -86,6 +88,7 @@ const Token &Parser::lookahead(std::size_t offset) const {
     std::size_t index = current_;
     std::size_t skipped = 0;
 
+    // Token komentar tetap ada dari lexer, tetapi tidak dihitung sebagai lookahead parser.
     while (index < tokens_.size()) {
         if (tokens_[index].type != Tokenizer::TOKEN_COMMENT_CURLY_END &&
             tokens_[index].type != Tokenizer::TOKEN_COMMENT_PARENTHESES_END) {
@@ -123,6 +126,7 @@ Token Parser::advance() {
 }
 
 Token Parser::expect(int tokenType) {
+    // Semua token wajib dikonsumsi lewat expect supaya pesan syntax error konsisten.
     if (check(tokenType)) {
         return advance();
     }
@@ -246,6 +250,7 @@ void Parser::syntaxError(const std::string &expectedName) const {
 }
 
 void Parser::skipIgnoredTokens() {
+    // Setelah advance, posisi parser dilompati melewati token komentar.
     while (current_ < tokens_.size() && (tokens_[current_].type == Tokenizer::TOKEN_COMMENT_CURLY_END || tokens_[current_].type == Tokenizer::TOKEN_COMMENT_PARENTHESES_END)) {
         ++current_;
     }
@@ -271,6 +276,7 @@ ParseNode Parser::parseProgramHeader() {
 ParseNode Parser::parseDeclarationPart() {
     ParseNode node = variableNode(DECLARATION_PART);
 
+    // Urutan deklarasi mengikuti grammar: const, type, var, lalu procedure/function.
     while (check(Tokenizer::TOKEN_CONST)) {
         node.addChild(parseConstDeclaration());
     }
@@ -303,6 +309,7 @@ ParseNode Parser::parseConstDeclaration() {
 ParseNode Parser::parseConstant() {
     ParseNode node = variableNode(CONSTANT);
 
+    // Char dan string sudah lengkap sebagai satu token; angka/ident boleh diawali tanda.
     if (check(Tokenizer::TOKEN_CHAR_END)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_CHAR_END)));
         return node;
@@ -369,6 +376,7 @@ ParseNode Parser::parseIdentifierList() {
 ParseNode Parser::parseType() {
     ParseNode node = variableNode(TYPE);
 
+    // Alternatif type dipilih dari token pertama setiap produksi.
     if (check(Tokenizer::TOKEN_ARRAY)) {
         node.addChild(parseArrayType());
         return node;
@@ -457,6 +465,7 @@ ParseNode Parser::parseFieldList() {
     node.addChild(parseFieldPart());
     while (check(Tokenizer::TOKEN_SEMICOLON)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+        // Semicolon terakhir sebelum end pada record tidak memulai field baru.
         if (check(Tokenizer::TOKEN_END)) {
             break;
         }
@@ -567,6 +576,7 @@ ParseNode Parser::parseStatementList() {
 
 ParseNode Parser::parseStatement() {
     ParseNode node = variableNode(STATEMENT);
+    // Identifier perlu lookahead karena bisa menjadi assignment atau procedure/function call.
     if (check(Tokenizer::TOKEN_IDENT)) {
         if (checkNext(Tokenizer::TOKEN_LEFT_BRACKET) || checkNext(Tokenizer::TOKEN_PERIOD) ||
             checkNext(Tokenizer::TOKEN_BECOMES)) {
@@ -647,6 +657,7 @@ ParseNode Parser::parseCaseBlock() {
     node.addChild(parseStatement());
     while (check(Tokenizer::TOKEN_SEMICOLON)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_SEMICOLON)));
+        // Case berikutnya dibaca rekursif sampai token end menutup case statement.
         if (!check(Tokenizer::TOKEN_END)) node.addChild(parseCaseBlock());
     }
     return node;
@@ -695,6 +706,7 @@ ParseNode Parser::parseProcedureOrFunctionCall() {
     ParseNode node = variableNode(PROCEDURE_FUNCTION_CALL);
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_PARENTHESES)));
+    // Parameter opsional hanya diparse jika token berikutnya dapat memulai expression.
     if (check(Tokenizer::TOKEN_PLUS) ||
         check(Tokenizer::TOKEN_MINUS) ||
         check(Tokenizer::TOKEN_IDENT) ||
@@ -726,6 +738,7 @@ ParseNode Parser::parseParameterList() {
 ParseNode Parser::parseExpression() {
     ParseNode node = variableNode(EXPRESSION);
     node.addChild(parseSimpleExpression());
+    // Relational operator berada di luar simple-expression agar prioritasnya paling rendah.
     if (check(Tokenizer::TOKEN_EQUAL_END) ||
         check(Tokenizer::TOKEN_NOT_EQUAL) ||
         check(Tokenizer::TOKEN_GREATER_THAN) ||
@@ -741,6 +754,7 @@ ParseNode Parser::parseExpression() {
 
 ParseNode Parser::parseSimpleExpression() {
     ParseNode node = variableNode(SIMPLE_EXPRESSION);
+    // Unary + atau - hanya valid di awal simple-expression.
     if (check(Tokenizer::TOKEN_PLUS) || check(Tokenizer::TOKEN_MINUS)) {
         node.addChild(terminalNode(advance()));
     }
@@ -758,6 +772,7 @@ ParseNode Parser::parseSimpleExpression() {
 ParseNode Parser::parseTerm() {
     ParseNode node = variableNode(TERM);
     node.addChild(parseFactor());
+    // Operator perkalian, pembagian, modulo, dan and diproses di level term.
     while (check(Tokenizer::TOKEN_TIMES) ||
            check(Tokenizer::TOKEN_RDIV) ||
            check(Tokenizer::TOKEN_IDIV) ||
@@ -773,6 +788,7 @@ ParseNode Parser::parseTerm() {
 ParseNode Parser::parseFactor() {
     ParseNode node = variableNode(FACTOR);
 
+    // Factor adalah unit terkecil expression: literal, variable, call, grouping, atau not.
     if (check(Tokenizer::TOKEN_IDENT)) {
         if (checkNext(Tokenizer::TOKEN_LEFT_PARENTHESES)) {
             node.addChild(parseProcedureOrFunctionCall());
@@ -845,6 +861,7 @@ ParseNode Parser::parseIndexList() {
     } else {
         syntaxError("index element");
     }
+    // Sesuai grammar, elemen setelah comma direpresentasikan sebagai index-list baru.
     while (check(Tokenizer::TOKEN_COMMA)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_COMMA)));
         node.addChild(parseIndexList());
