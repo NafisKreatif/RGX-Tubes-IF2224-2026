@@ -18,7 +18,7 @@ namespace arion {
         int getCurrentState() const;
         bool isCurrentStateInvalid() const;
         void resetToStartState();
-        
+
         // Start state
         int getStartState() const;
         void setStartState(int stateId);
@@ -44,8 +44,7 @@ namespace arion {
 
     private:
         struct hash {
-            std::size_t operator()(const std::pair<int, int> &p) const
-            {
+            std::size_t operator()(const std::pair<int, int> &p) const {
                 return ((unsigned long long)p.first << 32) ^ p.second;
             }
         };

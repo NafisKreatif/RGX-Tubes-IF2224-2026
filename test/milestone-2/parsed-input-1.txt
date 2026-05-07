@@ -1,0 +1,66 @@
+<program>
+├── <program-header>
+│   ├── programsy
+│   ├── ident (Hello)
+│   └── semicolon
+├── <declaration-part>
+│   └── <var-declaration>
+│       ├── varsy
+│       ├── <identifier-list>
+│       │   ├── ident (a)
+│       │   ├── comma
+│       │   └── ident (b)
+│       ├── colon
+│       ├── <type>
+│       │   └── ident (integer)
+│       └── semicolon
+├── <compound-statement>
+│   ├── beginsy
+│   ├── <statement-list>
+│   │   ├── <statement>
+│   │   │   └── <assignment-statement>
+│   │   │       ├── <variable>
+│   │   │       │   └── ident (a)
+│   │   │       ├── becomes
+│   │   │       └── <expression>
+│   │   │           └── <simple-expression>
+│   │   │               └── <term>
+│   │   │                   └── <factor>
+│   │   │                       └── intcon (5)
+│   │   ├── semicolon
+│   │   ├── <statement>
+│   │   │   └── <assignment-statement>
+│   │   │       ├── <variable>
+│   │   │       │   └── ident (b)
+│   │   │       ├── becomes
+│   │   │       └── <expression>
+│   │   │           └── <simple-expression>
+│   │   │               ├── <term>
+│   │   │               │   └── <factor>
+│   │   │               │       └── ident (a)
+│   │   │               ├── <additive-operator>
+│   │   │               │   └── plus
+│   │   │               └── <term>
+│   │   │                   └── <factor>
+│   │   │                       └── intcon (10)
+│   │   ├── semicolon
+│   │   ├── <statement>
+│   │   │   └── <procedure/function-call>
+│   │   │       ├── ident (writeln)
+│   │   │       ├── lparent
+│   │   │       ├── <parameter-list>
+│   │   │       │   ├── <expression>
+│   │   │       │   │   └── <simple-expression>
+│   │   │       │   │       └── <term>
+│   │   │       │   │           └── <factor>
+│   │   │       │   │               └── string ('Result = ')
+│   │   │       │   ├── comma
+│   │   │       │   └── <expression>
+│   │   │       │       └── <simple-expression>
+│   │   │       │           └── <term>
+│   │   │       │               └── <factor>
+│   │   │       │                   └── ident (b)
+│   │   │       └── rparent
+│   │   └── semicolon
+│   └── endsy
+└── period

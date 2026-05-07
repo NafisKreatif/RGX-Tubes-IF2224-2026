@@ -325,19 +325,28 @@ Token Tokenizer::getNextToken()
     return {lastFinalState, lexeme_};
 }
 
-std::string Tokenizer::tokenToString(Token type)
+std::vector<Token> Tokenizer::tokenizeAll() {
+    std::vector<Token> result;
+    Token currentToken;
+    while ((currentToken = getNextToken()).type != TOKEN_EOF) {
+        result.push_back(currentToken);
+    }
+    return result;
+}
+
+std::string Tokenizer::tokenToString(Token token)
 {
-    switch (type.type) {
+    switch (token.type) {
         case TOKEN_INT:
-            return "intcon (" + type.value + ")";
+            return "intcon (" + token.value + ")";
         case TOKEN_REAL:
-            return "realcon (" + type.value + ")";
+            return "realcon (" + token.value + ")";
         case TOKEN_CHAR_END:
-            return "charcon (" + type.value + ")";
+            return "charcon (" + token.value + ")";
         case TOKEN_STRING_ESCAPE_OR_END:
-            return "string (" + type.value + ")";
+            return "string (" + token.value + ")";
         case TOKEN_CHAR_ESCAPE_OR_END:
-            return "string (" + type.value + ")";
+            return "string (" + token.value + ")";
         case TOKEN_NOT:
             return "notsy";
         case TOKEN_PLUS:
@@ -403,7 +412,7 @@ std::string Tokenizer::tokenToString(Token type)
         case TOKEN_PROGRAM:
             return "programsy";
         case TOKEN_IDENT:
-            return "ident (" + type.value + ")";
+            return "ident (" + token.value + ")";
         case TOKEN_BEGIN:
             return "beginsy";
         case TOKEN_IF:
@@ -433,12 +442,12 @@ std::string Tokenizer::tokenToString(Token type)
         case TOKEN_THEN:
             return "thensy";
         case TOKEN_COMMENT_CURLY_END:
-            return "comment(" + type.value.substr(1, type.value.length()-2)+")";
+            return "comment(" + token.value.substr(1, token.value.length()-2)+")";
         case TOKEN_COMMENT_PARENTHESES_END:
-            return "comment(" + type.value.substr(2, type.value.length()-4)+")";
+            return "comment(" + token.value.substr(2, token.value.length()-4)+")";
         case TOKEN_UNKNOWN:
-            return "unknown (" + type.value + ")";
+            return "unknown (" + token.value + ")";
         default:
-            return "unknown (" + type.value + ")";
+            return "unknown (" + token.value + ")";
     };
 }

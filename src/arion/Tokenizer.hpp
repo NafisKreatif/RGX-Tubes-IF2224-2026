@@ -2,6 +2,7 @@
 #define ARION_TOKENIZER_H
 #include "DFA.hpp"
 #include <fstream>
+#include <vector>
 
 namespace arion {
     struct Token {
@@ -12,7 +13,7 @@ namespace arion {
 
     public:
         enum State {
-            START,
+            START = 1000,
             TOKEN_INT,
             TOKEN_REAL_PERIOD,
             TOKEN_REAL,
@@ -91,8 +92,10 @@ namespace arion {
 
         void setDebug(bool);
         Token getNextToken();
-        std::string tokenToString(Token type);
+        std::vector<Token> tokenizeAll();
         std::string getLexeme() { return lexeme_; };
+        
+        static std::string tokenToString(Token type);
 
     private:
         char peekChar();
