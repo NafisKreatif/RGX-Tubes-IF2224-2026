@@ -25,10 +25,16 @@ int main(int argc, char **argv)
     if (argc > 1 && std::string(argv[1]) == "debug") {
         tokenizer.setDebug(true);
     }
-    std::vector<arion::Token> tokens = tokenizer.tokenizeAll();
-    arion::Parser parser(tokens);
-    arion::ParseNode parseResult = parser.parse();
-    out << parseResult.toString();
+
+    try {
+        std::vector<arion::Token> tokens = tokenizer.tokenizeAll();
+        arion::Parser parser(tokens);
+        arion::ParseNode parseResult = parser.parse();
+        out << parseResult.toString();
+    } catch (const arion::ParserError &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
 
     std::cout << "Outputted to " << outputPath << std::endl;
 }
