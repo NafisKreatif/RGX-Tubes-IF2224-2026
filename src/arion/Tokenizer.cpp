@@ -325,6 +325,15 @@ Token Tokenizer::getNextToken()
     return {lastFinalState, lexeme_};
 }
 
+std::vector<Token> Tokenizer::tokenizeAll() {
+    std::vector<Token> result;
+    Token currentToken;
+    while ((currentToken = getNextToken()).type != TOKEN_EOF) {
+        result.push_back(currentToken);
+    }
+    return result;
+}
+
 std::string Tokenizer::tokenToString(Token token)
 {
     switch (token.type) {
