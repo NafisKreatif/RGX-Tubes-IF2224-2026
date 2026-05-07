@@ -74,10 +74,7 @@ Kelompok ReguExceptional - RGX:
 
 | Nama | NIM | Pembagian Tugas | Kontribusi (%) |
 | -------- | -------- | -------- | -------- |
-| Wafiq Hibban Robbany	|	13524016 | Membuat Diagram DFA | 23 |
-| Muhammad Nafis Habibi | 13524018 | Membuat Class DFA | 25 |
-| An-Dafa Anza Avansyah | 13524038 | Membuat Diagram DFA | 24 |
-| Wildan Abdurrahman Ghazali |	13524054 | Membuat Class Tokenizer (Lexer) | 28 |
-
-
-
+| Wafiq Hibban Robbany	|	13524016 | Header dan struktur ParseNode, Implementasi fungsi recursive descent | 27 |
+| Muhammad Nafis Habibi | 13524018 | Pengecekan dan revisi struktur ParseNode, integrasi ke program main | 25 |
+| An-Dafa Anza Avansyah | 13524038 | Implementasi fungsi recursive descent DFA | 26 |
+| Wildan Abdurrahman Ghazali |	13524054 | Implementasi fungsi recursive descent | 22 |
