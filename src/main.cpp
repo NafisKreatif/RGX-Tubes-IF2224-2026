@@ -1,4 +1,5 @@
 #include "arion/Tokenizer.hpp"
+#include "arion/Parser.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -16,7 +17,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/milestone-1/tokenized-" + inputPath.filename().string();
+    std::filesystem::path outputPath = "test/milestone-2/tokenized-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
     arion::Tokenizer tokenizer;
@@ -24,17 +25,10 @@ int main(int argc, char **argv)
     if (argc > 1 && std::string(argv[1]) == "debug") {
         tokenizer.setDebug(true);
     }
-    while (true) {
-        arion::Token t = tokenizer.getNextToken();
-
-        if (t.type == tokenizer.TOKEN_EOF) break;
-
-        std::string result = tokenizer.tokenToString(t);
-
-        if (!result.empty()) {
-            out << result << "\n";
-        }
-    }
+    std::vector<arion::Token> tokens = tokenizer.tokenizeAll();
+    arion::Parser parser(tokens);
+    arion::ParseNode parseResult = parser.parse();
+    out << parseResult.toString();
 
     std::cout << "Outputted to " << outputPath << std::endl;
 }
