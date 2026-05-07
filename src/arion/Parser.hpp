@@ -48,7 +48,7 @@ namespace arion {
 
     private:
         enum NonTerminal {
-            PROGRAM,
+            PROGRAM = 2000,
             PROGRAM_HEADER,
             DECLARATION_PART,
             CONST_DECLARATION,
