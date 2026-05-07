@@ -17,7 +17,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/milestone-2/tokenized-" + inputPath.filename().string();
+    std::filesystem::path outputPath = "test/milestone-2/parsed-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
     arion::Tokenizer tokenizer;
