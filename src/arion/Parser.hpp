@@ -8,19 +8,34 @@
 #include <vector>
 
 namespace arion {
+    class Symbol {
+    private:
+        int id_;
+        std::string label_;
+        std::string value_;
+        bool isTerminal_;
+
+    public:
+        Symbol(int id, std::string label, bool isTerminal = false, std::string value = "");
+        std::string toString() const;
+        bool isTerminal() const;
+    };
+
     class ParseNode {
     public:
         ParseNode() = default;
-        explicit ParseNode(std::string label);
+        explicit ParseNode(Symbol symbol);
 
         ParseNode &addChild(ParseNode child);
-        const std::string &getLabel() const;
+        Symbol getSymbol() const;
+        std::string getLabel() const;
         const std::vector<ParseNode> &getChildren() const;
-        std::string toString(int depth = 0) const;
+        std::string toString() const;
 
     private:
-        std::string label_;
+        Symbol symbol_;
         std::vector<ParseNode> children_;
+        std::string toStringHelper(int depth, std::vector<bool> &isLast) const;
     };
 
     class Parser {
