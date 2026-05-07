@@ -1,0 +1,77 @@
+<program>
+├── <program-header>
+│   ├── programsy
+│   ├── ident (Types)
+│   └── semicolon
+├── <declaration-part>
+│   ├── <const-declaration>
+│   │   ├── constsy
+│   │   ├── ident (Min)
+│   │   ├── eql
+│   │   ├── <constant>
+│   │   │   └── intcon (1)
+│   │   ├── semicolon
+│   │   ├── ident (Max)
+│   │   ├── eql
+│   │   ├── <constant>
+│   │   │   └── intcon (3)
+│   │   └── semicolon
+│   ├── <type-declaration>
+│   │   ├── typesy
+│   │   ├── ident (SmallRange)
+│   │   ├── eql
+│   │   ├── <type>
+│   │   │   └── <range>
+│   │   │       ├── <constant>
+│   │   │       │   └── ident (Min)
+│   │   │       ├── period
+│   │   │       ├── period
+│   │   │       └── <constant>
+│   │   │           └── ident (Max)
+│   │   ├── semicolon
+│   │   ├── ident (Pair)
+│   │   ├── eql
+│   │   ├── <type>
+│   │   │   └── <record-type>
+│   │   │       ├── recordsy
+│   │   │       ├── <field-list>
+│   │   │       │   └── <field-part>
+│   │   │       │       ├── <identifier-list>
+│   │   │       │       │   └── ident (x)
+│   │   │       │       ├── colon
+│   │   │       │       └── <type>
+│   │   │       │           └── ident (integer)
+│   │   │       └── endsy
+│   │   ├── semicolon
+│   │   ├── ident (Numbers)
+│   │   ├── eql
+│   │   ├── <type>
+│   │   │   └── <array-type>
+│   │   │       ├── arraysy
+│   │   │       ├── lbrack
+│   │   │       ├── ident (SmallRange)
+│   │   │       ├── rbrack
+│   │   │       ├── ofsy
+│   │   │       └── <type>
+│   │   │           └── ident (integer)
+│   │   └── semicolon
+│   └── <var-declaration>
+│       ├── varsy
+│       ├── <identifier-list>
+│       │   └── ident (p)
+│       ├── colon
+│       ├── <type>
+│       │   └── ident (Pair)
+│       ├── semicolon
+│       ├── <identifier-list>
+│       │   └── ident (n)
+│       ├── colon
+│       ├── <type>
+│       │   └── ident (Numbers)
+│       └── semicolon
+├── <compound-statement>
+│   ├── beginsy
+│   ├── <statement-list>
+│   │   └── <statement>
+│   └── endsy
+└── period

@@ -1,15 +1,10 @@
-program Expression;
+program Expr;
 
 var
-  a, b, c, d, e, f, g, h, i, j, k, l, m: integer;
+  a, b, c: integer;
 
 begin
-  a := b + c * d - e / f;
-  g := h div i mod j;
-  k := not (a < b);
-  l := (a + b) * (c - d);
-  m := a + b or c;
-  a := b and c;
-  d := e <= f;
-  g := h <> i;
+  a := (b + c) * 2;
+  b := not (a < c);
+  c := a div 2 mod 3
 end.
