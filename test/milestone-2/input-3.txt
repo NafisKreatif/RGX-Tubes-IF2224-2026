@@ -46,13 +46,21 @@ begin
   isDone := false;
   if not (pairValue.first == pairValue.second) then isValid := false else PrintValue(pairValue.first, numbers);
   while i <= Max do
-    i := i + 1;
+  begin
+    i := i + 1
+  end;
   repeat
     total := total + MirrorIndex(i) mod 3;
     i := i - 1
   until i < Min;
-  for i := Min to Max do PrintValue(i, numbers);
-  for i := Max downto Min do total := total + i;
+  for i := Min to Max do
+  begin
+    PrintValue(i, numbers)
+  end;
+  for i := Max downto Min do
+  begin
+    total := total + i
+  end;
   case total of
     0: total := total + 1;
     1, 2: total := total - 1;

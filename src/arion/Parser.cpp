@@ -668,7 +668,7 @@ ParseNode Parser::parseWhileStatement() {
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_WHILE)));
     node.addChild(parseExpression());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
-    node.addChild(parseStatement());
+    node.addChild(parseCompoundStatement());
     return node;
 }
 
@@ -697,7 +697,7 @@ ParseNode Parser::parseForStatement() {
     }
     node.addChild(parseExpression());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
-    node.addChild(parseStatement());
+    node.addChild(parseCompoundStatement());
 
     return node;
 }
