@@ -10,6 +10,19 @@ Symbol::Symbol(int id, std::string label, bool isTerminal, std::string value) {
     this->isTerminal_ = isTerminal;
     this->value_ = std::move(value);
 }
+
+int Symbol::getId() const {
+    return id_;
+}
+
+const std::string &Symbol::getLabel() const {
+    return label_;
+}
+
+const std::string &Symbol::getValue() const {
+    return value_;
+}
+
 std::string Symbol::toString() const {
     return label_;
 }
