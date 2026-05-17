@@ -40,3 +40,6 @@ bin/main
 
 # debug information files
 *.dwo
+
+# vscode extensions
+.vscode/
