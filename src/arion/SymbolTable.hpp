@@ -250,6 +250,19 @@ namespace arion
         int maxBTabReturnTypeWidth() const;
         int maxBTabReturnRefWidth() const;
         int maxBTabOwnerWidth() const;
+
+        // for type descriptor dump
+        int maxTypeDescriptorIdxWidth() const;
+        int maxTypeDescriptorKindWidth() const;
+        int maxTypeDescriptorBaseTypeWidth() const;
+        int maxTypeDescriptorBaseRefWidth() const;
+        int maxTypeDescriptorLowWidth() const;
+        int maxTypeDescriptorHighWidth() const;
+        int maxTypeDescriptorResolvedWidth() const;
+        int maxTypeDescriptorLowOrdWidth() const;
+        int maxTypeDescriptorHighOrdWidth() const;
+        int maxTypeDescriptorSizeWidth() const;
+        int maxTypeDescriptorValuesWidth() const;
     };
 
     class SymbolTableError : public std::runtime_error {

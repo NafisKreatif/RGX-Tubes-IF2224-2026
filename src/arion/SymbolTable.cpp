@@ -751,20 +751,61 @@ std::string SymbolTable::dumpATab() const {
 
 std::string SymbolTable::dumpTypeDescriptors() const {
     std::ostringstream out;
-    out << "idx kind baseType baseRef low high resolved lowOrd highOrd size values\n";
+
+    int typeDescriptorIdxWidth = maxTypeDescriptorIdxWidth();
+    int typeDescriptorKindWidth = maxTypeDescriptorKindWidth();
+    int typeDescriptorBaseTypeWidth = maxTypeDescriptorBaseTypeWidth();
+    int typeDescriptorBaseRefWidth = maxTypeDescriptorBaseRefWidth();
+    int typeDescriptorLowWidth = maxTypeDescriptorLowWidth();
+    int typeDescriptorHighWidth = maxTypeDescriptorHighWidth();
+    int typeDescriptorResolvedWidth = maxTypeDescriptorResolvedWidth();
+    int typeDescriptorLowOrdWidth = maxTypeDescriptorLowOrdWidth();
+    int typeDescriptorHighOrdWidth = maxTypeDescriptorHighOrdWidth();
+    int typeDescriptorSizeWidth = maxTypeDescriptorSizeWidth();
+    int typeDescriptorValuesWidth = maxTypeDescriptorValuesWidth();
+
+    out << " "
+        << std::setw(typeDescriptorIdxWidth) << "idx" << " | "
+        << std::setw(typeDescriptorKindWidth) << "kind" << " | "
+        << std::setw(typeDescriptorBaseTypeWidth) << "baseType" << " | "
+        << std::setw(typeDescriptorBaseRefWidth) << "baseRef" << " | "
+        << std::setw(typeDescriptorLowWidth) << "low" << " | "
+        << std::setw(typeDescriptorHighWidth) << "high" << " | "
+        << std::setw(typeDescriptorResolvedWidth) << "resolved" << " | "
+        << std::setw(typeDescriptorLowOrdWidth) << "lowOrd" << " | "
+        << std::setw(typeDescriptorHighOrdWidth) << "highOrd" << " | "
+        << std::setw(typeDescriptorSizeWidth) << "size" << " | "
+        << std::setw(typeDescriptorValuesWidth) << "values" << " \n";
+
+    out << std::setfill('-') << "-"
+        << std::setw(typeDescriptorIdxWidth) << "" << "-|-"
+        << std::setw(typeDescriptorKindWidth) << "" << "-|-"
+        << std::setw(typeDescriptorBaseTypeWidth) << "" << "-|-"
+        << std::setw(typeDescriptorBaseRefWidth) << "" << "-|-"
+        << std::setw(typeDescriptorLowWidth) << "" << "-|-"
+        << std::setw(typeDescriptorHighWidth) << "" << "-|-"
+        << std::setw(typeDescriptorResolvedWidth) << "" << "-|-"
+        << std::setw(typeDescriptorLowOrdWidth) << "" << "-|-"
+        << std::setw(typeDescriptorHighOrdWidth) << "" << "-|-"
+        << std::setw(typeDescriptorSizeWidth) << "" << "-|-"
+        << std::setw(typeDescriptorValuesWidth) << "" << "-\n";
+
+    out << std::setfill(' ');
+
     for (std::size_t i = 0; i < typeDescriptors_.size(); ++i) {
         const TypeDescriptor &entry = typeDescriptors_[i];
-        out << i << ' '
-            << descriptorKindToString(entry.kind) << ' '
-            << typeKindToString(entry.baseType) << ' '
-            << entry.baseRef << ' '
-            << entry.low << ' '
-            << entry.high << ' '
-            << (entry.boundsResolved ? 1 : 0) << ' '
-            << entry.lowOrdinal << ' '
-            << entry.highOrdinal << ' '
-            << entry.size << ' '
-            << descriptorValuesToString(entry) << '\n';
+        out << " "
+        << std::setw(typeDescriptorIdxWidth)<< i << " | "
+            << std::setw(typeDescriptorKindWidth)<< descriptorKindToString(entry.kind) << " | "
+            << std::setw(typeDescriptorBaseTypeWidth)<< typeKindToString(entry.baseType) << " | "
+            << std::setw(typeDescriptorBaseRefWidth)<< entry.baseRef << " | "
+            << std::setw(typeDescriptorLowWidth)<< entry.low << " | "
+            << std::setw(typeDescriptorHighWidth)<< entry.high << " | "
+            << std::setw(typeDescriptorResolvedWidth)<< (entry.boundsResolved ? 1 : 0) << " | "
+            << std::setw(typeDescriptorLowOrdWidth)<< entry.lowOrdinal << " | "
+            << std::setw(typeDescriptorHighOrdWidth)<< entry.highOrdinal << " | "
+            << std::setw(typeDescriptorSizeWidth)<< entry.size << " | "
+            << std::setw(typeDescriptorValuesWidth)<< descriptorValuesToString(entry) << '\n';
     }
     return out.str();
 }
