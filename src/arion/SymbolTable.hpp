@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-namespace arion {
+namespace arion
+{
     enum class SymbolObjectKind {
         Reserved,
         Program,
@@ -208,6 +209,47 @@ namespace arion {
                            const std::string &high, int &lowOrdinal, int &highOrdinal) const;
         int storageSize(TypeKind type, int ref) const;
         std::string descriptorValuesToString(const TypeDescriptor &descriptor) const;
+
+        // for tab dump
+        int maxTabIdxWidth() const;
+        int maxTabIdWidth() const;
+        int maxTabObjWidth() const;
+        int maxTabTypeWidth() const;
+        int maxTabRefWidth() const;
+        int maxTabNrmWidth() const;
+        int maxTabLvlWidth() const;
+        int maxTabAdrWidth() const;
+        int maxTabLinkWidth() const;
+        int maxTabValueWidth() const;
+        int maxTabInitWidth() const;
+
+        // for atab dump
+        int maxATabIdxWidth() const;
+        int maxATabIdxTypeWidth() const;
+        int maxATabIdxRefWidth() const;
+        int maxATabElTypeWidth() const;
+        int maxATabElRefWidth() const;
+        int maxATabLowWidth() const;
+        int maxATabHighWidth() const;
+        int maxATabResolvedWidth() const;
+        int maxATabLowOrdWidth() const;
+        int maxATabHighOrdWidth() const;
+        int maxATabElSizeWidth() const;
+        int maxATabSizeWidth() const;
+
+        // for btab dump
+        int maxBTabIdxWidth() const;
+        int maxBTabNameWidth() const;
+        int maxBTabKindWidth() const;
+        int maxBTabParentWidth() const;
+        int maxBTabLastWidth() const;
+        int maxBTabLParWidth() const;
+        int maxBTabPSizeWidth() const;
+        int maxBTabVSizeWidth() const;
+        int maxBTabLvlWidth() const;
+        int maxBTabReturnTypeWidth() const;
+        int maxBTabReturnRefWidth() const;
+        int maxBTabOwnerWidth() const;
     };
 
     class SymbolTableError : public std::runtime_error {

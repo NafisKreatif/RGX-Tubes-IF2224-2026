@@ -1,5 +1,6 @@
 #include "SymbolTable.hpp"
 #include <cctype>
+#include <iomanip>
 #include <sstream>
 #include <utility>
 
@@ -233,7 +234,8 @@ int SymbolTable::addArray(ATabEntry entry) {
         entry.lowOrdinal = lowOrdinal;
         entry.highOrdinal = highOrdinal;
         entry.size = (highOrdinal - lowOrdinal + 1) * entry.elementSize;
-    } else if (entry.size < 0) {
+    }
+    else if (entry.size < 0) {
         throw SymbolTableError("Invalid array size for bounds: " + entry.low + ".." + entry.high);
     }
 
@@ -560,62 +562,189 @@ const std::vector<TypeDescriptor> &SymbolTable::typeDescriptors() const {
 
 std::string SymbolTable::dumpTab() const {
     std::ostringstream out;
-    out << "idx identifier object type ref nrm lev adr link value initialized\n";
+
+    int tabIdxWidth = maxTabIdxWidth();
+    int tabIdWidth = maxTabIdWidth();
+    int tabObjWidth = maxTabObjWidth();
+    int tabTypeWidth = maxTabTypeWidth();
+    int tabRefWidth = maxTabRefWidth();
+    int tabNrmWidth = maxTabNrmWidth();
+    int tabLvlWidth = maxTabLvlWidth();
+    int tabAdrWidth = maxTabAdrWidth();
+    int tabLinkWidth = maxTabLinkWidth();
+    int tabValueWidth = maxTabValueWidth();
+    int tabInitWidth = maxTabInitWidth();
+
+    out << " "
+        << std::setw(tabIdxWidth) << "idx" << " | "
+        << std::setw(tabIdWidth) << "identifier" << " | "
+        << std::setw(tabObjWidth) << "object" << " | "
+        << std::setw(tabTypeWidth) << "type" << " | "
+        << std::setw(tabRefWidth) << "ref" << " | "
+        << std::setw(tabNrmWidth) << "nrm" << " | "
+        << std::setw(tabLvlWidth) << "lvl" << " | "
+        << std::setw(tabAdrWidth) << "adr" << " | "
+        << std::setw(tabLinkWidth) << "link" << " | "
+        << std::setw(tabValueWidth) << "value" << " | "
+        << std::setw(tabInitWidth) << "initialized" << " \n";
+
+    out << std::setfill('-') << "-"
+        << std::setw(tabIdxWidth) << "" << "-|-"
+        << std::setw(tabIdWidth) << "" << "-|-"
+        << std::setw(tabObjWidth) << "" << "-|-"
+        << std::setw(tabTypeWidth) << "" << "-|-"
+        << std::setw(tabRefWidth) << "" << "-|-"
+        << std::setw(tabNrmWidth) << "" << "-|-"
+        << std::setw(tabLvlWidth) << "" << "-|-"
+        << std::setw(tabAdrWidth) << "" << "-|-"
+        << std::setw(tabLinkWidth) << "" << "-|-"
+        << std::setw(tabValueWidth) << "" << "-|-"
+        << std::setw(tabInitWidth) << "" << "-\n";
+
+    out << std::setfill(' ');
     for (std::size_t i = 0; i < tab_.size(); ++i) {
         const TabEntry &entry = tab_[i];
-        out << i << ' '
-            << entry.identifier << ' '
-            << objectKindToString(entry.object) << ' '
-            << typeKindToString(entry.type) << ' '
-            << entry.ref << ' '
-            << (entry.normal ? 1 : 0) << ' '
-            << entry.lexicalLevel << ' '
-            << entry.address << ' '
-            << entry.link << ' '
-            << entry.value << ' '
-            << (entry.initialized ? 1 : 0) << '\n';
+        out << " "
+            << std::setw(tabIdxWidth) << i << " | "
+            << std::setw(tabIdWidth) << entry.identifier << " | "
+            << std::setw(tabObjWidth) << objectKindToString(entry.object) << " | "
+            << std::setw(tabTypeWidth) << typeKindToString(entry.type) << " | "
+            << std::setw(tabRefWidth) << entry.ref << " | "
+            << std::setw(tabNrmWidth) << (entry.normal ? 1 : 0) << " | "
+            << std::setw(tabLvlWidth) << entry.lexicalLevel << " | "
+            << std::setw(tabAdrWidth) << entry.address << " | "
+            << std::setw(tabLinkWidth) << entry.link << " | "
+            << std::setw(tabValueWidth) << entry.value << " | "
+            << std::setw(tabInitWidth) << (entry.initialized ? 1 : 0) << " \n";
     }
     return out.str();
 }
 
 std::string SymbolTable::dumpBTab() const {
     std::ostringstream out;
-    out << "idx name kind parent last lpar psze vsze lev returnType returnRef owner\n";
+
+    int bTabIdxWidth = maxBTabIdxWidth();
+    int bTabNameWidth = maxBTabNameWidth();
+    int bTabKindWidth = maxBTabKindWidth();
+    int bTabParentWidth = maxBTabParentWidth();
+    int bTabLastWidth = maxBTabLastWidth();
+    int bTabLParWidth = maxBTabLParWidth();
+    int bTabPSizeWidth = maxBTabPSizeWidth();
+    int bTabVSizeWidth = maxBTabVSizeWidth();
+    int bTabLvlWidth = maxBTabLvlWidth();
+    int bTabReturnTypeWidth = maxBTabReturnTypeWidth();
+    int bTabReturnRefWidth = maxBTabReturnRefWidth();
+    int bTabOwnerWidth = maxBTabOwnerWidth();
+
+    out << " "
+        << std::setw(bTabIdxWidth) << "idx" << " | "
+        << std::setw(bTabNameWidth) << "name" << " | "
+        << std::setw(bTabKindWidth) << "kind" << " | "
+        << std::setw(bTabParentWidth) << "parent" << " | "
+        << std::setw(bTabLastWidth) << "last" << " | "
+        << std::setw(bTabLParWidth) << "lpar" << " | "
+        << std::setw(bTabPSizeWidth) << "pSize" << " | "
+        << std::setw(bTabVSizeWidth) << "vSize" << " | "
+        << std::setw(bTabLvlWidth) << "lvl" << " | "
+        << std::setw(bTabReturnTypeWidth) << "returnType" << " | "
+        << std::setw(bTabReturnRefWidth) << "returnRef" << " | "
+        << std::setw(bTabOwnerWidth) << "owner" << " \n";
+
+    out << std::setfill('-') << "-"
+        << std::setw(bTabIdxWidth) << "" << "-|-"
+        << std::setw(bTabNameWidth) << "" << "-|-"
+        << std::setw(bTabKindWidth) << "" << "-|-"
+        << std::setw(bTabParentWidth) << "" << "-|-"
+        << std::setw(bTabLastWidth) << "" << "-|-"
+        << std::setw(bTabLParWidth) << "" << "-|-"
+        << std::setw(bTabPSizeWidth) << "" << "-|-"
+        << std::setw(bTabVSizeWidth) << "" << "-|-"
+        << std::setw(bTabLvlWidth) << "" << "-|-"
+        << std::setw(bTabReturnTypeWidth) << "" << "-|-"
+        << std::setw(bTabReturnRefWidth) << "" << "-|-"
+        << std::setw(bTabOwnerWidth) << "" << "-\n";
+
+    out << std::setfill(' ');
+
     for (std::size_t i = 0; i < btab_.size(); ++i) {
         const BTabEntry &entry = btab_[i];
-        out << i << ' '
-            << entry.name << ' '
-            << blockKindToString(entry.kind) << ' '
-            << entry.parent << ' '
-            << entry.last << ' '
-            << entry.lastParameter << ' '
-            << entry.parameterSize << ' '
-            << entry.variableSize << ' '
-            << entry.lexicalLevel << ' '
-            << typeKindToString(entry.returnType) << ' '
-            << entry.returnRef << ' '
-            << entry.ownerTabIndex << '\n';
+        out << " "
+            << std::setw(bTabIdxWidth) << i << " | "
+            << std::setw(bTabNameWidth) << entry.name << " | "
+            << std::setw(bTabKindWidth) << blockKindToString(entry.kind) << " | "
+            << std::setw(bTabParentWidth) << entry.parent << " | "
+            << std::setw(bTabLastWidth) << entry.last << " | "
+            << std::setw(bTabLParWidth) << entry.lastParameter << " | "
+            << std::setw(bTabPSizeWidth) << entry.parameterSize << " | "
+            << std::setw(bTabVSizeWidth) << entry.variableSize << " | "
+            << std::setw(bTabLvlWidth) << entry.lexicalLevel << " | "
+            << std::setw(bTabReturnTypeWidth) << typeKindToString(entry.returnType) << " | "
+            << std::setw(bTabReturnRefWidth) << entry.returnRef << " | "
+            << std::setw(bTabOwnerWidth) << entry.ownerTabIndex << " \n";
     }
     return out.str();
 }
 
 std::string SymbolTable::dumpATab() const {
     std::ostringstream out;
-    out << "idx xtyp xref etyp eref low high resolved lowOrd highOrd elsz size\n";
+    int atabIdxWidth = maxATabIdxWidth();
+    int atabIdxTypeWidth = maxATabIdxTypeWidth();
+    int atabIdxRefWidth = maxATabIdxRefWidth();
+    int atabElTypeWidth = maxATabElTypeWidth();
+    int atabElRefWidth = maxATabElRefWidth();
+    int atabLowWidth = maxATabLowWidth();
+    int atabHighWidth = maxATabHighWidth();
+    int atabResolvedWidth = maxATabResolvedWidth();
+    int atabLowOrdWidth = maxATabLowOrdWidth();
+    int atabHighOrdWidth = maxATabHighOrdWidth();
+    int atabElSizeWidth = maxATabElSizeWidth();
+    int atabSizeWidth = maxATabSizeWidth();
+
+    out << " "
+        << std::setw(atabIdxWidth) << "idx" << " | "
+        << std::setw(atabIdxTypeWidth) << "idxType" << " | "
+        << std::setw(atabIdxRefWidth) << "idxRef" << " | "
+        << std::setw(atabElTypeWidth) << "elType" << " | "
+        << std::setw(atabElRefWidth) << "elRef" << " | "
+        << std::setw(atabLowWidth) << "low" << " | "
+        << std::setw(atabHighWidth) << "high" << " | "
+        << std::setw(atabResolvedWidth) << "resolved" << " | "
+        << std::setw(atabLowOrdWidth) << "lowOrd" << " | "
+        << std::setw(atabHighOrdWidth) << "highOrd" << " | "
+        << std::setw(atabElSizeWidth) << "elSize" << " | "
+        << std::setw(atabSizeWidth) << "size" << " \n";
+
+    out << std::setfill('-') << "-"
+        << std::setw(atabIdxWidth) << "" << "-|-"
+        << std::setw(atabIdxTypeWidth) << "" << "-|-"
+        << std::setw(atabIdxRefWidth) << "" << "-|-"
+        << std::setw(atabElTypeWidth) << "" << "-|-"
+        << std::setw(atabElRefWidth) << "" << "-|-"
+        << std::setw(atabLowWidth) << "" << "-|-"
+        << std::setw(atabHighWidth) << "" << "-|-"
+        << std::setw(atabResolvedWidth) << "" << "-|-"
+        << std::setw(atabLowOrdWidth) << "" << "-|-"
+        << std::setw(atabHighOrdWidth) << "" << "-|-"
+        << std::setw(atabElSizeWidth) << "" << "-|-"
+        << std::setw(atabSizeWidth) << "" << "-\n";
+
+    out << std::setfill(' ');
+
     for (std::size_t i = 0; i < atab_.size(); ++i) {
         const ATabEntry &entry = atab_[i];
-        out << i << ' '
-            << typeKindToString(entry.indexType) << ' '
-            << entry.indexRef << ' '
-            << typeKindToString(entry.elementType) << ' '
-            << entry.elementRef << ' '
-            << entry.low << ' '
-            << entry.high << ' '
-            << (entry.boundsResolved ? 1 : 0) << ' '
-            << entry.lowOrdinal << ' '
-            << entry.highOrdinal << ' '
-            << entry.elementSize << ' '
-            << entry.size << '\n';
+        out << " "
+            << std::setw(atabIdxWidth) << i << " | "
+            << std::setw(atabIdxTypeWidth) << typeKindToString(entry.indexType) << " | "
+            << std::setw(atabIdxRefWidth) << entry.indexRef << " | "
+            << std::setw(atabElTypeWidth) << typeKindToString(entry.elementType) << " | "
+            << std::setw(atabElRefWidth) << entry.elementRef << " | "
+            << std::setw(atabLowWidth) << entry.low << " | "
+            << std::setw(atabHighWidth) << entry.high << " | "
+            << std::setw(atabResolvedWidth) << (entry.boundsResolved ? 1 : 0) << " | "
+            << std::setw(atabLowOrdWidth) << entry.lowOrdinal << " | "
+            << std::setw(atabHighOrdWidth) << entry.highOrdinal << " | "
+            << std::setw(atabElSizeWidth) << entry.elementSize << " | "
+            << std::setw(atabSizeWidth) << entry.size << " \n";
     }
     return out.str();
 }
@@ -642,54 +771,84 @@ std::string SymbolTable::dumpTypeDescriptors() const {
 
 std::string SymbolTable::objectKindToString(SymbolObjectKind kind) {
     switch (kind) {
-        case SymbolObjectKind::Reserved: return "reserved";
-        case SymbolObjectKind::Program: return "program";
-        case SymbolObjectKind::Constant: return "constant";
-        case SymbolObjectKind::Type: return "type";
-        case SymbolObjectKind::Variable: return "variable";
-        case SymbolObjectKind::Procedure: return "procedure";
-        case SymbolObjectKind::Function: return "function";
-        case SymbolObjectKind::Parameter: return "parameter";
-        case SymbolObjectKind::Field: return "field";
-        case SymbolObjectKind::Unknown: return "unknown";
+        case SymbolObjectKind::Reserved:
+            return "reserved";
+        case SymbolObjectKind::Program:
+            return "program";
+        case SymbolObjectKind::Constant:
+            return "constant";
+        case SymbolObjectKind::Type:
+            return "type";
+        case SymbolObjectKind::Variable:
+            return "variable";
+        case SymbolObjectKind::Procedure:
+            return "procedure";
+        case SymbolObjectKind::Function:
+            return "function";
+        case SymbolObjectKind::Parameter:
+            return "parameter";
+        case SymbolObjectKind::Field:
+            return "field";
+        case SymbolObjectKind::Unknown:
+            return "unknown";
     }
     return "unknown";
 }
 
 std::string SymbolTable::typeKindToString(TypeKind kind) {
     switch (kind) {
-        case TypeKind::Unknown: return "unknown";
-        case TypeKind::Void: return "void";
-        case TypeKind::Integer: return "integer";
-        case TypeKind::Real: return "real";
-        case TypeKind::Boolean: return "boolean";
-        case TypeKind::Char: return "char";
-        case TypeKind::String: return "string";
-        case TypeKind::Subrange: return "subrange";
-        case TypeKind::Array: return "array";
-        case TypeKind::Record: return "record";
-        case TypeKind::Enumerated: return "enumerated";
+        case TypeKind::Unknown:
+            return "unknown";
+        case TypeKind::Void:
+            return "void";
+        case TypeKind::Integer:
+            return "integer";
+        case TypeKind::Real:
+            return "real";
+        case TypeKind::Boolean:
+            return "boolean";
+        case TypeKind::Char:
+            return "char";
+        case TypeKind::String:
+            return "string";
+        case TypeKind::Subrange:
+            return "subrange";
+        case TypeKind::Array:
+            return "array";
+        case TypeKind::Record:
+            return "record";
+        case TypeKind::Enumerated:
+            return "enumerated";
     }
     return "unknown";
 }
 
 std::string SymbolTable::blockKindToString(BlockKind kind) {
     switch (kind) {
-        case BlockKind::Global: return "global";
-        case BlockKind::Program: return "program";
-        case BlockKind::Procedure: return "procedure";
-        case BlockKind::Function: return "function";
-        case BlockKind::Record: return "record";
-        case BlockKind::Anonymous: return "anonymous";
+        case BlockKind::Global:
+            return "global";
+        case BlockKind::Program:
+            return "program";
+        case BlockKind::Procedure:
+            return "procedure";
+        case BlockKind::Function:
+            return "function";
+        case BlockKind::Record:
+            return "record";
+        case BlockKind::Anonymous:
+            return "anonymous";
     }
     return "anonymous";
 }
 
 std::string SymbolTable::descriptorKindToString(TypeDescriptorKind kind) {
     switch (kind) {
-        case TypeDescriptorKind::Unknown: return "unknown";
-        case TypeDescriptorKind::Subrange: return "subrange";
-        case TypeDescriptorKind::Enumerated: return "enumerated";
+        case TypeDescriptorKind::Unknown:
+            return "unknown";
+        case TypeDescriptorKind::Subrange:
+            return "subrange";
+        case TypeDescriptorKind::Enumerated:
+            return "enumerated";
     }
     return "unknown";
 }
@@ -945,4 +1104,220 @@ std::string SymbolTable::descriptorValuesToString(const TypeDescriptor &descript
         out << descriptor.values[i];
     }
     return out.str();
+}
+
+static int digitCount(int n) {
+    int count = 1;
+    if (n < 0) {
+        n = -n;
+        count++;
+    }
+    while (n >= 10) {
+        count++;
+        n /= 10;
+    }
+    return count;
+}
+
+int SymbolTable::maxTabIdxWidth() const {
+    return std::max(3, digitCount(tab_.size()));
+}
+
+int SymbolTable::maxTabIdWidth() const {
+    int maxLength = 12;
+    for (auto &&entry : tab_) {
+        maxLength = std::max((int)entry.identifier.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabObjWidth() const {
+    return 11;
+}
+int SymbolTable::maxTabTypeWidth() const {
+    return 11;
+}
+int SymbolTable::maxTabRefWidth() const {
+    int maxLength = 3;
+    for (auto &&entry : tab_) {
+        maxLength = std::max(digitCount(entry.ref), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabNrmWidth() const {
+    return 3;
+}
+int SymbolTable::maxTabLvlWidth() const {
+    int maxLength = 3;
+    for (auto &&entry : tab_) {
+        maxLength = std::max(digitCount(entry.lexicalLevel), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabAdrWidth() const {
+    int maxLength = 3;
+    for (auto &&entry : tab_) {
+        maxLength = std::max(digitCount(entry.address), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabLinkWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : tab_) {
+        maxLength = std::max(digitCount(entry.link), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabValueWidth() const {
+    int maxLength = 5;
+    for (auto &&entry : tab_) {
+        maxLength = std::max((int)entry.value.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTabInitWidth() const {
+    return 12;
+}
+
+int SymbolTable::maxATabIdxWidth() const {
+    return std::max(3, digitCount(atab_.size()));
+}
+int SymbolTable::maxATabIdxTypeWidth() const {
+    return 11;
+}
+int SymbolTable::maxATabIdxRefWidth() const {
+    int maxLength = 6;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.indexRef), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabElTypeWidth() const {
+    return 11;
+}
+int SymbolTable::maxATabElRefWidth() const {
+    int maxLength = 6;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.elementRef), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabLowWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : atab_) {
+        maxLength = std::max((int)entry.low.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabHighWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : atab_) {
+        maxLength = std::max((int)entry.high.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabResolvedWidth() const {
+    return 8;
+}
+int SymbolTable::maxATabLowOrdWidth() const {
+    int maxLength = 7;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.lowOrdinal), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabHighOrdWidth() const {
+    int maxLength = 7;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.highOrdinal), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabElSizeWidth() const {
+    int maxLength = 6;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.elementSize), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxATabSizeWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : atab_) {
+        maxLength = std::max(digitCount(entry.size), maxLength);
+    }
+    return maxLength;
+}
+
+int SymbolTable::maxBTabIdxWidth() const {
+    return std::max(3, digitCount(btab_.size()));
+}
+int SymbolTable::maxBTabNameWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : btab_) {
+        maxLength = std::max((int)entry.name.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabKindWidth() const {
+    return 11;
+}
+int SymbolTable::maxBTabParentWidth() const {
+    int maxLength = 6;
+    for (auto &&entry : btab_) {
+        if (entry.parent != -1) {
+            maxLength = std::max(digitCount(entry.parent), maxLength);
+        }
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabLastWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.last), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabLParWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.lastParameter), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabPSizeWidth() const {
+    int maxLength = 5;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.parameterSize), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabVSizeWidth() const {
+    int maxLength = 5;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.variableSize), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabLvlWidth() const {
+    int maxLength = 3;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.lexicalLevel), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabReturnTypeWidth() const {
+    return 11;
+}
+int SymbolTable::maxBTabReturnRefWidth() const {
+    int maxLength = 9;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.returnRef), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxBTabOwnerWidth() const {
+    int maxLength = 5;
+    for (auto &&entry : btab_) {
+        maxLength = std::max(digitCount(entry.ownerTabIndex), maxLength);
+    }
+    return maxLength;
 }
