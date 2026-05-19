@@ -1,13 +1,13 @@
-#include "arion/Tokenizer.hpp"
+#include "arion/ASTBuilder.hpp"
 #include "arion/Parser.hpp"
+#include "arion/Tokenizer.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 using namespace std;
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     std::filesystem::path inputPath = "test/input.txt";
     std::cout << "Input file path: ";
     std::cin >> inputPath;
@@ -17,7 +17,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/milestone-2/parsed-" + inputPath.filename().string();
+    std::filesystem::path outputPath = "test/milestone-2/ast-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
     arion::Tokenizer tokenizer;
@@ -30,7 +30,11 @@ int main(int argc, char **argv)
         std::vector<arion::Token> tokens = tokenizer.tokenizeAll();
         arion::Parser parser(tokens);
         arion::ParseNode parseResult = parser.parse();
-        out << parseResult.toString();
+        arion::ASTBuilder builder;
+
+        arion::ASTNode astTree = builder.build(parseResult);
+
+        astTree.printTree(out);
     } catch (const arion::ParserError &e) {
         std::cerr << e.what() << std::endl;
         return 1;
