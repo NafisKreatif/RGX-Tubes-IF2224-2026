@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace arion {
     struct ASTChild;
@@ -124,12 +125,15 @@ namespace arion {
         static std::string kindToString(ASTNodeKind kind);
         static std::string roleToString(ASTChildRole role);
 
+        void printTree(std::ostream& out = std::cout) const;
+
     private:
         ASTNodeKind kind_;
         ASTAnnotation annotation_;
         std::vector<std::pair<std::string, std::string>> attributes_;
         std::vector<ASTChild> children_;
 
+        void printTreeHelper(int depth, std::vector<bool> &isLast, std::ostream& out = std::cout) const;
     };
 
     struct ASTChild {
