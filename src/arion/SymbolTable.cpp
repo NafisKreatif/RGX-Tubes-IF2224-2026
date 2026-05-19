@@ -795,17 +795,17 @@ std::string SymbolTable::dumpTypeDescriptors() const {
     for (std::size_t i = 0; i < typeDescriptors_.size(); ++i) {
         const TypeDescriptor &entry = typeDescriptors_[i];
         out << " "
-        << std::setw(typeDescriptorIdxWidth)<< i << " | "
-            << std::setw(typeDescriptorKindWidth)<< descriptorKindToString(entry.kind) << " | "
-            << std::setw(typeDescriptorBaseTypeWidth)<< typeKindToString(entry.baseType) << " | "
-            << std::setw(typeDescriptorBaseRefWidth)<< entry.baseRef << " | "
-            << std::setw(typeDescriptorLowWidth)<< entry.low << " | "
-            << std::setw(typeDescriptorHighWidth)<< entry.high << " | "
-            << std::setw(typeDescriptorResolvedWidth)<< (entry.boundsResolved ? 1 : 0) << " | "
-            << std::setw(typeDescriptorLowOrdWidth)<< entry.lowOrdinal << " | "
-            << std::setw(typeDescriptorHighOrdWidth)<< entry.highOrdinal << " | "
-            << std::setw(typeDescriptorSizeWidth)<< entry.size << " | "
-            << std::setw(typeDescriptorValuesWidth)<< descriptorValuesToString(entry) << '\n';
+            << std::setw(typeDescriptorIdxWidth) << i << " | "
+            << std::setw(typeDescriptorKindWidth) << descriptorKindToString(entry.kind) << " | "
+            << std::setw(typeDescriptorBaseTypeWidth) << typeKindToString(entry.baseType) << " | "
+            << std::setw(typeDescriptorBaseRefWidth) << entry.baseRef << " | "
+            << std::setw(typeDescriptorLowWidth) << entry.low << " | "
+            << std::setw(typeDescriptorHighWidth) << entry.high << " | "
+            << std::setw(typeDescriptorResolvedWidth) << (entry.boundsResolved ? 1 : 0) << " | "
+            << std::setw(typeDescriptorLowOrdWidth) << entry.lowOrdinal << " | "
+            << std::setw(typeDescriptorHighOrdWidth) << entry.highOrdinal << " | "
+            << std::setw(typeDescriptorSizeWidth) << entry.size << " | "
+            << std::setw(typeDescriptorValuesWidth) << descriptorValuesToString(entry) << " \n";
     }
     return out.str();
 }
@@ -1359,6 +1359,68 @@ int SymbolTable::maxBTabOwnerWidth() const {
     int maxLength = 5;
     for (auto &&entry : btab_) {
         maxLength = std::max(digitCount(entry.ownerTabIndex), maxLength);
+    }
+    return maxLength;
+}
+
+int SymbolTable::maxTypeDescriptorIdxWidth() const {
+    return std::max(3, digitCount(typeDescriptors_.size()));
+}
+int SymbolTable::maxTypeDescriptorKindWidth() const {
+    return 11;
+}
+int SymbolTable::maxTypeDescriptorBaseTypeWidth() const {
+    return 11;
+}
+int SymbolTable::maxTypeDescriptorBaseRefWidth() const {
+    int maxLength = 7;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max(digitCount(entry.baseRef), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorLowWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max((int)entry.low.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorHighWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max((int)entry.high.size(), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorResolvedWidth() const {
+    return 8;
+}
+int SymbolTable::maxTypeDescriptorLowOrdWidth() const {
+    int maxLength = 7;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max(digitCount(entry.lowOrdinal), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorHighOrdWidth() const {
+     int maxLength = 7;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max(digitCount(entry.highOrdinal), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorSizeWidth() const {
+    int maxLength = 4;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max(digitCount(entry.size), maxLength);
+    }
+    return maxLength;
+}
+int SymbolTable::maxTypeDescriptorValuesWidth() const {
+    int maxLength = 6;
+    for (auto &&entry : typeDescriptors_) {
+        maxLength = std::max((int) descriptorValuesToString(entry).size(), maxLength);
     }
     return maxLength;
 }
