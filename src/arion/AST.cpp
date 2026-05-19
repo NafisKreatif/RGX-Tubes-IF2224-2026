@@ -257,32 +257,37 @@ void ASTNode::printTree(std::ostream &out) const {
         }
     }
     out << "\n";
-    printTreeHelper(1, isLast, out);
-}
-
-void ASTNode::printTreeHelper(int depth, std::vector<bool> &isLast, std::ostream &out) const {
+    
     for (int i = 0; i < (int)children_.size(); i++) {
         isLast.push_back(i == ((int)children_.size() - 1));
-        for (int j = 0; j < depth; j++) {
-            out << ((j == depth - 1)
-                        ? (isLast[j] ? "└── " : "├── ")
-                        : (isLast[j] ? "    " : "│   "));
-        }
-        out << kindToString(children_[i].node.getKind()) << "[role: " << roleToString(children_[i].role) << "] ";
-        if (attributes_.size() > 0) {
-            out << "(";
-            for (int i = 0; i < (int)attributes_.size(); i++) {
-                out << attributes_[i].first << ": " << attributes_[i].second;
-                if (i == (int)attributes_.size() - 1) {
-                    out << ")";
-                }
-                else {
-                    out << ", ";
-                }
+        children_[i].node.printTreeHelper(1, isLast, children_[i].role, out);
+        isLast.pop_back();
+    }
+}
+
+void ASTNode::printTreeHelper(int depth, std::vector<bool> &isLast, ASTChildRole role, std::ostream &out) const {
+    for (int i = 0; i < depth; i++) {
+        out << ((i == depth - 1)
+                    ? (isLast[i] ? "└── " : "├── ")
+                    : (isLast[i] ? "    " : "│   "));
+    }
+    out << kindToString(kind_) << "[role: " << roleToString(role) << "] ";
+    if (attributes_.size() > 0) {
+        out << "(";
+        for (int i = 0; i < (int)attributes_.size(); i++) {
+            out << attributes_[i].first << ": " << attributes_[i].second;
+            if (i == (int)attributes_.size() - 1) {
+                out << ")";
+            }
+            else {
+                out << ", ";
             }
         }
-        out << "\n";
-        children_[i].node.printTreeHelper(depth + 1, isLast, out);
+    }
+    out << "\n";
+    for (int i = 0; i < (int)children_.size(); i++) {
+        isLast.push_back(i == ((int)children_.size() - 1));
+        children_[i].node.printTreeHelper(depth + 1, isLast, children_[i].role, out);
         isLast.pop_back();
     }
 }

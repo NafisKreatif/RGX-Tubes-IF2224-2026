@@ -133,7 +133,7 @@ namespace arion {
         std::vector<std::pair<std::string, std::string>> attributes_;
         std::vector<ASTChild> children_;
 
-        void printTreeHelper(int depth, std::vector<bool> &isLast, std::ostream& out = std::cout) const;
+        void printTreeHelper(int depth, std::vector<bool> &isLast, ASTChildRole role, std::ostream& out = std::cout) const;
     };
 
     struct ASTChild {
