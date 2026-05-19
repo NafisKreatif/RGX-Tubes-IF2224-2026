@@ -275,7 +275,6 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         symbolTable_.declareType(name, tabEntry.type, ref);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
-        std::cout << "Start decorating array type: " << name << '\n';
         const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         const ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
 
@@ -356,6 +355,19 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         symbolTable_.declareEnumeratedType(name, values);
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
+        int recordRef = symbolTable_.beginRecordType(name);
+        symbolTable_.declareRecordType(name, recordRef);
+        for (auto &&child : typeNode->getChildren()) {
+            const ASTNode &fieldNode = child.node;
+            const ASTNode *fieldTypeNode = fieldNode.childWithRole(ASTChildRole::Type);
+            
+            std::string fieldName = fieldNode.getAttribute("name");
+            std::string fieldTypeName = fieldTypeNode->getAttribute("name");
+            auto fieldTypeEntry = symbolTable_.requireType(fieldTypeName);
+            int fieldTypeRef = symbolTable_.requireTypeIndex(fieldTypeName);
+            symbolTable_.declareField(fieldName, fieldTypeEntry.type, fieldTypeRef);
+        }
+        symbolTable_.endRecordType();
     }
 }
 
