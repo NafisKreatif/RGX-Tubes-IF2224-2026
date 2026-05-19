@@ -245,7 +245,7 @@ void ASTNode::printTree(std::ostream &out) const {
     std::vector<bool> isLast = {};
     out << kindToString(kind_);
     if (attributes_.size() > 0) {
-        out << "(";
+        out << " (";
         for (int i = 0; i < (int)attributes_.size(); i++) {
             out << attributes_[i].first << ": " << attributes_[i].second;
             if (i == (int)attributes_.size() - 1) {
