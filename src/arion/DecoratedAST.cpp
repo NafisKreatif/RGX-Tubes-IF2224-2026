@@ -259,20 +259,24 @@ void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
     annotation.tabIndex = index;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
-    // std::cout << "Declared constant: " << name << ' ' << typeName << ' ' << value << std::endl;
 }
 
 void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
-    const ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
+    ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
 
     std::string name = node.getAttribute("name");
 
     if (typeNode->getKind() == ASTNodeKind::NamedType) {
         std::string typeName = typeNode->getAttribute("name");
 
-        auto tabEntry = symbolTable_.requireType(typeName);
+        const TabEntry &tabEntry = symbolTable_.requireType(typeName);
         int ref = symbolTable_.requireTypeIndex(typeName);
-        symbolTable_.declareType(name, tabEntry.type, ref);
+        int tabIndex = symbolTable_.declareType(name, tabEntry.type, ref);
+        ASTAnnotation annotation;
+        annotation.typeName = typeName;
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
         const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
@@ -289,11 +293,11 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         std::string high = "";
 
         if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            auto indexTabEntry = symbolTable_.requireType(indexName);
+            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
             indexRef = symbolTable_.requireTypeIndex(indexName);
 
             if (indexTabEntry.type == TypeKind::Subrange) {
-                auto typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
                 low = typeDescriptor.low;
                 high = typeDescriptor.high;
                 indexType = typeDescriptor.baseType;
@@ -320,14 +324,15 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         }
 
         std::string elementName = elementNode->getAttribute("name");
-        auto elementTabEntry = symbolTable_.requireType(elementName);
+        const TabEntry &elementTabEntry = symbolTable_.requireType(elementName);
         int elementRef = symbolTable_.requireTypeIndex(elementName);
+        int tabIndex = symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementTabEntry.type, elementRef);
 
-        // std::cout << "Declaring array type: " << name << ' ' << SymbolTable::typeKindToString(indexType)
-        //           << ' ' << indexRef << ' ' << low << ' ' << high << ' '
-        //           << SymbolTable::typeKindToString(elementTabEntry.type) << ' ' << elementRef << '\n';
-
-        symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementTabEntry.type, elementRef);
+        ASTAnnotation annotation;
+        annotation.typeName = "array of " + elementName;
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
         const ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
@@ -344,7 +349,12 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         TypeKind baseKind = lowType;
         int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
 
-        symbolTable_.declareSubrangeType(name, baseKind, low, high, baseRef);
+        int tabIndex = symbolTable_.declareSubrangeType(name, baseKind, low, high, baseRef);
+        ASTAnnotation annotation;
+        annotation.typeName = "subrange of " + SymbolTable::typeKindToString(baseKind);
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::EnumeratedType) {
         std::vector<std::string> values;
@@ -352,26 +362,50 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             const ASTNode &enumNode = child.node;
             values.push_back(enumNode.getAttribute("name"));
         }
-        symbolTable_.declareEnumeratedType(name, values);
+        int tabIndex = symbolTable_.declareEnumeratedType(name, values);
+        ASTAnnotation annotation;
+        annotation.typeName = "enumerated";
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
-        symbolTable_.declareRecordType(name, recordRef);
-        for (auto &&child : typeNode->getChildren()) {
-            const ASTNode &fieldNode = child.node;
-            const ASTNode *fieldTypeNode = fieldNode.childWithRole(ASTChildRole::Type);
-            
+        for (int i = 0; i < typeNode->getChildren().size(); i++){
+            ASTNode &fieldNode = typeNode->childAt(i);
+            ASTNode *fieldTypeNode = fieldNode.childWithRole(ASTChildRole::Type);
+
             std::string fieldName = fieldNode.getAttribute("name");
             std::string fieldTypeName = fieldTypeNode->getAttribute("name");
-            auto fieldTypeEntry = symbolTable_.requireType(fieldTypeName);
+            const TabEntry &fieldTypeEntry = symbolTable_.requireType(fieldTypeName);
             int fieldTypeRef = symbolTable_.requireTypeIndex(fieldTypeName);
-            symbolTable_.declareField(fieldName, fieldTypeEntry.type, fieldTypeRef);
+            int tabIndex = symbolTable_.declareField(fieldName, fieldTypeEntry.type, fieldTypeRef);
+            ASTAnnotation annotation;
+            annotation.typeName = "field";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            fieldNode.setAnnotation(annotation);
         }
         symbolTable_.endRecordType();
+        int recordTabIndex = symbolTable_.declareRecordType(name, recordRef);
+
+        ASTAnnotation annotation;
+        annotation.typeName = "record";
+        annotation.tabIndex = recordTabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
     }
 }
 
-void DecoratedAST::decorateVarDeclaration(ASTNode &node) {}
+void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
+    const ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
+    std::string name = node.getAttribute("name");
+
+    const TabEntry &typeEntry = symbolTable_.requireType(typeNode->getAttribute("name"));
+    int typeRef = symbolTable_.requireTypeIndex(typeNode->getAttribute("name"));
+    symbolTable_.declareVariable(name, typeEntry.type, typeRef);
+}
+
 void DecoratedAST::decorateType(ASTNode &node) {}
 void DecoratedAST::decorateArrayType(ASTNode &node) {}
 void DecoratedAST::decorateRange(ASTNode &node) {}
@@ -421,6 +455,10 @@ void DecoratedAST::printTree(std::ostream &out) const {
     printTreeHelper(astTree_, 0, isLast, out);
 }
 
+static bool hasAnnotation(const ASTAnnotation &annotation) {
+    return !annotation.typeName.empty() || annotation.tabIndex != -1 || annotation.arrayIndex != -1 || annotation.blockIndex != -1;
+}
+
 void DecoratedAST::printTreeHelper(const ASTNode &node, int depth, std::vector<bool> &isLast, std::ostream &out) const {
     for (int i = 0; i < depth; i++) {
         out << ((i == depth - 1)
@@ -428,22 +466,32 @@ void DecoratedAST::printTreeHelper(const ASTNode &node, int depth, std::vector<b
                     : (isLast[i] ? "    " : "│   "));
     }
     out << ASTNode::kindToString(node.getKind());
-    auto attributes = node.getAttributes();
-    if (attributes.size() > 0) {
-        out << "(";
-        for (int i = 0; i < (int)attributes.size(); i++) {
-            out << attributes[i].first << ": " << attributes[i].second;
-            if (i == (int)attributes.size() - 1) {
-                out << ")";
-            }
-            else {
-                out << ", ";
-            }
-        }
+    auto &annotation = node.annotation();
+    if (hasAnnotation(annotation)) {
+        out << "(" << "type: " << annotation.typeName;
+        if (annotation.tabIndex != -1) out << ", " << "tabIndex: " << annotation.tabIndex;
+        if (annotation.arrayIndex != -1) out << ", " << "arrayIndex: " << annotation.arrayIndex;
+        if (annotation.blockIndex != -1) out << ", " << "blockIndex: " << annotation.blockIndex;
+        if (annotation.lexicalLevel != -1) out << ", " << "lexicalLevel: " << annotation.lexicalLevel;
+        out << ")";
     }
     out << "\n";
+    // auto attributes = node.getAttributes();
+    // if (attributes.size() > 0) {
+    //     out << "(";
+    //     for (int i = 0; i < (int)attributes.size(); i++) {
+    //         out << attributes[i].first << ": " << attributes[i].second;
+    //         if (i == (int)attributes.size() - 1) {
+    //             out << ")";
+    //         }
+    //         else {
+    //             out << ", ";
+    //         }
+    //     }
+    // }
+    // out << "\n";
 
-    auto children = node.getChildren();
+    auto &children = node.getChildren();
     for (int i = 0; i < (int)children.size(); i++) {
         isLast.push_back(i == ((int)children.size() - 1));
         printTreeHelper(children[i].node, depth + 1, isLast, out);
