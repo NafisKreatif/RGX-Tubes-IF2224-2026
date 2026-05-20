@@ -386,29 +386,45 @@ void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {
     ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
     ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
 
-    int tabRef = symbolTable_.declareProcedureWithBlock(name);
-    const TabEntry &tabEntry = symbolTable_.tab().at(tabRef);
+    int tabIndex = symbolTable_.declareProcedureWithBlock(name);
+    const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
     dfs(*parametersNode);
     dfs(*blockNode);
     symbolTable_.leaveBlock();
+
+    ASTAnnotation annotation;
+    annotation.typeName = "void";
+    annotation.tabIndex = tabIndex;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
 }
 void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {
     std::string name = node.getAttribute("name");
+
     ASTNode *returnTypeNode = node.childWithRole(ASTChildRole::ReturnType);
+    ASTNode *typeNode = returnTypeNode->childWithRole(ASTChildRole::Type);
     ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
     ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
 
-    auto& returnTypeEntry = symbolTable_.requireType(returnTypeNode->getAttribute("name"));
-    int returnTypeRef = symbolTable_.requireTypeIndex(returnTypeNode->getAttribute("name"));
+    std::string typeName = typeNode->getAttribute("name");
+    auto &returnTypeEntry = symbolTable_.requireType(typeName);
+    int returnTypeRef = symbolTable_.requireTypeIndex(typeName);
 
-    int tabRef = symbolTable_.declareFunctionWithBlock(name, returnTypeEntry.type, returnTypeRef);
-    const TabEntry &tabEntry = symbolTable_.tab().at(tabRef);
+    int tabIndex = symbolTable_.declareFunctionWithBlock(name, returnTypeEntry.type, returnTypeRef);
+    const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
     dfs(*parametersNode);
     dfs(*blockNode);
     symbolTable_.leaveBlock();
+
+    ASTAnnotation annotation;
+    annotation.typeName = typeName;
+    annotation.tabIndex = tabIndex;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
 }
+
 void DecoratedAST::decorateBlock(ASTNode &node) {}
 void DecoratedAST::decorateFormalParameterList(ASTNode &node) {}
 void DecoratedAST::decorateParameter(ASTNode &node) {
