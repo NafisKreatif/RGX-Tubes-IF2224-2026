@@ -63,6 +63,15 @@ const ASTNode *ASTNode::childWithRole(ASTChildRole role) const {
     return nullptr;
 }
 
+ASTNode *ASTNode::childWithRole(ASTChildRole role) {
+    for (ASTChild &child : children_) {
+        if (child.role == role) {
+            return &child.node;
+        }
+    }
+    return nullptr;
+}
+
 void ASTNode::setAnnotation(ASTAnnotation annotation) {
     annotation_ = std::move(annotation);
 }

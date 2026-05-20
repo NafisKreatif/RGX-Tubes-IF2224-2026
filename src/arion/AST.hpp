@@ -117,6 +117,7 @@ namespace arion {
         const ASTNode &childAt(std::size_t index) const;
         ASTNode &childAt(std::size_t index);
         const ASTNode *childWithRole(ASTChildRole role) const;
+        ASTNode *childWithRole(ASTChildRole role);
 
         void setAnnotation(ASTAnnotation annotation);
         ASTAnnotation &annotation();
