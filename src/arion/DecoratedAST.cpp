@@ -14,198 +14,171 @@ void DecoratedAST::buildTableAndDecorateTree() {
 }
 
 void DecoratedAST::dfs(ASTNode &astNode) {
-    decorateNode(astNode);
-
-    for (size_t i = 0; i < astNode.getChildren().size(); i++) {
-        dfs(astNode.childAt(i));
+    if (decorateNode(astNode)) {
+        for (size_t i = 0; i < astNode.getChildren().size(); i++) {
+            dfs(astNode.childAt(i));
+        }
     }
 }
 
-void DecoratedAST::decorateNode(ASTNode &astNode) {
+bool DecoratedAST::decorateNode(ASTNode &astNode) {
     switch (astNode.getKind()) {
         case ASTNodeKind::Program:
             decorateProgram(astNode);
-            break;
-
-        case ASTNodeKind::Declarations:
-            // decorateDeclarations(astNode);
-            break;
-
-        case ASTNodeKind::ConstDeclarations:
-            // decorateConstDeclarations(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ConstDeclaration:
             decorateConstDeclaration(astNode);
-            break;
-
-        case ASTNodeKind::TypeDeclarations:
-            // decorateTypeDeclarations(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::TypeDeclaration:
             decorateTypeDeclaration(astNode);
-            break;
-
-        case ASTNodeKind::VarDeclarations:
-            // decorateVarDeclarations(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::VarDeclaration:
             decorateVarDeclaration(astNode);
-            break;
-
-        case ASTNodeKind::FieldDeclaration:
-            // decorateFieldDeclaration(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::ProcedureDeclaration:
             decorateProcedureDeclaration(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::FunctionDeclaration:
             decorateFunctionDeclaration(astNode);
-            break;
-
-        case ASTNodeKind::Parameters:
-            // decorateParameters(astNode);
-            break;
-
-        case ASTNodeKind::ParameterGroup:
-            decorateParameterGroup(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::Parameter:
-            // decorateParameter(astNode);
-            break;
+            decorateParameter(astNode);
+            return false;
 
         case ASTNodeKind::Block:
             decorateBlock(astNode);
-            break;
+            return false;
 
         case ASTNodeKind::CompoundStatement:
             decorateCompoundStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::StatementList:
             decorateStatementList(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::EmptyStatement:
             // decorateEmptyStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::Assignment:
             // decorateAssignment(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::IfStatement:
             decorateIfStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::CaseStatement:
             decorateCaseStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::CaseBranch:
             // decorateCaseBranch(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::WhileStatement:
             decorateWhileStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::RepeatStatement:
             decorateRepeatStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ForStatement:
             decorateForStatement(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ProcedureCall:
             // decorateProcedureCall(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::FunctionCall:
             // decorateFunctionCall(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::Arguments:
             // decorateArguments(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::BinaryOperation:
             // decorateBinaryOperation(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::UnaryOperation:
             // decorateUnaryOperation(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::Variable:
             decorateVariable(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ArrayAccess:
             // decorateArrayAccess(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::FieldAccess:
             // decorateFieldAccess(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::IntegerLiteral:
             // decorateIntegerLiteral(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::RealLiteral:
             // decorateRealLiteral(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::CharLiteral:
             // decorateCharLiteral(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::StringLiteral:
             // decorateStringLiteral(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::BooleanLiteral:
             // decorateBooleanLiteral(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::NamedType:
             // decorateNamedType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ReturnType:
             // decorateReturnType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::ArrayType:
-            decorateArrayType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::RecordType:
-            decorateRecordType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::RangeType:
             // decorateRangeType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::EnumeratedType:
             // decorateEnumeratedType(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::Identifier:
             // decorateIdentifier(astNode);
-            break;
+            return true;
 
         case ASTNodeKind::Unknown:
             // decorateUnknown(astNode);
-            break;
+            return true;
+
+        default:
+            return true;
     }
 }
 
@@ -255,7 +228,7 @@ void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
 
     int index = symbolTable_.declareConstant(name, typeKind, value);
     ASTAnnotation annotation;
-    annotation.typeName = typeName;
+    annotation.typeName = symbolTable_.typeKindToString(typeKind);
     annotation.tabIndex = index;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
@@ -319,17 +292,13 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             indexType = lowType;
         }
 
-        if (indexType == TypeKind::Real) {
-            throw std::runtime_error("Range cannot be a real number: " + name);
-        }
-
         std::string elementName = elementNode->getAttribute("name");
         const TabEntry &elementTabEntry = symbolTable_.requireType(elementName);
         int elementRef = symbolTable_.requireTypeIndex(elementName);
         int tabIndex = symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementTabEntry.type, elementRef);
 
         ASTAnnotation annotation;
-        annotation.typeName = "array of " + elementName;
+        annotation.typeName = "array";
         annotation.tabIndex = tabIndex;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
@@ -351,7 +320,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
 
         int tabIndex = symbolTable_.declareSubrangeType(name, baseKind, low, high, baseRef);
         ASTAnnotation annotation;
-        annotation.typeName = "subrange of " + SymbolTable::typeKindToString(baseKind);
+        annotation.typeName = "subrange";
         annotation.tabIndex = tabIndex;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
@@ -371,7 +340,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
-        for (int i = 0; i < typeNode->getChildren().size(); i++){
+        for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             ASTNode *fieldTypeNode = fieldNode.childWithRole(ASTChildRole::Type);
 
@@ -403,22 +372,118 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
 
     const TabEntry &typeEntry = symbolTable_.requireType(typeNode->getAttribute("name"));
     int typeRef = symbolTable_.requireTypeIndex(typeNode->getAttribute("name"));
-    symbolTable_.declareVariable(name, typeEntry.type, typeRef);
+    int tabIndex = symbolTable_.declareVariable(name, typeEntry.type, typeRef);
+
+    ASTAnnotation annotation;
+    annotation.typeName = typeEntry.identifier;
+    annotation.tabIndex = tabIndex;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
 }
 
-void DecoratedAST::decorateType(ASTNode &node) {}
-void DecoratedAST::decorateArrayType(ASTNode &node) {}
-void DecoratedAST::decorateRange(ASTNode &node) {}
-void DecoratedAST::decorateEnumerated(ASTNode &node) {}
-void DecoratedAST::decorateRecordType(ASTNode &node) {}
-void DecoratedAST::decorateFieldList(ASTNode &node) {}
-void DecoratedAST::decorateFieldPart(ASTNode &node) {}
-void DecoratedAST::decorateSubprogramDeclaration(ASTNode &node) {}
-void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {}
-void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {}
+void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {
+    std::string name = node.getAttribute("name");
+    ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
+    ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
+
+    int tabRef = symbolTable_.declareProcedureWithBlock(name);
+    const TabEntry &tabEntry = symbolTable_.tab().at(tabRef);
+    symbolTable_.enterBlockByIndex(tabEntry.ref);
+    dfs(*parametersNode);
+    dfs(*blockNode);
+    symbolTable_.leaveBlock();
+}
+void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {
+    std::string name = node.getAttribute("name");
+    ASTNode *returnTypeNode = node.childWithRole(ASTChildRole::ReturnType);
+    ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
+    ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
+
+    auto& returnTypeEntry = symbolTable_.requireType(returnTypeNode->getAttribute("name"));
+    int returnTypeRef = symbolTable_.requireTypeIndex(returnTypeNode->getAttribute("name"));
+
+    int tabRef = symbolTable_.declareFunctionWithBlock(name, returnTypeEntry.type, returnTypeRef);
+    const TabEntry &tabEntry = symbolTable_.tab().at(tabRef);
+    symbolTable_.enterBlockByIndex(tabEntry.ref);
+    dfs(*parametersNode);
+    dfs(*blockNode);
+    symbolTable_.leaveBlock();
+}
 void DecoratedAST::decorateBlock(ASTNode &node) {}
 void DecoratedAST::decorateFormalParameterList(ASTNode &node) {}
-void DecoratedAST::decorateParameterGroup(ASTNode &node) {}
+void DecoratedAST::decorateParameter(ASTNode &node) {
+    const ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
+    std::string name = node.getAttribute("name");
+
+    if (typeNode->getKind() == ASTNodeKind::NamedType) {
+        std::string typeName = typeNode->getAttribute("name");
+
+        const TabEntry &tabEntry = symbolTable_.requireType(typeName);
+        int ref = symbolTable_.requireTypeIndex(typeName);
+        int tabIndex = symbolTable_.declareType(name, tabEntry.type, ref);
+
+        ASTAnnotation annotation;
+        annotation.typeName = typeName;
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+    }
+    else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
+        const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
+        const ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
+
+        if (indexNode == nullptr || elementNode == nullptr) {
+            throw std::runtime_error("Can't get index or element of array: " + name);
+        }
+
+        std::string indexName = indexNode->getAttribute("name");
+        TypeKind indexType;
+        int indexRef = 0;
+        std::string low = "";
+        std::string high = "";
+
+        if (indexNode->getKind() == ASTNodeKind::Identifier) {
+            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+            indexRef = symbolTable_.requireTypeIndex(indexName);
+
+            if (indexTabEntry.type == TypeKind::Subrange) {
+                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                low = typeDescriptor.low;
+                high = typeDescriptor.high;
+                indexType = typeDescriptor.baseType;
+            }
+            else {
+                throw std::runtime_error("Identifier is not an array range: " + name);
+            }
+        }
+        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            low = lowNode->getAttribute("value");
+            high = highNode->getAttribute("value");
+            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
+            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
+            if (lowType != highType) {
+                throw std::runtime_error("Range low and high type is not the same: " + name);
+            }
+            indexType = lowType;
+        }
+
+        std::string elementName = elementNode->getAttribute("name");
+        const TabEntry &elementTabEntry = symbolTable_.requireType(elementName);
+        int elementRef = symbolTable_.requireTypeIndex(elementName);
+        int typeRef = symbolTable_.declareArrayType("arrparam" + std::to_string(array_parameter_count++),
+                                                    indexType, indexRef, low, high, elementTabEntry.type, elementRef);
+
+        int paramRef = symbolTable_.declareParameter(name, TypeKind::Array, typeRef);
+
+        ASTAnnotation annotation;
+        annotation.typeName = "array";
+        annotation.tabIndex = paramRef;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+    }
+}
 void DecoratedAST::decorateCompoundStatement(ASTNode &node) {}
 void DecoratedAST::decorateStatementList(ASTNode &node) {}
 void DecoratedAST::decorateStatement(ASTNode &node) {}
@@ -466,30 +531,46 @@ void DecoratedAST::printTreeHelper(const ASTNode &node, int depth, std::vector<b
                     : (isLast[i] ? "    " : "│   "));
     }
     out << ASTNode::kindToString(node.getKind());
+    auto attributes = node.getAttributes();
+    if (attributes.size() > 0) {
+        out << "(";
+        for (int i = 0; i < (int)attributes.size(); i++) {
+            out << attributes[i].first << ": " << attributes[i].second;
+            if (i == (int)attributes.size() - 1) {
+                out << ")";
+            }
+            else {
+                out << ", ";
+            }
+        }
+    }
     auto &annotation = node.annotation();
     if (hasAnnotation(annotation)) {
-        out << "(" << "type: " << annotation.typeName;
-        if (annotation.tabIndex != -1) out << ", " << "tabIndex: " << annotation.tabIndex;
-        if (annotation.arrayIndex != -1) out << ", " << "arrayIndex: " << annotation.arrayIndex;
-        if (annotation.blockIndex != -1) out << ", " << "blockIndex: " << annotation.blockIndex;
-        if (annotation.lexicalLevel != -1) out << ", " << "lexicalLevel: " << annotation.lexicalLevel;
+        bool first = true;
+        out << " -> (";
+        if (!annotation.typeName.empty()) {
+            out << "type: " << annotation.typeName;
+            first = false;
+        }
+        if (annotation.tabIndex != -1) {
+            out << (first ? "" : ", ") << "tabIndex: " << annotation.tabIndex;
+            first = false;
+        }
+        if (annotation.arrayIndex != -1) {
+            out << (first ? "" : ", ") << "arrayIndex: " << annotation.arrayIndex;
+            first = false;
+        }
+        if (annotation.blockIndex != -1) {
+            out << (first ? "" : ", ") << "blockIndex: " << annotation.blockIndex;
+            first = false;
+        }
+        if (annotation.lexicalLevel != -1) {
+            out << (first ? "" : ", ") << "lexicalLevel: " << annotation.lexicalLevel;
+            first = false;
+        }
         out << ")";
     }
     out << "\n";
-    // auto attributes = node.getAttributes();
-    // if (attributes.size() > 0) {
-    //     out << "(";
-    //     for (int i = 0; i < (int)attributes.size(); i++) {
-    //         out << attributes[i].first << ": " << attributes[i].second;
-    //         if (i == (int)attributes.size() - 1) {
-    //             out << ")";
-    //         }
-    //         else {
-    //             out << ", ";
-    //         }
-    //     }
-    // }
-    // out << "\n";
 
     auto &children = node.getChildren();
     for (int i = 0; i < (int)children.size(); i++) {

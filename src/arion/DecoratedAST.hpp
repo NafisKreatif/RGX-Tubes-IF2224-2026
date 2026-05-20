@@ -12,29 +12,22 @@ namespace arion
         ASTNode astTree_;
         SymbolTable symbolTable_;
 
+        size_t array_parameter_count = 0;
          
         void dfs(ASTNode &astNode);
         void buildTableAndDecorateTree();
 
-        void decorateNode(ASTNode &node);
+        bool decorateNode(ASTNode &node); // Return need to recursively decorate or no
+
         void decorateProgram(ASTNode &node);
-        void decorateDeclarationPart(ASTNode &node);
         void decorateConstDeclaration(ASTNode &node);
         void decorateTypeDeclaration(ASTNode &node);
         void decorateVarDeclaration(ASTNode &node);
-        void decorateType(ASTNode &node);
-        void decorateArrayType(ASTNode &node);
-        void decorateRange(ASTNode &node);
-        void decorateEnumerated(ASTNode &node);
-        void decorateRecordType(ASTNode &node);
-        void decorateFieldList(ASTNode &node);
-        void decorateFieldPart(ASTNode &node);
-        void decorateSubprogramDeclaration(ASTNode &node);
         void decorateProcedureDeclaration(ASTNode &node);
         void decorateFunctionDeclaration(ASTNode &node);
         void decorateBlock(ASTNode &node);
         void decorateFormalParameterList(ASTNode &node);
-        void decorateParameterGroup(ASTNode &node);
+        void decorateParameter(ASTNode &node);
         void decorateCompoundStatement(ASTNode &node);
         void decorateStatementList(ASTNode &node);
         void decorateStatement(ASTNode &node);
