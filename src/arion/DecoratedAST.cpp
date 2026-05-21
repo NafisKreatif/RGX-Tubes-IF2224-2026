@@ -55,18 +55,11 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             decorateBlock(astNode);
             return false;
 
-        case ASTNodeKind::CompoundStatement:
-            return true;
-
-        case ASTNodeKind::StatementList:
-            return true;
-
         case ASTNodeKind::EmptyStatement:
-            // decorateEmptyStatement(astNode);
             return true;
 
         case ASTNodeKind::Assignment:
-            // decorateAssignment(astNode);
+            decorateAssignmentStatement(astNode);
             return true;
 
         case ASTNodeKind::IfStatement:
@@ -117,54 +110,8 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             decorateVariable(astNode);
             return true;
 
-        case ASTNodeKind::ArrayAccess:
-            // decorateArrayAccess(astNode);
-            return true;
-
-        case ASTNodeKind::FieldAccess:
-            // decorateFieldAccess(astNode);
-            return true;
-
-        case ASTNodeKind::IntegerLiteral:
-            // decorateIntegerLiteral(astNode);
-            return true;
-
-        case ASTNodeKind::RealLiteral:
-            // decorateRealLiteral(astNode);
-            return true;
-
-        case ASTNodeKind::CharLiteral:
-            // decorateCharLiteral(astNode);
-            return true;
-
-        case ASTNodeKind::StringLiteral:
-            // decorateStringLiteral(astNode);
-            return true;
-
-        case ASTNodeKind::BooleanLiteral:
-            // decorateBooleanLiteral(astNode);
-            return true;
-
-        case ASTNodeKind::NamedType:
-            // decorateNamedType(astNode);
-            return true;
-
         case ASTNodeKind::ReturnType:
             // decorateReturnType(astNode);
-            return true;
-
-        case ASTNodeKind::ArrayType:
-            return true;
-
-        case ASTNodeKind::RecordType:
-            return true;
-
-        case ASTNodeKind::RangeType:
-            // decorateRangeType(astNode);
-            return true;
-
-        case ASTNodeKind::EnumeratedType:
-            // decorateEnumeratedType(astNode);
             return true;
 
         case ASTNodeKind::Identifier:
@@ -200,8 +147,9 @@ static TypeKind nodeKindLiteralToTypeKind(ASTNodeKind kind) {
             return TypeKind::String;
         case ASTNodeKind::BooleanLiteral:
             return TypeKind::Boolean;
+        default:
+            return TypeKind::Unknown;
     }
-    return TypeKind::Unknown;
 }
 
 void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
@@ -240,8 +188,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         std::string typeName = typeNode->getAttribute("name");
 
         const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int ref = symbolTable_.requireTypeIndex(typeName);
-        int tabIndex = symbolTable_.declareType(name, tabEntry.type, ref);
+        int tabIndex = symbolTable_.declareType(name, tabEntry.type, tabEntry.ref);
         ASTAnnotation annotation;
         annotation.typeName = typeName;
         annotation.tabIndex = tabIndex;
@@ -411,12 +358,13 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node) {
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrIndex = symbolTable_.declareArrayType("_anonymousType" + std::to_string(anonymousTypeCount_++), indexType, indexRef, low, high, elementType, elementRef);
+        int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
         int tabIndex = symbolTable_.declareField(name, TypeKind::Array, arrIndex);
 
         ASTAnnotation annotation;
         annotation.typeName = "array";
         annotation.tabIndex = tabIndex;
+        annotation.arrayIndex = arrIndex;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -614,8 +562,7 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         std::string typeName = typeNode->getAttribute("name");
 
         const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int ref = symbolTable_.requireTypeIndex(typeName);
-        int tabIndex = symbolTable_.declareVariable(name, tabEntry.type, ref);
+        int tabIndex = symbolTable_.declareVariable(name, tabEntry.type, tabEntry.ref);
         ASTAnnotation annotation;
         annotation.typeName = typeName;
         annotation.tabIndex = tabIndex;
@@ -664,12 +611,13 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrIndex = symbolTable_.declareArrayType("_anonymousType" + std::to_string(anonymousTypeCount_++), indexType, indexRef, low, high, elementType, elementRef);
+        int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
         int tabIndex = symbolTable_.declareVariable(name, TypeKind::Array, arrIndex);
 
         ASTAnnotation annotation;
         annotation.typeName = "array";
         annotation.tabIndex = tabIndex;
+        annotation.arrayIndex = arrIndex;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -832,14 +780,13 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int typeRef = symbolTable_.declareArrayType("_anonymousType" + std::to_string(anonymousTypeCount_++),
-                                                    indexType, indexRef, low, high, elementType, elementRef);
-
-        int paramRef = symbolTable_.declareParameter(name, TypeKind::Array, typeRef);
+        int arrRef = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
+        int paramRef = symbolTable_.declareParameter(name, TypeKind::Array, arrRef);
 
         ASTAnnotation annotation;
         annotation.typeName = "array";
         annotation.tabIndex = paramRef;
+        annotation.arrayIndex = arrRef;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -864,12 +811,18 @@ void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     else if (targetNode->getKind() == ASTNodeKind::ArrayAccess) {
         targetType = decorateArrayAccess(*targetNode);
     }
+    else if (targetNode->getKind() == ASTNodeKind::FieldAccess) {
+        targetType = decorateFieldAccess(*targetNode);
+    }
 
     ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
     std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
 
     if (!isAssignmentCompatible(targetType.first, targetType.second, valueType.first, valueType.second)) {
-        throw std::runtime_error("Incompatible type");
+        throw std::runtime_error("Incompatible type: " +
+                                 symbolTable_.typeKindToString(targetType.second) +
+                                 " := " +
+                                 symbolTable_.typeKindToString(valueType.second));
     }
 }
 void DecoratedAST::decorateIfStatement(ASTNode &node) {
@@ -912,7 +865,8 @@ void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
 }
 void DecoratedAST::decorateForStatement(ASTNode &node) {
 }
-void DecoratedAST::decorateProcedureCall(ASTNode &node) {}
+void DecoratedAST::decorateProcedureCall(ASTNode &node) {
+}
 std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
     return {0, TypeKind::Unknown};
 }
@@ -930,16 +884,17 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
                                  symbolTable_.typeKindToString(rightType.second));
     }
 
+    std::pair<int, TypeKind> type = {0, TypeKind::Unknown};
     if (op == "+") {
         if (isStringType(leftType.second) && isStringType(rightType.second)) {
-            return {26, TypeKind::String};
+            type = {26, TypeKind::String};
         }
         else if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
             if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
-                return {23, TypeKind::Real};
+                type = {23, TypeKind::Real};
             }
             else {
-                return {22, TypeKind::Integer};
+                type = {22, TypeKind::Integer};
             }
         }
         else {
@@ -952,10 +907,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     else if (op == "-" || op == "*") {
         if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
             if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
-                return {23, TypeKind::Real};
+                type = {23, TypeKind::Real};
             }
             else {
-                return {22, TypeKind::Integer};
+                type = {22, TypeKind::Integer};
             }
         }
         else {
@@ -967,7 +922,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "div" || op == "mod") {
         if (leftType.second == TypeKind::Integer || rightType.second == TypeKind::Integer) {
-            return {22, TypeKind::Integer};
+            type = {22, TypeKind::Integer};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -978,7 +933,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "/") {
         if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
-            return {23, TypeKind::Real};
+            type = {23, TypeKind::Real};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -989,7 +944,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "and" || op == "or") {
         if (isBooleanType(leftType.second) && isBooleanType(rightType.second)) {
-            return {24, TypeKind::Boolean};
+            type = {24, TypeKind::Boolean};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -999,11 +954,11 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         }
     }
     else if (op == "==" || op == "<>") {
-        return {24, TypeKind::Boolean};
+        type = {24, TypeKind::Boolean};
     }
     else if (op == ">" || op == ">=" || op == "<" || op == "<=") {
         if (isOrderedType(leftType.second) && isOrderedType(rightType.second)) {
-            return {24, TypeKind::Boolean};
+            type = {24, TypeKind::Boolean};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -1016,7 +971,12 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         throw std::runtime_error("Unrecognized binary operator: " + op);
     }
 
-    return {0, TypeKind::Unknown};
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(type.second);
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
+
+    return type;
 }
 std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
     std::string op = node.getAttribute("operator");
@@ -1046,6 +1006,11 @@ std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
                                  symbolTable_.typeKindToString(expressionType.second));
     }
 
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(expressionType.second);
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
+
     return expressionType;
 }
 std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
@@ -1065,6 +1030,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     std::string varName = varNode->getAttribute("name");
     int varRef = symbolTable_.requireLookupIndex(varName);
     const TabEntry &varEntry = symbolTable_.requireLookup(varName);
+
     int arrRef = varEntry.ref;
     const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
 
@@ -1079,23 +1045,27 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     return {arrEntry.elementRef, arrEntry.elementType};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
-    ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
-    std::string varName = varNode->getAttribute("name");
-    int varRef = symbolTable_.requireLookupIndex(varName);
-    const TabEntry &varEntry = symbolTable_.requireLookup(varName);
+    // ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
+    // std::string varName = varNode->getAttribute("name");
+    // int varRef = symbolTable_.requireLookupIndex(varName);
+    // const TabEntry &varEntry = symbolTable_.requireLookup(varName);
 
-    std::string fieldName = node.getAttribute("name");
-    int fieldRef = symbolTable_.requireLookupIndex(fieldName);
-    const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+    // std::cout << varRef << ' ' << varEntry.ref << "\n";
+    // symbolTable_.enterBlockByIndex(varEntry.ref);
+    // std::string fieldName = node.getAttribute("field");
+    // int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+    // const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+    // symbolTable_.leaveBlock();
 
-    for (int i = 0; i < node.getChildren().size(); i++) {
-        const ASTChild &child = node.getChildren().at(i);
-        if (child.role == ASTChildRole::Index) {
-            ASTNode &childNode = node.childAt(i);
-            // idk decorate the index i guess....
-        }
-    }
-    return {fieldRef, fieldEntry.type};
+    // for (int i = 0; i < node.getChildren().size(); i++) {
+    //     const ASTChild &child = node.getChildren().at(i);
+    //     if (child.role == ASTChildRole::Index) {
+    //         ASTNode &childNode = node.childAt(i);
+    //         // idk decorate the index i guess....
+    //     }
+    // }
+    // return {fieldRef, fieldEntry.type};
+    return {0, TypeKind::Unknown};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
     std::pair<int, TypeKind> valueType = {0, TypeKind::Unknown};
@@ -1128,7 +1098,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
 }
 
 bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
-    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return false;
+    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return true;
     if (typeRef1 == typeRef2) return true;
     if (isBooleanType(type1) && isBooleanType(type2)) return true;
     if (isStringType(type1) && isStringType(type2)) return !(type1 == TypeKind::Char && type2 == TypeKind::String);
@@ -1141,7 +1111,7 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
     return false;
 }
 bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
-    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return false;
+    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return true;
     if (typeRef1 == typeRef2) return true;
     if (isBooleanType(type1) && isBooleanType(type2)) return true;
     if (isStringType(type1) && isStringType(type2)) return true;
@@ -1170,6 +1140,9 @@ bool DecoratedAST::isBooleanType(TypeKind type) {
     return type == TypeKind::Boolean;
 }
 
+static bool hasAnnotation(const ASTAnnotation &annotation) {
+    return !annotation.typeName.empty() || annotation.tabIndex != -1 || annotation.arrayIndex != -1 || annotation.blockIndex != -1;
+}
 void DecoratedAST::printTable(std::ostream &out) const {
     out << "tab:\n";
     out << symbolTable_.dumpTab() << "\n";
@@ -1180,16 +1153,10 @@ void DecoratedAST::printTable(std::ostream &out) const {
     out << "type:\n";
     out << symbolTable_.dumpTypeDescriptors() << "\n";
 }
-
 void DecoratedAST::printTree(std::ostream &out) const {
     std::vector<bool> isLast = {};
     printTreeHelper(astTree_, 0, isLast, out);
 }
-
-static bool hasAnnotation(const ASTAnnotation &annotation) {
-    return !annotation.typeName.empty() || annotation.tabIndex != -1 || annotation.arrayIndex != -1 || annotation.blockIndex != -1;
-}
-
 void DecoratedAST::printTreeHelper(const ASTNode &node, int depth, std::vector<bool> &isLast, std::ostream &out, ASTChildRole role) const {
     for (int i = 0; i < depth; i++) {
         out << ((i == depth - 1)
