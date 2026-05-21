@@ -287,7 +287,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateFieldDeclaration(fieldNode);
+            decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType(name, recordRef);
@@ -300,7 +300,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         node.setAnnotation(annotation);
     }
 }
-void DecoratedAST::decorateFieldDeclaration(ASTNode &node) {
+void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
     ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
     std::string name = node.getAttribute("name");
 
@@ -308,8 +308,7 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node) {
         std::string typeName = typeNode->getAttribute("name");
 
         const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int ref = symbolTable_.requireTypeIndex(typeName);
-        int tabIndex = symbolTable_.declareField(name, tabEntry.type, ref);
+        int tabIndex = symbolTable_.declareField(name, tabEntry.type, recordBlockRef);
         ASTAnnotation annotation;
         annotation.typeName = typeName;
         annotation.tabIndex = tabIndex;
@@ -411,7 +410,7 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateFieldDeclaration(fieldNode);
+            decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
@@ -540,7 +539,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         for (int i = 0; i < typeNode.getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode.childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateFieldDeclaration(fieldNode);
+            decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
 
@@ -664,7 +663,7 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateFieldDeclaration(fieldNode);
+            decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
@@ -729,8 +728,7 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         std::string typeName = typeNode->getAttribute("name");
 
         const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int ref = symbolTable_.requireTypeIndex(typeName);
-        int tabIndex = symbolTable_.declareType(name, tabEntry.type, ref);
+        int tabIndex = symbolTable_.declareType(name, tabEntry.type, tabEntry.ref);
 
         ASTAnnotation annotation;
         annotation.typeName = typeName;
@@ -1047,6 +1045,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
     // ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
     // std::string varName = varNode->getAttribute("name");
+    
     // int varRef = symbolTable_.requireLookupIndex(varName);
     // const TabEntry &varEntry = symbolTable_.requireLookup(varName);
 
