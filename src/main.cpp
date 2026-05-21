@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/milestone-3/decorated-ast-" + inputPath.filename().string();
+    std::filesystem::path outputPath = "test/milestone-3/dast-" + inputPath.filename().string();
     std::ofstream out(outputPath);
 
     arion::Tokenizer tokenizer;
@@ -34,10 +34,8 @@ int main(int argc, char **argv) {
         arion::ASTBuilder builder;
 
         arion::ASTNode astTree = builder.build(parseResult);
-        astTree.printTree(out);
-
         arion::DecoratedAST decoratedAstTree(astTree);
-
+        
         decoratedAstTree.printTable(out);
         decoratedAstTree.printTree(out);
 
