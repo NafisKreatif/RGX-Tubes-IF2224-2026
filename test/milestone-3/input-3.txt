@@ -1,0 +1,81 @@
+program Test;
+
+const
+  Min == 1;
+  Max == 5;
+  StartChar == 'a';
+  Label == 'level';
+
+type
+  Bulat == integer;
+  SmallRange == 1 .. 5;
+  Direction == (Left, Right, Center);
+  Pair == record
+    first, second: integer;
+    tag: char
+  end;
+  Circle == record
+    coords: record x, y: integer end;
+    radius: real
+  end;
+  NumberList == array[1 .. 5] of integer;
+  Matrix == array[1 .. 10] of array[1 .. 10] of array[1 .. 10] of real;
+
+var
+  i, total, middle: integer;
+  numbers: NumberList;
+  pairValue: Pair;
+  isValid, isDone: boolean;
+
+function EulerDistance(x, y: real; z: real): real;
+begin
+  EulerDistance := x * x + y * y + z * z; 
+end;
+
+procedure PrintValue(value: integer; data: array[1 .. 5] of integer);
+begin
+  writeln('value = ', value)
+end;
+
+function MirrorIndex(index: integer): integer;
+var
+  result: integer;
+begin
+  result := Max - index + Min;
+  MirrorIndex := result
+end;
+
+begin
+  i := Min;
+  total := 0;
+  middle := (Min + Max) div 2;
+  numbers[1, 2, 3] := 9;
+  pairValue.first := numbers[1] * 2;
+  pairValue.second := pairValue.first / 2;
+  pairValue.tag := StartChar;
+  isValid := true;
+  isDone := false;
+  if not (pairValue.first == pairValue.second) then isValid := false else PrintValue(pairValue.first, numbers);
+  while i <= Max do
+  begin
+    i := i + 1
+  end;
+  repeat
+    total := total + MirrorIndex(i) mod 3;
+    i := i - 1
+  until i < Min;
+  for i := Min to Max do
+  begin
+    PrintValue(i, numbers)
+  end;
+  for i := Max downto Min do
+  begin
+    total := total + i
+  end;
+  case total of
+    0: total := total + 1;
+    1, 2: total := total - 1;
+    3: PrintValue(total, numbers)
+  end;
+  isDone := isValid and true or false
+end.

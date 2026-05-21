@@ -1,0 +1,400 @@
+tab:
+ idx |      identifier |      object |        type | ref | nrm | lvl | adr | link |   value |  initialized 
+-----|-----------------|-------------|-------------|-----|-----|-----|-----|------|---------|--------------
+   0 |           <nil> |    reserved |        void |   0 |   1 |   0 |   0 |    0 |         |            1 
+   1 |             and |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   2 |           array |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   3 |           begin |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   4 |            case |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   5 |           const |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   6 |             div |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   7 |          downto |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   8 |              do |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+   9 |            else |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  10 |             end |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  11 |             for |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  12 |        function |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  13 |              if |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  14 |             mod |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  15 |             not |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  16 |              of |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  17 |              or |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  18 |       procedure |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  19 |         program |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  20 |          record |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  21 |          repeat |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  22 |         integer |        type |     integer |   0 |   1 |   0 |   0 |    0 |         |            1 
+  23 |            real |        type |        real |   0 |   1 |   0 |   0 |    0 |         |            1 
+  24 |         boolean |        type |     boolean |   0 |   1 |   0 |   0 |    0 |         |            1 
+  25 |            char |        type |        char |   0 |   1 |   0 |   0 |    0 |         |            1 
+  26 |          string |        type |      string |   0 |   1 |   0 |   0 |    0 |         |            1 
+  27 |            then |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  28 |              to |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  29 |            type |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  30 |           until |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  31 |             var |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  32 |           while |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |         |            1 
+  33 |            true |    constant |     boolean |   0 |   1 |   0 |   1 |    0 |    true |            1 
+  34 |           false |    constant |     boolean |   0 |   1 |   0 |   0 |    0 |   false |            1 
+  35 |          readln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |         |            1 
+  36 |         writeln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |         |            1 
+  37 |           write |   procedure |        void |   0 |   1 |   0 |   0 |    0 |         |            1 
+  38 |            Test |     program |        void |   0 |   1 |   0 |   0 |    0 |         |            1 
+  39 |             Min |    constant |     integer |   0 |   1 |   0 |   0 |   38 |       1 |            1 
+  40 |             Max |    constant |     integer |   0 |   1 |   0 |   0 |   39 |       5 |            1 
+  41 |       StartChar |    constant |        char |   0 |   1 |   0 |   0 |   40 |     'a' |            1 
+  42 |           Label |    constant |      string |   0 |   1 |   0 |   0 |   41 | 'level' |            1 
+  43 |           Bulat |        type |     integer |  22 |   1 |   0 |   0 |   42 |         |            1 
+  44 |      SmallRange |        type |    subrange |   0 |   1 |   0 |   0 |   43 |         |            1 
+  45 |       Direction |        type |  enumerated |   1 |   1 |   0 |   0 |   44 |         |            1 
+  46 |            Left |    constant |  enumerated |   1 |   1 |   0 |   0 |   45 |       0 |            1 
+  47 |           Right |    constant |  enumerated |   1 |   1 |   0 |   1 |   46 |       1 |            1 
+  48 |          Center |    constant |  enumerated |   1 |   1 |   0 |   2 |   47 |       2 |            1 
+  49 |           first |       field |     integer |  22 |   1 |   1 |   0 |    0 |         |            0 
+  50 |          second |       field |     integer |  22 |   1 |   1 |   1 |   49 |         |            0 
+  51 |             tag |       field |        char |  25 |   1 |   1 |   2 |   50 |         |            0 
+  52 |            Pair |        type |      record |   1 |   1 |   0 |   0 |   48 |         |            1 
+  53 |               x |       field |     integer |  22 |   1 |   2 |   0 |    0 |         |            0 
+  54 |               y |       field |     integer |  22 |   1 |   2 |   1 |   53 |         |            0 
+  55 | _anonymousType0 |        type |      record |   3 |   1 |   1 |   0 |    0 |         |            1 
+  56 |          coords |       field |      record |   3 |   1 |   1 |   0 |   55 |         |            0 
+  57 |          radius |       field |        real |  23 |   1 |   1 |   2 |   56 |         |            0 
+  58 |          Circle |        type |      record |   2 |   1 |   0 |   0 |   52 |         |            1 
+  59 |      NumberList |        type |       array |   0 |   1 |   0 |   0 |   58 |         |            1 
+  60 |          Matrix |        type |       array |   3 |   1 |   0 |   0 |   59 |         |            1 
+  61 |               i |    variable |     integer |  22 |   1 |   0 |   0 |   60 |         |            0 
+  62 |           total |    variable |     integer |  22 |   1 |   0 |   1 |   61 |         |            0 
+  63 |          middle |    variable |     integer |  22 |   1 |   0 |   2 |   62 |         |            0 
+  64 |         numbers |    variable |       array |  59 |   1 |   0 |   3 |   63 |         |            0 
+  65 |       pairValue |    variable |      record |  52 |   1 |   0 |   4 |   64 |         |            0 
+  66 |         isValid |    variable |     boolean |  24 |   1 |   0 |   5 |   65 |         |            0 
+  67 |          isDone |    variable |     boolean |  24 |   1 |   0 |   6 |   66 |         |            0 
+  68 |   EulerDistance |    function |        real |   4 |   1 |   0 |   0 |   67 |         |            1 
+  69 |               x |        type |        real |  23 |   1 |   1 |   0 |    0 |         |            1 
+  70 |               y |        type |        real |  23 |   1 |   1 |   0 |   69 |         |            1 
+  71 |               z |        type |        real |  23 |   1 |   1 |   0 |   70 |         |            1 
+  72 |      PrintValue |   procedure |        void |   5 |   1 |   0 |   0 |   68 |         |            1 
+  73 |           value |        type |     integer |  22 |   1 |   1 |   0 |    0 |         |            1 
+  74 | _anonymousType1 |        type |       array |   4 |   1 |   1 |   0 |   73 |         |            1 
+  75 |            data |   parameter |       array |  74 |   1 |   1 |   0 |   74 |         |            0 
+  76 |     MirrorIndex |    function |     integer |   6 |   1 |   0 |   0 |   72 |         |            1 
+  77 |           index |        type |     integer |  22 |   1 |   1 |   0 |    0 |         |            1 
+
+atab:
+ idx |     idxType | idxRef |      elType |  elRef |  low | high | resolved |  lowOrd | highOrd | elSize | size 
+-----|-------------|--------|-------------|--------|------|------|----------|---------|---------|--------|------
+   0 |     integer |      0 |     integer |     22 |    1 |    5 |        1 |       1 |       5 |      1 |    5 
+   1 |     integer |      0 |        real |     23 |    1 |   10 |        1 |       1 |      10 |      1 |   10 
+   2 |     integer |      0 |       array |      1 |    1 |   10 |        1 |       1 |      10 |     10 |  100 
+   3 |     integer |      0 |       array |      2 |    1 |   10 |        1 |       1 |      10 |    100 | 1000 
+   4 |     integer |      0 |     integer |     22 |    1 |    5 |        1 |       1 |       5 |      1 |    5 
+
+btab:
+ idx |          name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
+-----|---------------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
+   0 |          Test |     program |     -1 |   76 |    0 |     0 |     7 |   0 |        void |         0 |    38 
+   1 |          Pair |      record |      0 |   51 |    0 |     0 |     3 |   1 |        void |         0 |    52 
+   2 |        Circle |      record |      0 |   57 |    0 |     0 |     3 |   1 |        void |         0 |    58 
+   3 |        coords |      record |      2 |   54 |    0 |     0 |     2 |   2 |        void |         0 |    55 
+   4 | EulerDistance |    function |      0 |   71 |    0 |     0 |     0 |   1 |        real |        23 |    68 
+   5 |    PrintValue |   procedure |      0 |   75 |   75 |     1 |     0 |   1 |        void |         0 |    72 
+   6 |   MirrorIndex |    function |      0 |   77 |    0 |     0 |     0 |   1 |     integer |        22 |    76 
+
+type:
+ idx |        kind |    baseType | baseRef |  low | high | resolved |  lowOrd | highOrd | size |            values 
+-----|-------------|-------------|---------|------|------|----------|---------|---------|------|-------------------
+   0 |    subrange |     integer |      22 |    1 |    5 |        1 |       1 |       5 |    1 |                 - 
+   1 |  enumerated |  enumerated |       0 |    0 |    2 |        1 |       0 |       2 |    1 | Left,Right,Center 
+
+Program(name: Test) -> (tabIndex: 38, lexicalLevel: 0)
+├── Declarations[role: Declaration] 
+│   ├── ConstDeclarations[role: Declaration] 
+│   │   ├── ConstDeclaration[role: Const] (name: Min) -> (type: integer, tabIndex: 39, lexicalLevel: 0)
+│   │   │   └── IntegerLiteral[role: Value] (value: 1)
+│   │   ├── ConstDeclaration[role: Const] (name: Max) -> (type: integer, tabIndex: 40, lexicalLevel: 0)
+│   │   │   └── IntegerLiteral[role: Value] (value: 5)
+│   │   ├── ConstDeclaration[role: Const] (name: StartChar) -> (type: char, tabIndex: 41, lexicalLevel: 0)
+│   │   │   └── CharLiteral[role: Value] (value: 'a')
+│   │   └── ConstDeclaration[role: Const] (name: Label) -> (type: string, tabIndex: 42, lexicalLevel: 0)
+│   │       └── StringLiteral[role: Value] (value: 'level')
+│   ├── TypeDeclarations[role: Declaration] 
+│   │   ├── TypeDeclaration[role: Type] (name: Bulat) -> (type: integer, tabIndex: 43, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: integer)
+│   │   ├── TypeDeclaration[role: Type] (name: SmallRange) -> (type: subrange, tabIndex: 44, lexicalLevel: 0)
+│   │   │   └── RangeType[role: Type] 
+│   │   │       ├── IntegerLiteral[role: Low] (value: 1)
+│   │   │       └── IntegerLiteral[role: High] (value: 5)
+│   │   ├── TypeDeclaration[role: Type] (name: Direction) -> (type: enumerated, tabIndex: 45, lexicalLevel: 0)
+│   │   │   └── EnumeratedType[role: Type] 
+│   │   │       ├── Identifier[role: Element] (name: Left)
+│   │   │       ├── Identifier[role: Element] (name: Right)
+│   │   │       └── Identifier[role: Element] (name: Center)
+│   │   ├── TypeDeclaration[role: Type] (name: Pair) -> (type: record, tabIndex: 52, lexicalLevel: 0)
+│   │   │   └── RecordType[role: Type] 
+│   │   │       ├── FieldDeclaration[role: Field] (name: first) -> (type: integer, tabIndex: 49, lexicalLevel: 1)
+│   │   │       │   └── NamedType[role: Type] (name: integer)
+│   │   │       ├── FieldDeclaration[role: Field] (name: second) -> (type: integer, tabIndex: 50, lexicalLevel: 1)
+│   │   │       │   └── NamedType[role: Type] (name: integer)
+│   │   │       └── FieldDeclaration[role: Field] (name: tag) -> (type: char, tabIndex: 51, lexicalLevel: 1)
+│   │   │           └── NamedType[role: Type] (name: char)
+│   │   ├── TypeDeclaration[role: Type] (name: Circle) -> (type: record, tabIndex: 58, lexicalLevel: 0)
+│   │   │   └── RecordType[role: Type] 
+│   │   │       ├── FieldDeclaration[role: Field] (name: coords) -> (type: record, tabIndex: 56, lexicalLevel: 1)
+│   │   │       │   └── RecordType[role: Type] 
+│   │   │       │       ├── FieldDeclaration[role: Field] (name: x) -> (type: integer, tabIndex: 53, lexicalLevel: 2)
+│   │   │       │       │   └── NamedType[role: Type] (name: integer)
+│   │   │       │       └── FieldDeclaration[role: Field] (name: y) -> (type: integer, tabIndex: 54, lexicalLevel: 2)
+│   │   │       │           └── NamedType[role: Type] (name: integer)
+│   │   │       └── FieldDeclaration[role: Field] (name: radius) -> (type: real, tabIndex: 57, lexicalLevel: 1)
+│   │   │           └── NamedType[role: Type] (name: real)
+│   │   ├── TypeDeclaration[role: Type] (name: NumberList) -> (type: array, tabIndex: 59, lexicalLevel: 0)
+│   │   │   └── ArrayType[role: Type] 
+│   │   │       ├── RangeType[role: Index] 
+│   │   │       │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │   │       │   └── IntegerLiteral[role: High] (value: 5)
+│   │   │       └── NamedType[role: Element] (name: integer) -> (type: integer, tabIndex: 22, lexicalLevel: 0)
+│   │   └── TypeDeclaration[role: Type] (name: Matrix) -> (type: array, tabIndex: 60, lexicalLevel: 0)
+│   │       └── ArrayType[role: Type] 
+│   │           ├── RangeType[role: Index] 
+│   │           │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │           │   └── IntegerLiteral[role: High] (value: 10)
+│   │           └── ArrayType[role: Element]  -> (type: array, arrayIndex: 2, lexicalLevel: 0)
+│   │               ├── RangeType[role: Index] 
+│   │               │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │               │   └── IntegerLiteral[role: High] (value: 10)
+│   │               └── ArrayType[role: Element]  -> (type: array, arrayIndex: 1, lexicalLevel: 0)
+│   │                   ├── RangeType[role: Index] 
+│   │                   │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │                   │   └── IntegerLiteral[role: High] (value: 10)
+│   │                   └── NamedType[role: Element] (name: real) -> (type: real, tabIndex: 23, lexicalLevel: 0)
+│   ├── VarDeclarations[role: Declaration] 
+│   │   ├── VarDeclaration[role: Variable] (name: i) -> (type: integer, tabIndex: 61, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: integer)
+│   │   ├── VarDeclaration[role: Variable] (name: total) -> (type: integer, tabIndex: 62, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: integer)
+│   │   ├── VarDeclaration[role: Variable] (name: middle) -> (type: integer, tabIndex: 63, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: integer)
+│   │   ├── VarDeclaration[role: Variable] (name: numbers) -> (type: NumberList, tabIndex: 64, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: NumberList)
+│   │   ├── VarDeclaration[role: Variable] (name: pairValue) -> (type: Pair, tabIndex: 65, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: Pair)
+│   │   ├── VarDeclaration[role: Variable] (name: isValid) -> (type: boolean, tabIndex: 66, lexicalLevel: 0)
+│   │   │   └── NamedType[role: Type] (name: boolean)
+│   │   └── VarDeclaration[role: Variable] (name: isDone) -> (type: boolean, tabIndex: 67, lexicalLevel: 0)
+│   │       └── NamedType[role: Type] (name: boolean)
+│   ├── FunctionDeclaration[role: Declaration] (name: EulerDistance) -> (type: real, tabIndex: 68, lexicalLevel: 0)
+│   │   ├── ReturnType[role: ReturnType] 
+│   │   │   └── Identifier[role: Type] (name: real)
+│   │   ├── Parameters[role: Parameters] 
+│   │   │   ├── ParameterGroup[role: Group] 
+│   │   │   │   ├── Parameter[role: Parameter] (name: x) -> (type: real, tabIndex: 69, lexicalLevel: 1)
+│   │   │   │   │   └── NamedType[role: Type] (name: real)
+│   │   │   │   └── Parameter[role: Parameter] (name: y) -> (type: real, tabIndex: 70, lexicalLevel: 1)
+│   │   │   │       └── NamedType[role: Type] (name: real)
+│   │   │   └── ParameterGroup[role: Group] 
+│   │   │       └── Parameter[role: Parameter] (name: z) -> (type: real, tabIndex: 71, lexicalLevel: 1)
+│   │   │           └── NamedType[role: Type] (name: real)
+│   │   └── Block[role: Block] 
+│   │       ├── Declarations[role: Declaration] 
+│   │       └── CompoundStatement[role: Body] 
+│   │           └── StatementList[role: Body] 
+│   │               └── Assignment[role: Statement] 
+│   │                   ├── Variable[role: Target] (name: EulerDistance)
+│   │                   └── BinaryOperation[role: Value] (operator: +)
+│   │                       ├── BinaryOperation[role: Left] (operator: +)
+│   │                       │   ├── BinaryOperation[role: Left] (operator: *)
+│   │                       │   │   ├── Variable[role: Left] (name: x)
+│   │                       │   │   └── Variable[role: Right] (name: x)
+│   │                       │   └── BinaryOperation[role: Right] (operator: *)
+│   │                       │       ├── Variable[role: Left] (name: y)
+│   │                       │       └── Variable[role: Right] (name: y)
+│   │                       └── BinaryOperation[role: Right] (operator: *)
+│   │                           ├── Variable[role: Left] (name: z)
+│   │                           └── Variable[role: Right] (name: z)
+│   ├── ProcedureDeclaration[role: Declaration] (name: PrintValue) -> (type: void, tabIndex: 72, lexicalLevel: 0)
+│   │   ├── Parameters[role: Parameters] 
+│   │   │   ├── ParameterGroup[role: Group] 
+│   │   │   │   └── Parameter[role: Parameter] (name: value) -> (type: integer, tabIndex: 73, lexicalLevel: 1)
+│   │   │   │       └── NamedType[role: Type] (name: integer)
+│   │   │   └── ParameterGroup[role: Group] 
+│   │   │       └── Parameter[role: Parameter] (name: data) -> (type: array, tabIndex: 75, lexicalLevel: 1)
+│   │   │           └── ArrayType[role: Type] 
+│   │   │               ├── RangeType[role: Index] 
+│   │   │               │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │   │               │   └── IntegerLiteral[role: High] (value: 5)
+│   │   │               └── NamedType[role: Element] (name: integer) -> (type: integer, tabIndex: 22, lexicalLevel: 1)
+│   │   └── Block[role: Block] 
+│   │       ├── Declarations[role: Declaration] 
+│   │       └── CompoundStatement[role: Body] 
+│   │           └── StatementList[role: Body] 
+│   │               └── ProcedureCall[role: Statement] (name: writeln)
+│   │                   └── Arguments[role: Arg] 
+│   │                       ├── StringLiteral[role: Arg] (value: 'value = ')
+│   │                       └── Variable[role: Arg] (name: value)
+│   └── FunctionDeclaration[role: Declaration] (name: MirrorIndex) -> (type: integer, tabIndex: 76, lexicalLevel: 0)
+│       ├── ReturnType[role: ReturnType] 
+│       │   └── Identifier[role: Type] (name: integer)
+│       ├── Parameters[role: Parameters] 
+│       │   └── ParameterGroup[role: Group] 
+│       │       └── Parameter[role: Parameter] (name: index) -> (type: integer, tabIndex: 77, lexicalLevel: 1)
+│       │           └── NamedType[role: Type] (name: integer)
+│       └── Block[role: Block] 
+│           ├── Declarations[role: Declaration] 
+│           │   └── VarDeclarations[role: Declaration] 
+│           │       └── VarDeclaration[role: Variable] (name: result)
+│           │           └── NamedType[role: Type] (name: integer)
+│           └── CompoundStatement[role: Body] 
+│               └── StatementList[role: Body] 
+│                   ├── Assignment[role: Statement] 
+│                   │   ├── Variable[role: Target] (name: result)
+│                   │   └── BinaryOperation[role: Value] (operator: +)
+│                   │       ├── BinaryOperation[role: Left] (operator: -)
+│                   │       │   ├── Variable[role: Left] (name: Max)
+│                   │       │   └── Variable[role: Right] (name: index)
+│                   │       └── Variable[role: Right] (name: Min)
+│                   └── Assignment[role: Statement] 
+│                       ├── Variable[role: Target] (name: MirrorIndex)
+│                       └── Variable[role: Value] (name: result)
+└── CompoundStatement[role: Body] 
+    └── StatementList[role: Body] 
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: i)
+        │   └── Variable[role: Value] (name: Min)
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: total)
+        │   └── IntegerLiteral[role: Value] (value: 0)
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: middle)
+        │   └── BinaryOperation[role: Value] (operator: div)
+        │       ├── BinaryOperation[role: Left] (operator: +)
+        │       │   ├── Variable[role: Left] (name: Min)
+        │       │   └── Variable[role: Right] (name: Max)
+        │       └── IntegerLiteral[role: Right] (value: 2)
+        ├── Assignment[role: Statement] 
+        │   ├── ArrayAccess[role: Target] 
+        │   │   ├── Variable[role: Base] (name: numbers)
+        │   │   ├── IntegerLiteral[role: Index] (value: 1)
+        │   │   ├── IntegerLiteral[role: Index] (value: 2)
+        │   │   └── IntegerLiteral[role: Index] (value: 3)
+        │   └── IntegerLiteral[role: Value] (value: 9)
+        ├── Assignment[role: Statement] 
+        │   ├── FieldAccess[role: Target] (field: first)
+        │   │   └── Variable[role: Base] (name: pairValue)
+        │   └── BinaryOperation[role: Value] (operator: *)
+        │       ├── ArrayAccess[role: Left] 
+        │       │   ├── Variable[role: Base] (name: numbers)
+        │       │   └── IntegerLiteral[role: Index] (value: 1)
+        │       └── IntegerLiteral[role: Right] (value: 2)
+        ├── Assignment[role: Statement] 
+        │   ├── FieldAccess[role: Target] (field: second)
+        │   │   └── Variable[role: Base] (name: pairValue)
+        │   └── BinaryOperation[role: Value] (operator: /)
+        │       ├── FieldAccess[role: Left] (field: first)
+        │       │   └── Variable[role: Base] (name: pairValue)
+        │       └── IntegerLiteral[role: Right] (value: 2)
+        ├── Assignment[role: Statement] 
+        │   ├── FieldAccess[role: Target] (field: tag)
+        │   │   └── Variable[role: Base] (name: pairValue)
+        │   └── Variable[role: Value] (name: StartChar)
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: isValid)
+        │   └── BooleanLiteral[role: Value] (value: true)
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: isDone)
+        │   └── BooleanLiteral[role: Value] (value: false)
+        ├── IfStatement[role: Statement] 
+        │   ├── UnaryOperation[role: Condition] (operator: not)
+        │   │   └── BinaryOperation[role: Expression] (operator: ==)
+        │   │       ├── FieldAccess[role: Left] (field: first)
+        │   │       │   └── Variable[role: Base] (name: pairValue)
+        │   │       └── FieldAccess[role: Right] (field: second)
+        │   │           └── Variable[role: Base] (name: pairValue)
+        │   ├── Assignment[role: Then] 
+        │   │   ├── Variable[role: Target] (name: isValid)
+        │   │   └── BooleanLiteral[role: Value] (value: false)
+        │   └── ProcedureCall[role: Else] (name: PrintValue)
+        │       └── Arguments[role: Arg] 
+        │           ├── FieldAccess[role: Arg] (field: first)
+        │           │   └── Variable[role: Base] (name: pairValue)
+        │           └── Variable[role: Arg] (name: numbers)
+        ├── WhileStatement[role: Statement] 
+        │   ├── BinaryOperation[role: Condition] (operator: <=)
+        │   │   ├── Variable[role: Left] (name: i)
+        │   │   └── Variable[role: Right] (name: Max)
+        │   └── CompoundStatement[role: Body] 
+        │       └── StatementList[role: Body] 
+        │           └── Assignment[role: Statement] 
+        │               ├── Variable[role: Target] (name: i)
+        │               └── BinaryOperation[role: Value] (operator: +)
+        │                   ├── Variable[role: Left] (name: i)
+        │                   └── IntegerLiteral[role: Right] (value: 1)
+        ├── RepeatStatement[role: Statement] 
+        │   ├── StatementList[role: Body] 
+        │   │   ├── Assignment[role: Statement] 
+        │   │   │   ├── Variable[role: Target] (name: total)
+        │   │   │   └── BinaryOperation[role: Value] (operator: +)
+        │   │   │       ├── Variable[role: Left] (name: total)
+        │   │   │       └── BinaryOperation[role: Right] (operator: mod)
+        │   │   │           ├── FunctionCall[role: Left] (name: MirrorIndex)
+        │   │   │           │   └── Arguments[role: Arg] 
+        │   │   │           │       └── Variable[role: Arg] (name: i)
+        │   │   │           └── IntegerLiteral[role: Right] (value: 3)
+        │   │   └── Assignment[role: Statement] 
+        │   │       ├── Variable[role: Target] (name: i)
+        │   │       └── BinaryOperation[role: Value] (operator: -)
+        │   │           ├── Variable[role: Left] (name: i)
+        │   │           └── IntegerLiteral[role: Right] (value: 1)
+        │   └── BinaryOperation[role: Condition] (operator: <)
+        │       ├── Variable[role: Left] (name: i)
+        │       └── Variable[role: Right] (name: Min)
+        ├── ForStatement[role: Statement] (direction: to)
+        │   ├── Identifier[role: Variable] (name: i)
+        │   ├── Variable[role: Start] (name: Min)
+        │   ├── Variable[role: End] (name: Max)
+        │   └── CompoundStatement[role: Body] 
+        │       └── StatementList[role: Body] 
+        │           └── ProcedureCall[role: Statement] (name: PrintValue)
+        │               └── Arguments[role: Arg] 
+        │                   ├── Variable[role: Arg] (name: i)
+        │                   └── Variable[role: Arg] (name: numbers)
+        ├── ForStatement[role: Statement] (direction: downto)
+        │   ├── Identifier[role: Variable] (name: i)
+        │   ├── Variable[role: Start] (name: Max)
+        │   ├── Variable[role: End] (name: Min)
+        │   └── CompoundStatement[role: Body] 
+        │       └── StatementList[role: Body] 
+        │           └── Assignment[role: Statement] 
+        │               ├── Variable[role: Target] (name: total)
+        │               └── BinaryOperation[role: Value] (operator: +)
+        │                   ├── Variable[role: Left] (name: total)
+        │                   └── Variable[role: Right] (name: i)
+        ├── CaseStatement[role: Statement] 
+        │   ├── Variable[role: Expression] (name: total)
+        │   ├── CaseBranch[role: Branch] 
+        │   │   ├── IntegerLiteral[role: Label] (value: 0)
+        │   │   └── Assignment[role: Statement] 
+        │   │       ├── Variable[role: Target] (name: total)
+        │   │       └── BinaryOperation[role: Value] (operator: +)
+        │   │           ├── Variable[role: Left] (name: total)
+        │   │           └── IntegerLiteral[role: Right] (value: 1)
+        │   ├── CaseBranch[role: Branch] 
+        │   │   ├── IntegerLiteral[role: Label] (value: 1)
+        │   │   ├── IntegerLiteral[role: Label] (value: 2)
+        │   │   └── Assignment[role: Statement] 
+        │   │       ├── Variable[role: Target] (name: total)
+        │   │       └── BinaryOperation[role: Value] (operator: -)
+        │   │           ├── Variable[role: Left] (name: total)
+        │   │           └── IntegerLiteral[role: Right] (value: 1)
+        │   └── CaseBranch[role: Branch] 
+        │       ├── IntegerLiteral[role: Label] (value: 3)
+        │       └── ProcedureCall[role: Statement] (name: PrintValue)
+        │           └── Arguments[role: Arg] 
+        │               ├── Variable[role: Arg] (name: total)
+        │               └── Variable[role: Arg] (name: numbers)
+        └── Assignment[role: Statement] 
+            ├── Variable[role: Target] (name: isDone)
+            └── BinaryOperation[role: Value] (operator: or)
+                ├── BinaryOperation[role: Left] (operator: and)
+                │   ├── Variable[role: Left] (name: isValid)
+                │   └── BooleanLiteral[role: Right] (value: true)
+                └── BooleanLiteral[role: Right] (value: false)
