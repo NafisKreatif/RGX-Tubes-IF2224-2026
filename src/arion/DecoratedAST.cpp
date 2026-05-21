@@ -857,7 +857,13 @@ void DecoratedAST::decorateBlock(ASTNode &node) {
 }
 void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     ASTNode *targetNode = node.childWithRole(ASTChildRole::Target);
-    std::pair<int, TypeKind> targetType = decorateVariable(*targetNode);
+    std::pair<int, TypeKind> targetType = {0, TypeKind::Unknown};
+    if (targetNode->getKind() == ASTNodeKind::Variable) {
+        targetType = decorateVariable(*targetNode);
+    }
+    else if (targetNode->getKind() == ASTNodeKind::ArrayAccess) {
+        targetType = decorateArrayAccess(*targetNode);
+    }
 
     ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
     std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
@@ -1055,10 +1061,41 @@ std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     return {varRef, varEntry.type};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
-    return {0, TypeKind::Unknown};
+    ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
+    std::string varName = varNode->getAttribute("name");
+    int varRef = symbolTable_.requireLookupIndex(varName);
+    const TabEntry &varEntry = symbolTable_.requireLookup(varName);
+    int arrRef = varEntry.ref;
+    const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
+
+    for (int i = 0; i < node.getChildren().size(); i++) {
+        const ASTChild &child = node.getChildren().at(i);
+        if (child.role == ASTChildRole::Index) {
+            ASTNode &childNode = node.childAt(i);
+            // idk decorate the index i guess....
+        }
+    }
+
+    return {arrEntry.elementRef, arrEntry.elementType};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
-    return {0, TypeKind::Unknown};
+    ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
+    std::string varName = varNode->getAttribute("name");
+    int varRef = symbolTable_.requireLookupIndex(varName);
+    const TabEntry &varEntry = symbolTable_.requireLookup(varName);
+
+    std::string fieldName = node.getAttribute("name");
+    int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+    const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+
+    for (int i = 0; i < node.getChildren().size(); i++) {
+        const ASTChild &child = node.getChildren().at(i);
+        if (child.role == ASTChildRole::Index) {
+            ASTNode &childNode = node.childAt(i);
+            // idk decorate the index i guess....
+        }
+    }
+    return {fieldRef, fieldEntry.type};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
     std::pair<int, TypeKind> valueType = {0, TypeKind::Unknown};
@@ -1103,7 +1140,6 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
 
     return false;
 }
-
 bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
     if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return false;
     if (typeRef1 == typeRef2) return true;
