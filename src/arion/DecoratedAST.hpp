@@ -12,8 +12,8 @@ namespace arion
         ASTNode astTree_;
         SymbolTable symbolTable_;
 
-        size_t array_parameter_count = 0;
-         
+        size_t anonymousTypeCount_ = 0;
+
         void dfs(ASTNode &astNode);
         void buildTableAndDecorateTree();
 
@@ -22,11 +22,12 @@ namespace arion
         void decorateProgram(ASTNode &node);
         void decorateConstDeclaration(ASTNode &node);
         void decorateTypeDeclaration(ASTNode &node);
+        void decorateField(ASTNode &node);
+        std::pair<int, TypeKind> decorateAnonymousType(ASTNode &node);
         void decorateVarDeclaration(ASTNode &node);
         void decorateProcedureDeclaration(ASTNode &node);
         void decorateFunctionDeclaration(ASTNode &node);
         void decorateBlock(ASTNode &node);
-        void decorateFormalParameterList(ASTNode &node);
         void decorateParameter(ASTNode &node);
         void decorateCompoundStatement(ASTNode &node);
         void decorateStatementList(ASTNode &node);
@@ -48,7 +49,7 @@ namespace arion
         void decorateIndexList(ASTNode &node);
         void decorateConstant(ASTNode &node);
 
-        void printTreeHelper(const ASTNode& node, int depth, std::vector<bool> &isLast, std::ostream& out = std::cout) const;
+        void printTreeHelper(const ASTNode &node, int depth, std::vector<bool> &isLast, std::ostream &out = std::cout, ASTChildRole role = ASTChildRole::None) const;
 
     public:
         DecoratedAST(const ASTNode &astTree);
@@ -56,8 +57,8 @@ namespace arion
         const ASTNode &getASTTree() const;
         const SymbolTable &getSymbolTable() const;
 
-        void printTable(std::ostream& out = std::cout) const;
-        void printTree(std::ostream& out = std::cout) const;
+        void printTable(std::ostream &out = std::cout) const;
+        void printTree(std::ostream &out = std::cout) const;
     };
 }
 
