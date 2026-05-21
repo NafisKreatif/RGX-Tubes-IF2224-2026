@@ -98,28 +98,12 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             // decorateArguments(astNode);
             return true;
 
-        case ASTNodeKind::BinaryOperation:
-            // decorateBinaryOperation(astNode);
-            return true;
-
-        case ASTNodeKind::UnaryOperation:
-            // decorateUnaryOperation(astNode);
-            return true;
-
-        case ASTNodeKind::Variable:
-            decorateVariable(astNode);
-            return true;
-
         case ASTNodeKind::ReturnType:
             // decorateReturnType(astNode);
             return true;
 
         case ASTNodeKind::Identifier:
             // decorateIdentifier(astNode);
-            return true;
-
-        case ASTNodeKind::Unknown:
-            // decorateUnknown(astNode);
             return true;
 
         default:
@@ -152,6 +136,23 @@ static TypeKind nodeKindLiteralToTypeKind(ASTNodeKind kind) {
     }
 }
 
+static bool isLiteralKind(ASTNodeKind kind) {
+    switch (kind) {
+        case ASTNodeKind::IntegerLiteral:
+            return true;
+        case ASTNodeKind::RealLiteral:
+            return true;
+        case ASTNodeKind::CharLiteral:
+            return true;
+        case ASTNodeKind::StringLiteral:
+            return true;
+        case ASTNodeKind::BooleanLiteral:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
     const ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
 
@@ -179,7 +180,6 @@ void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
 }
-
 void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
     ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
     std::string name = node.getAttribute("name");
@@ -250,11 +250,36 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
         const ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
         const ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        std::string low = lowNode->getAttribute("value");
-        std::string high = highNode->getAttribute("value");
+        std::string low;
+        std::string high;
+        TypeKind lowType = TypeKind::Unknown;
+        TypeKind highType = TypeKind::Unknown;
 
-        TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-        TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
+        if (isLiteralKind(lowNode->getKind())) {
+            low = lowNode->getAttribute("value");
+            lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
+        }
+        else if (lowNode->getKind() == ASTNodeKind::Variable) {
+            std::string typeName = lowNode->getAttribute("name");
+            const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
+            low = tabEntry.value;
+            lowType = tabEntry.type;
+        }
+
+        if (isLiteralKind(highNode->getKind())) {
+            high = highNode->getAttribute("value");
+            highType = nodeKindLiteralToTypeKind(highNode->getKind());
+        }
+        else if (highNode->getKind() == ASTNodeKind::Variable) {
+            std::string typeName = highNode->getAttribute("name");
+            const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
+            high = tabEntry.value;
+            highType = tabEntry.type;
+        }
+
+        if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
+            throw std::runtime_error("Range low and high type is unknown");
+        }
         if (lowType != highType) {
             throw std::runtime_error("Range low and high type is not the same: " + name);
         }
@@ -838,6 +863,37 @@ void DecoratedAST::decorateIfStatement(ASTNode &node) {
     }
 }
 void DecoratedAST::decorateCaseStatement(ASTNode &node) {
+    ASTNode *expressionNode = node.childWithRole(ASTChildRole::Expression);
+    auto [expressionRef, expressionType] = decorateExpression(*expressionNode);
+
+    for (int i = 0; i < (int)node.getChildren().size(); i++) {
+        const ASTChild &child1 = node.getChildren().at(i);
+        if (child1.role == ASTChildRole::Branch) {
+            ASTNode &branchNode = node.childAt(i);
+            for (int j = 0; j < (int)node.getChildren().size(); j++) {
+                const ASTChild &child2 = node.getChildren().at(i);
+                if (child2.role == ASTChildRole::Label) {
+                    ASTNode &labelNode = branchNode.childAt(j);
+                    TypeKind labelType = TypeKind::Unknown;
+                    if (isLiteralKind(labelNode.getKind())) {
+                        labelType = nodeKindLiteralToTypeKind(labelNode.getKind());
+                    }
+                    else if (labelNode.getKind() == ASTNodeKind::Variable) {
+                        std::string typeName = labelNode.getAttribute("name");
+                        const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
+                        labelType = tabEntry.type;
+                    }
+                    if (expressionType != labelType) {
+                        throw std::runtime_error("Invalid label type");
+                    }
+                }
+                else if (child2.role == ASTChildRole::Statement) {
+                    ASTNode &statementNode = branchNode.childAt(j);
+                    decorateNode(statementNode);
+                }
+            }
+        }
+    }
 }
 void DecoratedAST::decorateCaseBranches(ASTNode &node) {}
 void DecoratedAST::decorateWhileStatement(ASTNode &node) {
@@ -863,11 +919,8 @@ void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
 }
 void DecoratedAST::decorateForStatement(ASTNode &node) {
 }
-void DecoratedAST::decorateProcedureCall(ASTNode &node) {
-}
-std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
-    return {0, TypeKind::Unknown};
-}
+void DecoratedAST::decorateProcedureCall(ASTNode &node) {}
+std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) { return {0, TypeKind::Unknown}; }
 std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     std::string op = node.getAttribute("operator");
     ASTNode *leftNode = node.childWithRole(ASTChildRole::Left);
@@ -1019,7 +1072,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     ASTAnnotation annotation;
     annotation.typeName = symbolTable_.typeKindToString(varEntry.type);
     annotation.tabIndex = varRef;
-    annotation.lexicalLevel = varEntry.lexicalLevel;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
     return {varRef, varEntry.type};
 }
@@ -1040,30 +1093,55 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
         }
     }
 
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(arrEntry.elementType);
+    annotation.tabIndex = varRef;
+    annotation.arrayIndex = arrRef;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
     return {arrEntry.elementRef, arrEntry.elementType};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
-    // ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
-    // std::string varName = varNode->getAttribute("name");
-    
-    // int varRef = symbolTable_.requireLookupIndex(varName);
-    // const TabEntry &varEntry = symbolTable_.requireLookup(varName);
+    ASTNode *baseNode = node.childWithRole(ASTChildRole::Base);
+    if (baseNode->getKind() == ASTNodeKind::FieldAccess) {
+        auto [blockRef, fieldType] = decorateFieldAccess(*baseNode);
 
-    // std::cout << varRef << ' ' << varEntry.ref << "\n";
-    // symbolTable_.enterBlockByIndex(varEntry.ref);
-    // std::string fieldName = node.getAttribute("field");
-    // int fieldRef = symbolTable_.requireLookupIndex(fieldName);
-    // const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
-    // symbolTable_.leaveBlock();
+        symbolTable_.enterBlockByIndex(blockRef);
 
-    // for (int i = 0; i < node.getChildren().size(); i++) {
-    //     const ASTChild &child = node.getChildren().at(i);
-    //     if (child.role == ASTChildRole::Index) {
-    //         ASTNode &childNode = node.childAt(i);
-    //         // idk decorate the index i guess....
-    //     }
-    // }
-    // return {fieldRef, fieldEntry.type};
+        std::string fieldName = node.getAttribute("field");
+        int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+
+        symbolTable_.leaveBlock();
+
+        ASTAnnotation annotation;
+        annotation.typeName = symbolTable_.typeKindToString(fieldEntry.type);
+        annotation.tabIndex = fieldRef;
+        annotation.blockIndex = fieldEntry.ref;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+        return {blockRef, fieldEntry.type};
+    }
+    else if (baseNode->getKind() == ASTNodeKind::Variable) {
+        auto [varRef, varType] = decorateVariable(*baseNode);
+        const TabEntry &varEntry = symbolTable_.tab().at(varRef);
+
+        symbolTable_.enterBlockByIndex(varEntry.ref);
+
+        std::string fieldName = node.getAttribute("field");
+        int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+
+        symbolTable_.leaveBlock();
+
+        ASTAnnotation annotation;
+        annotation.typeName = symbolTable_.typeKindToString(fieldEntry.type);
+        annotation.tabIndex = fieldRef;
+        annotation.blockIndex = fieldEntry.ref;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+        return {fieldEntry.ref, fieldEntry.type};
+    }
     return {0, TypeKind::Unknown};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
