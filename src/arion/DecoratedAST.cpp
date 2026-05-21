@@ -56,11 +56,9 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             return false;
 
         case ASTNodeKind::CompoundStatement:
-            decorateCompoundStatement(astNode);
             return true;
 
         case ASTNodeKind::StatementList:
-            decorateStatementList(astNode);
             return true;
 
         case ASTNodeKind::EmptyStatement:
@@ -293,10 +291,12 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
         int tabIndex = symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementType, elementRef);
+        const TabEntry tabEntry = symbolTable_.tab().at(tabIndex);
 
         ASTAnnotation annotation;
         annotation.typeName = "array";
         annotation.tabIndex = tabIndex;
+        annotation.arrayIndex = tabEntry.ref;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -340,7 +340,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateField(fieldNode);
+            decorateFieldDeclaration(fieldNode);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType(name, recordRef);
@@ -348,11 +348,12 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         ASTAnnotation annotation;
         annotation.typeName = "record";
         annotation.tabIndex = recordTabIndex;
+        annotation.blockIndex = recordRef;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
 }
-void DecoratedAST::decorateField(ASTNode &node) {
+void DecoratedAST::decorateFieldDeclaration(ASTNode &node) {
     ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
     std::string name = node.getAttribute("name");
 
@@ -462,7 +463,7 @@ void DecoratedAST::decorateField(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateField(fieldNode);
+            decorateFieldDeclaration(fieldNode);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
@@ -471,6 +472,7 @@ void DecoratedAST::decorateField(ASTNode &node) {
         ASTAnnotation annotation;
         annotation.typeName = "record";
         annotation.tabIndex = tabIndex;
+        annotation.blockIndex = recordRef;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -590,7 +592,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         for (int i = 0; i < typeNode.getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode.childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateField(fieldNode);
+            decorateFieldDeclaration(fieldNode);
         }
         symbolTable_.endRecordType();
 
@@ -714,7 +716,7 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         for (int i = 0; i < typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
-            decorateField(fieldNode);
+            decorateFieldDeclaration(fieldNode);
         }
         symbolTable_.endRecordType();
         int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
@@ -723,6 +725,7 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         ASTAnnotation annotation;
         annotation.typeName = "record";
         annotation.tabIndex = tabIndex;
+        annotation.blockIndex = recordRef;
         annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
         node.setAnnotation(annotation);
     }
@@ -841,26 +844,295 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         node.setAnnotation(annotation);
     }
 }
-void DecoratedAST::decorateBlock(ASTNode &node) {}
-void DecoratedAST::decorateCompoundStatement(ASTNode &node) {}
-void DecoratedAST::decorateStatementList(ASTNode &node) {}
-void DecoratedAST::decorateStatement(ASTNode &node) {}
-void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {}
-void DecoratedAST::decorateIfStatement(ASTNode &node) {}
-void DecoratedAST::decorateCaseStatement(ASTNode &node) {}
+void DecoratedAST::decorateBlock(ASTNode &node) {
+    int blockIndex = symbolTable_.enterBlock("block");
+    for (size_t i = 0; i < node.getChildren().size(); i++) {
+        dfs(node.childAt(i));
+    }
+    symbolTable_.leaveBlock();
+    ASTAnnotation annotation;
+    annotation.blockIndex = blockIndex;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
+}
+void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
+    ASTNode *targetNode = node.childWithRole(ASTChildRole::Target);
+    std::pair<int, TypeKind> targetType = decorateVariable(*targetNode);
+
+    ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
+    std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
+
+    if (!isAssignmentCompatible(targetType.first, targetType.second, valueType.first, valueType.second)) {
+        throw std::runtime_error("Incompatible type");
+    }
+}
+void DecoratedAST::decorateIfStatement(ASTNode &node) {
+    ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
+    std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
+    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+        throw std::runtime_error("Condition must be a boolean: " +
+                                 symbolTable_.typeKindToString(valueType.second));
+    }
+    ASTNode *thenNode = node.childWithRole(ASTChildRole::Then);
+    ASTNode *elseNode = node.childWithRole(ASTChildRole::Else);
+    decorateBlock(*thenNode);
+    if (elseNode != NULL) {
+        decorateBlock(*elseNode);
+    }
+}
+void DecoratedAST::decorateCaseStatement(ASTNode &node) {
+}
 void DecoratedAST::decorateCaseBranches(ASTNode &node) {}
-void DecoratedAST::decorateWhileStatement(ASTNode &node) {}
-void DecoratedAST::decorateRepeatStatement(ASTNode &node) {}
-void DecoratedAST::decorateForStatement(ASTNode &node) {}
-void DecoratedAST::decorateProcedureOrFunctionCall(ASTNode &node) {}
-void DecoratedAST::decorateParameterList(ASTNode &node) {}
-void DecoratedAST::decorateExpression(ASTNode &node) {}
-void DecoratedAST::decorateSimpleExpression(ASTNode &node) {}
-void DecoratedAST::decorateTerm(ASTNode &node) {}
-void DecoratedAST::decorateFactor(ASTNode &node) {}
-void DecoratedAST::decorateVariable(ASTNode &node) {}
-void DecoratedAST::decorateIndexList(ASTNode &node) {}
-void DecoratedAST::decorateConstant(ASTNode &node) {}
+void DecoratedAST::decorateWhileStatement(ASTNode &node) {
+    ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
+    std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
+    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+        throw std::runtime_error("Condition must be a boolean: " +
+                                 symbolTable_.typeKindToString(valueType.second));
+    }
+    ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
+    decorateBlock(*bodyNode);
+}
+void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
+    ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
+    decorateBlock(*bodyNode);
+
+    ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
+    std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
+    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+        throw std::runtime_error("Condition must be a boolean: " +
+                                 symbolTable_.typeKindToString(valueType.second));
+    }
+}
+void DecoratedAST::decorateForStatement(ASTNode &node) {
+}
+void DecoratedAST::decorateProcedureCall(ASTNode &node) {}
+std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
+    return {0, TypeKind::Unknown};
+}
+std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
+    std::string op = node.getAttribute("operator");
+    ASTNode *leftNode = node.childWithRole(ASTChildRole::Left);
+    ASTNode *rightNode = node.childWithRole(ASTChildRole::Right);
+
+    std::pair<int, TypeKind> leftType = decorateExpression(*leftNode);
+    std::pair<int, TypeKind> rightType = decorateExpression(*rightNode);
+    if (!isTypeCompatible(leftType.first, leftType.second, rightType.first, rightType.second)) {
+        throw std::runtime_error("Incompatible type in binary operation: " +
+                                 symbolTable_.typeKindToString(leftType.second) + " " +
+                                 op + " " +
+                                 symbolTable_.typeKindToString(rightType.second));
+    }
+
+    if (op == "+") {
+        if (isStringType(leftType.second) && isStringType(rightType.second)) {
+            return {26, TypeKind::String};
+        }
+        else if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
+            if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
+                return {23, TypeKind::Real};
+            }
+            else {
+                return {22, TypeKind::Integer};
+            }
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else if (op == "-" || op == "*") {
+        if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
+            if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
+                return {23, TypeKind::Real};
+            }
+            else {
+                return {22, TypeKind::Integer};
+            }
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else if (op == "div" || op == "mod") {
+        if (leftType.second == TypeKind::Integer || rightType.second == TypeKind::Integer) {
+            return {22, TypeKind::Integer};
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else if (op == "/") {
+        if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
+            return {23, TypeKind::Real};
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else if (op == "and" || op == "or") {
+        if (isBooleanType(leftType.second) && isBooleanType(rightType.second)) {
+            return {24, TypeKind::Boolean};
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else if (op == "==" || op == "<>") {
+        return {24, TypeKind::Boolean};
+    }
+    else if (op == ">" || op == ">=" || op == "<" || op == "<=") {
+        if (isOrderedType(leftType.second) && isOrderedType(rightType.second)) {
+            return {24, TypeKind::Boolean};
+        }
+        else {
+            throw std::runtime_error("Incompatible type in binary operation: " +
+                                     symbolTable_.typeKindToString(leftType.second) + " " +
+                                     op + " " +
+                                     symbolTable_.typeKindToString(rightType.second));
+        }
+    }
+    else {
+        throw std::runtime_error("Unrecognized binary operator: " + op);
+    }
+
+    return {0, TypeKind::Unknown};
+}
+std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
+    std::string op = node.getAttribute("operator");
+    ASTNode *expressionNode = node.childWithRole(ASTChildRole::Expression);
+    std::pair<int, TypeKind> expressionType = decorateExpression(*expressionNode);
+
+    if (op == "not") {
+        if (!isBooleanType(expressionType.second)) {
+            throw std::runtime_error("Invalid unary operation: " + op + " " +
+                                     symbolTable_.typeKindToString(expressionType.second));
+        }
+    }
+    else if (op == "+") {
+        if (!isNumberType(expressionType.second)) {
+            throw std::runtime_error("Invalid unary operation: " + op + " " +
+                                     symbolTable_.typeKindToString(expressionType.second));
+        }
+    }
+    else if (op == "-") {
+        if (!isNumberType(expressionType.second)) {
+            throw std::runtime_error("Invalid unary operation: " + op + " " +
+                                     symbolTable_.typeKindToString(expressionType.second));
+        }
+    }
+    else {
+        throw std::runtime_error("Invalid unary operation: " + op + " " +
+                                 symbolTable_.typeKindToString(expressionType.second));
+    }
+
+    return expressionType;
+}
+std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
+    std::string name = node.getAttribute("name");
+    int varRef = symbolTable_.requireLookupIndex(name);
+    const TabEntry &varEntry = symbolTable_.requireLookup(name);
+
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(varEntry.type);
+    annotation.tabIndex = varRef;
+    annotation.lexicalLevel = varEntry.lexicalLevel;
+    node.setAnnotation(annotation);
+    return {varRef, varEntry.type};
+}
+std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
+    return {0, TypeKind::Unknown};
+}
+std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
+    return {0, TypeKind::Unknown};
+}
+std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
+    std::pair<int, TypeKind> valueType = {0, TypeKind::Unknown};
+    if (node.getKind() == ASTNodeKind::BinaryOperation) {
+        valueType = decorateBinaryOperator(node);
+    }
+    else if (node.getKind() == ASTNodeKind::BinaryOperation) {
+        valueType = decorateBinaryOperator(node);
+    }
+    else if (node.getKind() == ASTNodeKind::UnaryOperation) {
+        valueType = decorateUnaryOperator(node);
+    }
+    else if (node.getKind() == ASTNodeKind::FunctionCall) {
+        valueType = decorateFunctionCall(node);
+    }
+    else if (node.getKind() == ASTNodeKind::Variable) {
+        valueType = decorateVariable(node);
+    }
+    else if (node.getKind() == ASTNodeKind::ArrayAccess) {
+        valueType = decorateArrayAccess(node);
+    }
+    else if (node.getKind() == ASTNodeKind::FieldAccess) {
+        valueType = decorateFieldAccess(node);
+    }
+    else {
+        valueType.second = nodeKindLiteralToTypeKind(node.getKind());
+        valueType.first = symbolTable_.requireTypeIndex(symbolTable_.typeKindToString(valueType.second));
+    }
+    return valueType;
+}
+
+bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
+    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return false;
+    if (typeRef1 == typeRef2) return true;
+    if (isBooleanType(type1) && isBooleanType(type2)) return true;
+    if (isStringType(type1) && isStringType(type2)) return !(type1 == TypeKind::Char && type2 == TypeKind::String);
+    if (isNumberType(type1) && isNumberType(type2)) return true;
+    if (type1 == TypeKind::Enumerated && type2 == TypeKind::Enumerated) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Array && type2 == TypeKind::Array) return typeRef1 == typeRef2;
+
+    return false;
+
+    return false;
+}
+
+bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
+    if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return false;
+    if (typeRef1 == typeRef2) return true;
+    if (isBooleanType(type1) && isBooleanType(type2)) return true;
+    if (isStringType(type1) && isStringType(type2)) return true;
+    if (isNumberType(type1) && isNumberType(type2)) return true;
+    if (type1 == TypeKind::Enumerated && type2 == TypeKind::Enumerated) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Array && type2 == TypeKind::Array) return typeRef1 == typeRef2;
+
+    return false;
+}
+
+bool DecoratedAST::isOrderedType(TypeKind type) {
+    return type == TypeKind::Integer ||
+           type == TypeKind::Real ||
+           type == TypeKind::Char ||
+           type == TypeKind::String;
+}
+bool DecoratedAST::isNumberType(TypeKind type) {
+    return type == TypeKind::Integer ||
+           type == TypeKind::Real;
+}
+bool DecoratedAST::isStringType(TypeKind type) {
+    return type == TypeKind::Char ||
+           type == TypeKind::String;
+}
+bool DecoratedAST::isBooleanType(TypeKind type) {
+    return type == TypeKind::Boolean;
+}
 
 void DecoratedAST::printTable(std::ostream &out) const {
     out << "tab:\n";
