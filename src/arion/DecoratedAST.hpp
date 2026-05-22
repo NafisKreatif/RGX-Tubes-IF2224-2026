@@ -50,6 +50,8 @@ namespace arion
         bool isNumberType(TypeKind type);
         bool isStringType(TypeKind type);
         bool isBooleanType(TypeKind type);
+        bool isBuiltinWriteLikeProcedure(const TabEntry &entry);
+        bool isPrintableType(TypeKind type);
 
         void printTreeHelper(const ASTNode &node, int depth, std::vector<bool> &isLast, std::ostream &out = std::cout, ASTChildRole role = ASTChildRole::None) const;
 

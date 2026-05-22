@@ -918,39 +918,93 @@ void DecoratedAST::decorateForStatement(ASTNode &node) {
 }
 void DecoratedAST::decorateProcedureCall(ASTNode &node) {
     std::string procedureName = node.getAttribute("name");
-    int procedureTabIndex = symbolTable_.requireLookupIndex(procedureName);
-    const TabEntry &procedureTabEntry = symbolTable_.requireLookup(procedureName);
+    int procedureTabIndex = symbolTable_.lookupIndex(procedureName);
+    if (procedureTabIndex < 0) {
+        throw std::runtime_error("Semantic error: procedure '" + procedureName + "' is not declared");
+    }
+
+    const TabEntry &procedureTabEntry = symbolTable_.tab().at(procedureTabIndex);
+    if (procedureTabEntry.object != SymbolObjectKind::Procedure &&
+        procedureTabEntry.object != SymbolObjectKind::Function) {
+        throw std::runtime_error("Semantic error: '" + procedureName + "' is not callable");
+    }
+
     const BTabEntry &procedureBTabEntry = symbolTable_.requireBlock(procedureTabEntry.ref);
 
     ASTNode *argumentsNode = node.childWithRole(ASTChildRole::Arg);
     int argCount = 0;
+
+    if (isBuiltinWriteLikeProcedure(procedureTabEntry)) {
+        if (argumentsNode != nullptr) {
+            for (int i = 0; i < (int)argumentsNode->getChildren().size(); i++) {
+                const ASTChild &child = argumentsNode->getChildren().at(i);
+                if (child.role != ASTChildRole::Arg) continue;
+
+                argCount++;
+                ASTNode &argNode = argumentsNode->childAt(i);
+                auto [argRef, argType] = decorateExpression(argNode);
+                (void)argRef;
+
+                if (!isPrintableType(argType)) {
+                    throw std::runtime_error("Semantic error: argument " +
+                                             std::to_string(argCount) + " of '" +
+                                             procedureName + "' is not printable");
+                }
+            }
+        }
+
+        ASTAnnotation annotation;
+        annotation.typeName = symbolTable_.typeKindToString(procedureTabEntry.type);
+        annotation.tabIndex = procedureTabIndex;
+        annotation.blockIndex = procedureTabEntry.ref;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+        return;
+    }
+
+    int expectedArgCount = procedureBTabEntry.lastParameter > procedureTabIndex
+                               ? procedureBTabEntry.lastParameter - procedureTabIndex
+                               : 0;
+
     if (argumentsNode != nullptr) {
         for (int i = 0; i < (int)argumentsNode->getChildren().size(); i++) {
             const ASTChild &child = argumentsNode->getChildren().at(i);
             if (child.role == ASTChildRole::Arg) {
                 argCount++;
-                int parTabRef = procedureTabIndex + argCount;
-                if (parTabRef > procedureBTabEntry.lastParameter) {
-                    throw std::runtime_error("Too many arguments in procedure call: " + procedureName);
+                if (argCount > expectedArgCount) {
+                    throw std::runtime_error("Semantic error: procedure '" + procedureName +
+                                             "' expects " + std::to_string(expectedArgCount) +
+                                             " argument(s), got " + std::to_string(argCount));
                 }
+
+                int parTabRef = procedureTabIndex + argCount;
                 const TabEntry &parTabEntry = symbolTable_.tab().at(parTabRef);
                 ASTNode &argNode = argumentsNode->childAt(i);
                 auto [argRef, argType] = decorateExpression(argNode);
 
                 if (!isAssignmentCompatible(parTabEntry.ref, parTabEntry.type, argRef, argType)) {
-                    throw std::runtime_error("Invalid argument type: " +
-                                             std::to_string(parTabEntry.ref) + ":" +
+                    throw std::runtime_error("Semantic error: argument " +
+                                             std::to_string(argCount) + " of '" +
+                                             procedureName + "' expects " +
                                              symbolTable_.typeKindToString(parTabEntry.type) +
-                                             " <- " +
-                                             std::to_string(argRef) + ":" +
+                                             ", got " +
                                              symbolTable_.typeKindToString(argType));
                 }
             }
         }
     }
-    if (procedureTabIndex + argCount != procedureBTabEntry.lastParameter) {
-        throw std::runtime_error("Too few arguments in procedure call: " + procedureName);
+    if (argCount != expectedArgCount) {
+        throw std::runtime_error("Semantic error: procedure '" + procedureName +
+                                 "' expects " + std::to_string(expectedArgCount) +
+                                 " argument(s), got " + std::to_string(argCount));
     }
+
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(procedureTabEntry.type);
+    annotation.tabIndex = procedureTabIndex;
+    annotation.blockIndex = procedureTabEntry.ref;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
     std::string functionName = node.getAttribute("name");
@@ -1317,6 +1371,17 @@ bool DecoratedAST::isStringType(TypeKind type) {
 }
 bool DecoratedAST::isBooleanType(TypeKind type) {
     return type == TypeKind::Boolean;
+}
+bool DecoratedAST::isBuiltinWriteLikeProcedure(const TabEntry &entry) {
+    return entry.object == SymbolObjectKind::Procedure &&
+           (entry.identifier == "write" || entry.identifier == "writeln");
+}
+bool DecoratedAST::isPrintableType(TypeKind type) {
+    return isBooleanType(type) ||
+           isNumberType(type) ||
+           isStringType(type) ||
+           type == TypeKind::Subrange ||
+           type == TypeKind::Enumerated;
 }
 
 static bool hasAnnotation(const ASTAnnotation &annotation) {

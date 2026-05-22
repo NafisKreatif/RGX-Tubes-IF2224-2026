@@ -18,10 +18,9 @@ void SymbolTable::reset() {
     atab_.clear();
     typeDescriptors_.clear();
     blockStack_.clear();
+    predefinedLimit_ = 0;
 
     tab_.push_back(TabEntry{"<nil>", 0, SymbolObjectKind::Reserved, TypeKind::Void, 0, true, 0, 0, "", true});
-    initializePredefinedIdentifiers();
-    predefinedLimit_ = static_cast<int>(tab_.size());
 
     BTabEntry global;
     global.name = "<global>";
@@ -30,6 +29,9 @@ void SymbolTable::reset() {
     global.kind = BlockKind::Global;
     btab_.push_back(global);
     blockStack_.push_back(0);
+
+    initializePredefinedIdentifiers();
+    predefinedLimit_ = static_cast<int>(tab_.size());
 }
 
 int SymbolTable::enterBlock(const std::string &name) {
@@ -942,8 +944,20 @@ void SymbolTable::initializePredefinedIdentifiers() {
     appendEntry(TabEntry{"true", 0, SymbolObjectKind::Constant, TypeKind::Boolean, 0, true, 0, 1, "true", true}, false);
     appendEntry(TabEntry{"false", 0, SymbolObjectKind::Constant, TypeKind::Boolean, 0, true, 0, 0, "false", true}, false);
     appendEntry(TabEntry{"readln", 0, SymbolObjectKind::Procedure, TypeKind::Void, 0, true, 0, 0, "", true}, false);
-    appendEntry(TabEntry{"writeln", 0, SymbolObjectKind::Procedure, TypeKind::Void, 0, true, 0, 0, "", true}, false);
-    appendEntry(TabEntry{"write", 0, SymbolObjectKind::Procedure, TypeKind::Void, 0, true, 0, 0, "", true}, false);
+
+    auto appendWriteLikeProcedure = [this](const std::string &name) {
+        int blockRef = createProcedureBlock(name);
+        int tabIndex = appendEntry(TabEntry{name, 0, SymbolObjectKind::Procedure, TypeKind::Void,
+                                            blockRef, true, 0, 0, "", true}, false);
+        btab_[blockRef].ownerTabIndex = tabIndex;
+
+        enterBlockByIndex(blockRef);
+        declareParameter("<" + name + "-arg>", TypeKind::String);
+        leaveBlock();
+    };
+
+    appendWriteLikeProcedure("writeln");
+    appendWriteLikeProcedure("write");
 }
 
 int SymbolTable::appendEntry(TabEntry entry, bool updateCurrentBlock) {
