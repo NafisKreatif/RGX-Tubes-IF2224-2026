@@ -118,6 +118,8 @@ namespace arion {
         ASTNode &childAt(std::size_t index);
         const ASTNode *childWithRole(ASTChildRole role) const;
         ASTNode *childWithRole(ASTChildRole role);
+        std::vector<const ASTNode *>childrenWithRole(ASTChildRole role) const;
+        std::vector<ASTNode *> childrenWithRole(ASTChildRole role);
 
         void setAnnotation(ASTAnnotation annotation);
         ASTAnnotation &annotation();

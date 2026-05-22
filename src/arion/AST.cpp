@@ -72,6 +72,26 @@ ASTNode *ASTNode::childWithRole(ASTChildRole role) {
     return nullptr;
 }
 
+std::vector<const ASTNode *> ASTNode::childrenWithRole(ASTChildRole role) const {
+    std::vector<const ASTNode *> results;
+    for (const ASTChild &child : children_) {
+        if (child.role == role) {
+            results.push_back(&child.node);
+        }
+    }
+    return results;
+}
+
+std::vector<ASTNode *> ASTNode::childrenWithRole(ASTChildRole role) {
+    std::vector<ASTNode *> results;
+    for (ASTChild &child : children_) {
+        if (child.role == role) {
+            results.push_back(&child.node);
+        }
+    }
+    return results;
+}
+
 void ASTNode::setAnnotation(ASTAnnotation annotation) {
     annotation_ = std::move(annotation);
 }
