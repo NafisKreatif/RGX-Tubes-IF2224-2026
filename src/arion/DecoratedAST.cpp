@@ -87,8 +87,8 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             return true;
 
         case ASTNodeKind::ProcedureCall:
-            // decorateProcedureCall(astNode);
-            return true;
+            decorateProcedureCall(astNode);
+            return false;
 
         case ASTNodeKind::FunctionCall:
             // decorateFunctionCall(astNode);
@@ -309,7 +309,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
-        for (int i = 0; i < typeNode->getChildren().size(); i++) {
+        for (int i = 0; i < (int)typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
             decorateFieldDeclaration(fieldNode, recordRef);
@@ -432,13 +432,12 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
-        for (int i = 0; i < typeNode->getChildren().size(); i++) {
+        for (int i = 0; i < (int)typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
             decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
-        int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
         int tabIndex = symbolTable_.declareField(name, TypeKind::Record, recordRef);
 
         ASTAnnotation annotation;
@@ -517,7 +516,6 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         node.setAnnotation(annotation);
 
         return {arrRef, TypeKind::Array};
-        ;
     }
     else if (typeNode.getKind() == ASTNodeKind::RangeType) {
         const ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
@@ -561,7 +559,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
     else if (typeNode.getKind() == ASTNodeKind::RecordType) {
         std::string name = "_anonymousType" + std::to_string(anonymousTypeCount_++);
         int recordRef = symbolTable_.beginRecordType(name);
-        for (int i = 0; i < typeNode.getChildren().size(); i++) {
+        for (int i = 0; i < (int)typeNode.getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode.childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
             decorateFieldDeclaration(fieldNode, recordRef);
@@ -685,13 +683,12 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
-        for (int i = 0; i < typeNode->getChildren().size(); i++) {
+        for (int i = 0; i < (int)typeNode->getChildren().size(); i++) {
             ASTNode &fieldNode = typeNode->childAt(i);
             if (fieldNode.getKind() != ASTNodeKind::FieldDeclaration) continue;
             decorateFieldDeclaration(fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
-        int recordTabIndex = symbolTable_.declareRecordType("_anonymousType" + std::to_string(anonymousTypeCount_++), recordRef);
         int tabIndex = symbolTable_.declareVariable(name, TypeKind::Record, recordRef);
 
         ASTAnnotation annotation;
@@ -753,7 +750,7 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         std::string typeName = typeNode->getAttribute("name");
 
         const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int tabIndex = symbolTable_.declareType(name, tabEntry.type, tabEntry.ref);
+        int tabIndex = symbolTable_.declareParameter(name, tabEntry.type, tabEntry.ref);
 
         ASTAnnotation annotation;
         annotation.typeName = typeName;
@@ -814,8 +811,8 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         node.setAnnotation(annotation);
     }
 }
-void DecoratedAST::decorateBlock(ASTNode &node) {
-    int blockIndex = symbolTable_.enterBlock("block");
+void DecoratedAST::decorateBlock(ASTNode &node, std::string name) {
+    int blockIndex = symbolTable_.enterBlock(name);
     for (size_t i = 0; i < node.getChildren().size(); i++) {
         dfs(node.childAt(i));
     }
@@ -851,15 +848,15 @@ void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
 void DecoratedAST::decorateIfStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
-    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+    if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
         throw std::runtime_error("Condition must be a boolean: " +
                                  symbolTable_.typeKindToString(valueType.second));
     }
     ASTNode *thenNode = node.childWithRole(ASTChildRole::Then);
     ASTNode *elseNode = node.childWithRole(ASTChildRole::Else);
-    decorateBlock(*thenNode);
+    decorateBlock(*thenNode, "if-then");
     if (elseNode != NULL) {
-        decorateBlock(*elseNode);
+        decorateBlock(*elseNode, "else");
     }
 }
 void DecoratedAST::decorateCaseStatement(ASTNode &node) {
@@ -899,28 +896,100 @@ void DecoratedAST::decorateCaseBranches(ASTNode &node) {}
 void DecoratedAST::decorateWhileStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
-    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+    if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
         throw std::runtime_error("Condition must be a boolean: " +
                                  symbolTable_.typeKindToString(valueType.second));
     }
     ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
-    decorateBlock(*bodyNode);
+    decorateBlock(*bodyNode, "while");
 }
 void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
     ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
-    decorateBlock(*bodyNode);
+    decorateBlock(*bodyNode, "repeat-until");
 
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
-    if (!isTypeCompatible(24, TypeKind::Boolean, valueType.first, valueType.second)) {
+    if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
         throw std::runtime_error("Condition must be a boolean: " +
                                  symbolTable_.typeKindToString(valueType.second));
     }
 }
 void DecoratedAST::decorateForStatement(ASTNode &node) {
 }
-void DecoratedAST::decorateProcedureCall(ASTNode &node) {}
-std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) { return {0, TypeKind::Unknown}; }
+void DecoratedAST::decorateProcedureCall(ASTNode &node) {
+    std::string procedureName = node.getAttribute("name");
+    int procedureTabIndex = symbolTable_.requireLookupIndex(procedureName);
+    const TabEntry &procedureTabEntry = symbolTable_.requireLookup(procedureName);
+    const BTabEntry &procedureBTabEntry = symbolTable_.requireBlock(procedureTabEntry.ref);
+
+    ASTNode *argumentsNode = node.childWithRole(ASTChildRole::Arg);
+    int argCount = 0;
+    if (argumentsNode != nullptr) {
+        for (int i = 0; i < (int)argumentsNode->getChildren().size(); i++) {
+            const ASTChild &child = argumentsNode->getChildren().at(i);
+            if (child.role == ASTChildRole::Arg) {
+                argCount++;
+                int parTabRef = procedureTabIndex + argCount;
+                if (parTabRef > procedureBTabEntry.lastParameter) {
+                    throw std::runtime_error("Too many arguments in procedure call: " + procedureName);
+                }
+                const TabEntry &parTabEntry = symbolTable_.tab().at(parTabRef);
+                ASTNode &argNode = argumentsNode->childAt(i);
+                auto [argRef, argType] = decorateExpression(argNode);
+
+                if (!isAssignmentCompatible(parTabEntry.ref, parTabEntry.type, argRef, argType)) {
+                    throw std::runtime_error("Invalid argument type: " +
+                                             std::to_string(parTabEntry.ref) + ":" +
+                                             symbolTable_.typeKindToString(parTabEntry.type) +
+                                             " <- " +
+                                             std::to_string(argRef) + ":" +
+                                             symbolTable_.typeKindToString(argType));
+                }
+            }
+        }
+    }
+    if (procedureTabIndex + argCount != procedureBTabEntry.lastParameter) {
+        throw std::runtime_error("Too few arguments in procedure call: " + procedureName);
+    }
+}
+std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
+    std::string functionName = node.getAttribute("name");
+    int functionTabIndex = symbolTable_.requireLookupIndex(functionName);
+    const TabEntry &functionTabEntry = symbolTable_.requireLookup(functionName);
+    const BTabEntry &functionBTabEntry = symbolTable_.requireBlock(functionTabEntry.ref);
+
+    ASTNode *argumentsNode = node.childWithRole(ASTChildRole::Arg);
+    int argCount = 0;
+    if (argumentsNode != nullptr) {
+        for (int i = 0; i < (int)argumentsNode->getChildren().size(); i++) {
+            const ASTChild &child = argumentsNode->getChildren().at(i);
+            if (child.role == ASTChildRole::Arg) {
+                int parTabRef = functionTabIndex + ++argCount;
+                if (parTabRef > functionBTabEntry.lastParameter) {
+                    throw std::runtime_error("Too many arguments in function call: " + functionName);
+                }
+                const TabEntry &parTabEntry = symbolTable_.tab().at(parTabRef);
+                ASTNode &argNode = argumentsNode->childAt(i);
+                auto [argRef, argType] = decorateExpression(argNode);
+
+                if (!isAssignmentCompatible(parTabEntry.ref, parTabEntry.type, argRef, argType)) {
+                    throw std::runtime_error("Invalid argument type: " +
+                                             std::to_string(parTabEntry.ref) + ":" +
+                                             symbolTable_.typeKindToString(parTabEntry.type) +
+                                             " <- " +
+                                             std::to_string(argRef) + ":" +
+                                             symbolTable_.typeKindToString(argType));
+                }
+            }
+        }
+    }
+    if (functionTabIndex + argCount != functionBTabEntry.lastParameter) {
+        throw std::runtime_error("Too few arguments in function call: " + functionName);
+    }
+
+    const TabEntry &returnTabEntry = symbolTable_.tab().at(functionBTabEntry.returnRef);
+    return {returnTabEntry.ref, returnTabEntry.type};
+}
 std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     std::string op = node.getAttribute("operator");
     ASTNode *leftNode = node.childWithRole(ASTChildRole::Left);
@@ -938,14 +1007,14 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     std::pair<int, TypeKind> type = {0, TypeKind::Unknown};
     if (op == "+") {
         if (isStringType(leftType.second) && isStringType(rightType.second)) {
-            type = {26, TypeKind::String};
+            type = {0, TypeKind::String};
         }
         else if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
             if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
-                type = {23, TypeKind::Real};
+                type = {0, TypeKind::Real};
             }
             else {
-                type = {22, TypeKind::Integer};
+                type = {0, TypeKind::Integer};
             }
         }
         else {
@@ -958,10 +1027,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     else if (op == "-" || op == "*") {
         if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
             if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
-                type = {23, TypeKind::Real};
+                type = {0, TypeKind::Real};
             }
             else {
-                type = {22, TypeKind::Integer};
+                type = {0, TypeKind::Integer};
             }
         }
         else {
@@ -973,7 +1042,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "div" || op == "mod") {
         if (leftType.second == TypeKind::Integer || rightType.second == TypeKind::Integer) {
-            type = {22, TypeKind::Integer};
+            type = {0, TypeKind::Integer};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -984,7 +1053,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "/") {
         if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
-            type = {23, TypeKind::Real};
+            type = {0, TypeKind::Real};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -995,7 +1064,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     }
     else if (op == "and" || op == "or") {
         if (isBooleanType(leftType.second) && isBooleanType(rightType.second)) {
-            type = {24, TypeKind::Boolean};
+            type = {0, TypeKind::Boolean};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -1005,11 +1074,11 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         }
     }
     else if (op == "==" || op == "<>") {
-        type = {24, TypeKind::Boolean};
+        type = {0, TypeKind::Boolean};
     }
     else if (op == ">" || op == ">=" || op == "<" || op == "<=") {
         if (isOrderedType(leftType.second) && isOrderedType(rightType.second)) {
-            type = {24, TypeKind::Boolean};
+            type = {0, TypeKind::Boolean};
         }
         else {
             throw std::runtime_error("Incompatible type in binary operation: " +
@@ -1074,7 +1143,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     annotation.tabIndex = varRef;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
-    return {varRef, varEntry.type};
+    return {varEntry.ref, varEntry.type};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
@@ -1085,11 +1154,22 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     int arrRef = varEntry.ref;
     const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
 
-    for (int i = 0; i < node.getChildren().size(); i++) {
+    for (int i = 0; i < (int)node.getChildren().size(); i++) {
         const ASTChild &child = node.getChildren().at(i);
         if (child.role == ASTChildRole::Index) {
-            ASTNode &childNode = node.childAt(i);
-            // idk decorate the index i guess....
+            ASTNode &indexNode = node.childAt(i);
+            TypeKind indexType = TypeKind::Unknown;
+            if (isLiteralKind(indexNode.getKind())) {
+                indexType = nodeKindLiteralToTypeKind(indexNode.getKind());
+            }
+            else if (indexNode.getKind() == ASTNodeKind::Variable) {
+                std::string typeName = indexNode.getAttribute("name");
+                const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
+                indexType = tabEntry.type;
+            }
+            if (indexType != arrEntry.indexType) {
+                throw std::runtime_error("Invalid index type on array access");
+            }
         }
     }
 
@@ -1124,9 +1204,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
     }
     else if (baseNode->getKind() == ASTNodeKind::Variable) {
         auto [varRef, varType] = decorateVariable(*baseNode);
-        const TabEntry &varEntry = symbolTable_.tab().at(varRef);
-
-        symbolTable_.enterBlockByIndex(varEntry.ref);
+        symbolTable_.enterBlockByIndex(varRef);
 
         std::string fieldName = node.getAttribute("field");
         int fieldRef = symbolTable_.requireLookupIndex(fieldName);
@@ -1176,12 +1254,24 @@ std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
 
 bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
     if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return true;
-    if (typeRef1 == typeRef2) return true;
     if (isBooleanType(type1) && isBooleanType(type2)) return true;
     if (isStringType(type1) && isStringType(type2)) return !(type1 == TypeKind::Char && type2 == TypeKind::String);
     if (isNumberType(type1) && isNumberType(type2)) return true;
     if (type1 == TypeKind::Enumerated && type2 == TypeKind::Enumerated) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Array && type2 == TypeKind::Array) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Array && type2 == TypeKind::Array) {
+        if (typeRef1 == typeRef2) return true;
+        const ATabEntry &arrEntry1 = symbolTable_.requireArray(typeRef1);
+        const ATabEntry &arrEntry2 = symbolTable_.requireArray(typeRef2);
+        bool validIndex = arrEntry1.indexType == arrEntry2.indexType &&
+                          arrEntry1.lowOrdinal == arrEntry2.lowOrdinal &&
+                          arrEntry1.highOrdinal == arrEntry2.highOrdinal;
+
+        const TabEntry &elEntry1 = symbolTable_.tab().at(arrEntry1.elementRef);
+        const TabEntry &elEntry2 = symbolTable_.tab().at(arrEntry2.elementRef);
+        return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
+    }
+    if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
 
     return false;
 
@@ -1189,12 +1279,24 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
 }
 bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2) {
     if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return true;
-    if (typeRef1 == typeRef2) return true;
     if (isBooleanType(type1) && isBooleanType(type2)) return true;
     if (isStringType(type1) && isStringType(type2)) return true;
     if (isNumberType(type1) && isNumberType(type2)) return true;
     if (type1 == TypeKind::Enumerated && type2 == TypeKind::Enumerated) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Array && type2 == TypeKind::Array) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Array && type2 == TypeKind::Array) {
+        if (typeRef1 == typeRef2) return true;
+        const ATabEntry &arrEntry1 = symbolTable_.requireArray(typeRef1);
+        const ATabEntry &arrEntry2 = symbolTable_.requireArray(typeRef2);
+        bool validIndex = arrEntry1.indexType == arrEntry2.indexType &&
+                          arrEntry1.lowOrdinal == arrEntry2.lowOrdinal &&
+                          arrEntry1.highOrdinal == arrEntry2.highOrdinal;
+
+        const TabEntry &elEntry1 = symbolTable_.tab().at(arrEntry1.elementRef);
+        const TabEntry &elEntry2 = symbolTable_.tab().at(arrEntry2.elementRef);
+        return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
+    }
+    if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
 
     return false;
 }

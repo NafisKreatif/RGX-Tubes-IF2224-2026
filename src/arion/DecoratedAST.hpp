@@ -26,7 +26,7 @@ namespace arion
         void decorateVarDeclaration(ASTNode &node);
         void decorateProcedureDeclaration(ASTNode &node);
         void decorateFunctionDeclaration(ASTNode &node);
-        void decorateBlock(ASTNode &node);
+        void decorateBlock(ASTNode &node, std::string name = "block");
         void decorateParameter(ASTNode &node);
         void decorateAssignmentStatement(ASTNode &node);
         void decorateIfStatement(ASTNode &node);
