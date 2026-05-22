@@ -172,7 +172,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
-        const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
+        ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
 
         if (indexNode == nullptr || elementNode == nullptr) {
@@ -200,16 +200,16 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             }
         }
         else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            low = lowNode->getAttribute("value");
-            high = highNode->getAttribute("value");
-            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-            if (lowType != highType) {
+            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            auto lowValue = decorateValue(*lowNode);
+            auto highValue = decorateValue(*highNode);
+            low = lowValue.first;
+            high = highValue.first;
+            if (lowValue.second != highValue.second) {
                 throw std::runtime_error("Range low and high type is not the same: " + name);
             }
-            indexType = lowType;
+            indexType = lowValue.second;
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
@@ -224,34 +224,10 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        const ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        const ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        std::string low;
-        std::string high;
-        TypeKind lowType = TypeKind::Unknown;
-        TypeKind highType = TypeKind::Unknown;
-
-        if (isLiteralKind(lowNode->getKind())) {
-            low = lowNode->getAttribute("value");
-            lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-        }
-        else if (lowNode->getKind() == ASTNodeKind::Variable) {
-            std::string typeName = lowNode->getAttribute("name");
-            const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
-            low = tabEntry.value;
-            lowType = tabEntry.type;
-        }
-
-        if (isLiteralKind(highNode->getKind())) {
-            high = highNode->getAttribute("value");
-            highType = nodeKindLiteralToTypeKind(highNode->getKind());
-        }
-        else if (highNode->getKind() == ASTNodeKind::Variable) {
-            std::string typeName = highNode->getAttribute("name");
-            const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
-            high = tabEntry.value;
-            highType = tabEntry.type;
-        }
+        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+        auto [low, lowType] = decorateValue(*lowNode);
+        auto [high, highType] = decorateValue(*highNode);
 
         if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
             throw std::runtime_error("Range low and high type is unknown");
@@ -314,7 +290,7 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
-        const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
+        ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
 
         if (indexNode == nullptr || elementNode == nullptr) {
@@ -342,16 +318,16 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
             }
         }
         else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            low = lowNode->getAttribute("value");
-            high = highNode->getAttribute("value");
-            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-            if (lowType != highType) {
+            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            auto lowValue = decorateValue(*lowNode);
+            auto highValue = decorateValue(*highNode);
+            low = lowValue.first;
+            high = highValue.first;
+            if (lowValue.second != highValue.second) {
                 throw std::runtime_error("Range low and high type is not the same: " + name);
             }
-            indexType = lowType;
+            indexType = lowValue.second;
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
@@ -366,19 +342,18 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        const ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        const ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        std::string low = lowNode->getAttribute("value");
-        std::string high = highNode->getAttribute("value");
-
-        TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-        TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-        if (lowType != highType) {
+        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+        auto lowValue = decorateValue(*lowNode);
+        auto highValue = decorateValue(*highNode);
+        std::string low = lowValue.first;
+        std::string high = highValue.first;
+        if (lowValue.second != highValue.second) {
             throw std::runtime_error("Range low and high type is not the same: " + name);
         }
 
-        TypeKind baseKind = lowType;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
+        TypeKind baseKind = lowValue.second;
+        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
         int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
         int tabIndex = symbolTable_.declareField(name, TypeKind::Subrange, subrangeIndex);
 
@@ -390,9 +365,8 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
     }
     else if (typeNode->getKind() == ASTNodeKind::EnumeratedType) {
         std::vector<std::string> values;
-        for (auto &&child : typeNode->getChildren()) {
-            const ASTNode &enumNode = child.node;
-            values.push_back(enumNode.getAttribute("name"));
+        for (auto enumNode : typeNode->childrenWithRole(ASTChildRole::Element)) {
+            values.push_back(enumNode->getAttribute("name"));
         }
         int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
         int tabIndex = symbolTable_.declareField(name, TypeKind::Enumerated, enumIndex);
@@ -447,7 +421,8 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         return {tabIndex, tabEntry.type};
     }
     else if (typeNode.getKind() == ASTNodeKind::ArrayType) {
-        const ASTNode *indexNode = typeNode.childWithRole(ASTChildRole::Index);
+
+        ASTNode *indexNode = typeNode.childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode.childWithRole(ASTChildRole::Element);
 
         if (indexNode == nullptr || elementNode == nullptr) {
@@ -475,16 +450,17 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
             }
         }
         else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            low = lowNode->getAttribute("value");
-            high = highNode->getAttribute("value");
-            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-            if (lowType != highType) {
+            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+
+            auto lowValue = decorateValue(*lowNode);
+            auto highValue = decorateValue(*highNode);
+            low = lowValue.first;
+            high = highValue.first;
+            if (lowValue.second != highValue.second) {
                 throw std::runtime_error("Range low and high type is not the same");
             }
-            indexType = lowType;
+            indexType = TypeKind::Integer;
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
@@ -499,19 +475,18 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         return {arrRef, TypeKind::Array};
     }
     else if (typeNode.getKind() == ASTNodeKind::RangeType) {
-        const ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
-        const ASTNode *highNode = typeNode.childWithRole(ASTChildRole::High);
-        std::string low = lowNode->getAttribute("value");
-        std::string high = highNode->getAttribute("value");
-
-        TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-        TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-        if (lowType != highType) {
+        ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
+        ASTNode *highNode = typeNode.childWithRole(ASTChildRole::High);
+        auto lowValue = decorateValue(*lowNode);
+        auto highValue = decorateValue(*highNode);
+        std::string low = lowValue.first;
+        std::string high = highValue.first;
+        if (lowValue.second != highValue.second) {
             throw std::runtime_error("Range low and high type is not the same");
         }
 
-        TypeKind baseKind = lowType;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
+        TypeKind baseKind = lowValue.second;
+        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
 
         int tabIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
         ASTAnnotation annotation;
@@ -570,7 +545,7 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
-        const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
+        ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
 
         if (indexNode == nullptr || elementNode == nullptr) {
@@ -598,16 +573,16 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
             }
         }
         else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            low = lowNode->getAttribute("value");
-            high = highNode->getAttribute("value");
-            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-            if (lowType != highType) {
+            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            auto lowValue = decorateValue(*lowNode);
+            auto highValue = decorateValue(*highNode);
+            low = lowValue.first;
+            high = highValue.first;
+            if (lowValue.second != highValue.second) {
                 throw std::runtime_error("Range low and high type is not the same: " + name);
             }
-            indexType = lowType;
+            indexType = lowValue.second;
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
@@ -622,19 +597,17 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        const ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        const ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        std::string low = lowNode->getAttribute("value");
-        std::string high = highNode->getAttribute("value");
-
-        TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-        TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-        if (lowType != highType) {
+        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+        auto lowValue = decorateValue(*lowNode);
+        auto highValue = decorateValue(*highNode);
+        std::string low = lowValue.first;
+        std::string high = highValue.first;
+        if (lowValue.second != highValue.second) {
             throw std::runtime_error("Range low and high type is not the same: " + name);
         }
-
-        TypeKind baseKind = lowType;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
+        TypeKind baseKind = lowValue.second;
+        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
         int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
         int tabIndex = symbolTable_.declareVariable(name, TypeKind::Subrange, subrangeIndex);
 
@@ -701,7 +674,7 @@ void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {
     ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
     ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
 
-    auto [_, returnType] = decorateNamedType(*typeNode);
+    TypeKind returnType = decorateNamedType(*typeNode).second;
     int returnTypeRef = symbolTable_.requireTypeIndex(typeNode->getAttribute("name"));
 
     int tabIndex = symbolTable_.declareFunctionWithBlock(name, returnType, returnTypeRef);
@@ -734,7 +707,7 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
-        const ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
+        ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
 
         if (indexNode == nullptr || elementNode == nullptr) {
@@ -762,16 +735,16 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
             }
         }
         else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            const ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            const ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            low = lowNode->getAttribute("value");
-            high = highNode->getAttribute("value");
-            TypeKind lowType = nodeKindLiteralToTypeKind(lowNode->getKind());
-            TypeKind highType = nodeKindLiteralToTypeKind(highNode->getKind());
-            if (lowType != highType) {
+            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            auto lowValue = decorateValue(*lowNode);
+            auto highValue = decorateValue(*highNode);
+            low = lowValue.first;
+            high = highValue.first;
+            if (lowValue.second != highValue.second) {
                 throw std::runtime_error("Range low and high type is not the same: " + name);
             }
-            indexType = lowType;
+            indexType = lowValue.second;
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
@@ -842,15 +815,7 @@ void DecoratedAST::decorateCaseStatement(ASTNode &node) {
 
     for (auto branchNode : node.childrenWithRole(ASTChildRole::Branch)) {
         for (auto labelNode : branchNode->childrenWithRole(ASTChildRole::Label)) {
-            TypeKind labelType = TypeKind::Unknown;
-            if (isLiteralKind(labelNode->getKind())) {
-                labelType = nodeKindLiteralToTypeKind(labelNode->getKind());
-            }
-            else if (labelNode->getKind() == ASTNodeKind::Variable) {
-                std::string typeName = labelNode->getAttribute("name");
-                const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
-                labelType = tabEntry.type;
-            }
+            TypeKind labelType = decorateValue(*labelNode).second;
             if (expressionType != labelType) {
                 throw std::runtime_error("Invalid label type");
             }
@@ -971,7 +936,7 @@ void DecoratedAST::decorateProcedureCall(ASTNode &node) {
                 throw std::runtime_error("Semantic error: argument " +
                                          std::to_string(argCount) + " of '" +
                                          procedureName + "' expects " +
-                                         symbolTable_.typeKindToString(parTabEntry.type) + ":" +std::to_string(parTabEntry.ref) +
+                                         symbolTable_.typeKindToString(parTabEntry.type) + ":" + std::to_string(parTabEntry.ref) +
                                          ", got " +
                                          symbolTable_.typeKindToString(argType) + ":" + std::to_string(argRef));
             }
@@ -1167,6 +1132,27 @@ std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
 
     return expressionType;
 }
+std::pair<std::string, TypeKind> DecoratedAST::decorateValue(ASTNode &node) {
+    std::string value;
+    TypeKind type = TypeKind::Unknown;
+    if (isLiteralKind(node.getKind())) {
+        value = node.getAttribute("value");
+        type = nodeKindLiteralToTypeKind(node.getKind());
+    }
+    else {
+        std::string name = node.getAttribute("name");
+        const TabEntry &varEntry = symbolTable_.requireLookup(name);
+        value = varEntry.value;
+        type = varEntry.type;
+    }
+    std::string typeName = symbolTable_.typeKindToString(type);
+
+    ASTAnnotation annotation;
+    annotation.typeName = typeName;
+    node.setAnnotation(annotation);
+
+    return {value, type};
+}
 std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     std::string name = node.getAttribute("name");
     int varRef = symbolTable_.requireLookupIndex(name);
@@ -1189,15 +1175,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
 
     for (auto indexNode : node.childrenWithRole(ASTChildRole::Index)) {
-        TypeKind indexType = TypeKind::Unknown;
-        if (isLiteralKind(indexNode->getKind())) {
-            indexType = nodeKindLiteralToTypeKind(indexNode->getKind());
-        }
-        else if (indexNode->getKind() == ASTNodeKind::Variable) {
-            std::string typeName = indexNode->getAttribute("name");
-            const TabEntry &tabEntry = symbolTable_.requireLookup(typeName);
-            indexType = tabEntry.type;
-        }
+        TypeKind indexType = decorateValue(*indexNode).second;
         if (indexType != arrEntry.indexType) {
             throw std::runtime_error("Invalid index type on array access");
         }

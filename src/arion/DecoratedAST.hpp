@@ -39,6 +39,7 @@ namespace arion
         std::pair<int, TypeKind> decorateFunctionCall(ASTNode &node);
         std::pair<int, TypeKind> decorateBinaryOperator(ASTNode &node);
         std::pair<int, TypeKind> decorateUnaryOperator(ASTNode &node);
+        std::pair<std::string, TypeKind> decorateValue(ASTNode &node);
         std::pair<int, TypeKind> decorateVariable(ASTNode &node);
         std::pair<int, TypeKind> decorateArrayAccess(ASTNode &node);
         std::pair<int, TypeKind> decorateFieldAccess(ASTNode &node);
