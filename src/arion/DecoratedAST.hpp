@@ -22,6 +22,7 @@ namespace arion
         void decorateConstDeclaration(ASTNode &node);
         void decorateTypeDeclaration(ASTNode &node);
         void decorateFieldDeclaration(ASTNode &node, int recordBlockRef);
+        std::pair<int, TypeKind> decorateNamedType(ASTNode &node);
         std::pair<int, TypeKind> decorateAnonymousType(ASTNode &node);
         void decorateVarDeclaration(ASTNode &node);
         void decorateProcedureDeclaration(ASTNode &node);
