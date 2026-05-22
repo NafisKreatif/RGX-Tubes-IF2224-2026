@@ -1,0 +1,107 @@
+tab:
+ idx |   identifier |      object |        type | ref | nrm | lvl | adr | link | value |  initialized 
+-----|--------------|-------------|-------------|-----|-----|-----|-----|------|-------|--------------
+   0 |        <nil> |    reserved |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+   1 |          and |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   2 |        array |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   3 |        begin |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   4 |         case |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   5 |        const |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   6 |          div |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   7 |       downto |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   8 |           do |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   9 |         else |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  10 |          end |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  11 |          for |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  12 |     function |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  13 |           if |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  14 |          mod |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  15 |          not |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  16 |           of |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  17 |           or |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  18 |    procedure |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  19 |      program |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  20 |       record |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  21 |       repeat |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  22 |      integer |        type |     integer |   0 |   1 |   0 |   0 |    0 |       |            1 
+  23 |         real |        type |        real |   0 |   1 |   0 |   0 |    0 |       |            1 
+  24 |      boolean |        type |     boolean |   0 |   1 |   0 |   0 |    0 |       |            1 
+  25 |         char |        type |        char |   0 |   1 |   0 |   0 |    0 |       |            1 
+  26 |       string |        type |      string |   0 |   1 |   0 |   0 |    0 |       |            1 
+  27 |         then |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  28 |           to |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  29 |         type |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  30 |        until |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  31 |          var |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  32 |        while |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  33 |         true |    constant |     boolean |   0 |   1 |   0 |   1 |    0 |  true |            1 
+  34 |        false |    constant |     boolean |   0 |   1 |   0 |   0 |    0 | false |            1 
+  35 |       readln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  36 |      writeln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  37 |        write |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  38 |         Expr |     program |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  39 |   NumberList |        type |       array |   0 |   1 |   0 |   0 |   38 |       |            1 
+  40 |  NumberArray |        type |       array |   0 |   1 |   0 |   0 |   39 |       |            1 
+  41 |            a |    variable |     integer |  22 |   1 |   0 |   0 |   40 |       |            0 
+  42 |            b |    variable |     integer |  22 |   1 |   0 |   1 |   41 |       |            0 
+  43 |            c |    variable |     integer |  22 |   1 |   0 |   2 |   42 |       |            0 
+  44 |          yes |    variable |     boolean |  24 |   1 |   0 |   3 |   43 |       |            0 
+
+atab:
+ idx |     idxType | idxRef |      elType |  elRef |  low | high | resolved |  lowOrd | highOrd | elSize | size 
+-----|-------------|--------|-------------|--------|------|------|----------|---------|---------|--------|------
+   0 |     integer |      0 |     integer |     22 |    1 |    5 |        1 |       1 |       5 |      1 |    5 
+
+btab:
+ idx | name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
+-----|------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
+   0 | Expr |     program |     -1 |   44 |    0 |     0 |     4 |   0 |        void |         0 |    38 
+
+type:
+ idx |        kind |    baseType | baseRef |  low | high | resolved |  lowOrd | highOrd | size | values 
+-----|-------------|-------------|---------|------|------|----------|---------|---------|------|--------
+
+Program(name: Expr) -> (tabIndex: 38, lexicalLevel: 0)
+├── Declarations[role: Declaration] 
+│   ├── TypeDeclarations[role: Declaration] 
+│   │   ├── TypeDeclaration[role: Type] (name: NumberList) -> (type: array, tabIndex: 39, arrayIndex: 0, lexicalLevel: 0)
+│   │   │   └── ArrayType[role: Type] 
+│   │   │       ├── RangeType[role: Index] 
+│   │   │       │   ├── IntegerLiteral[role: Low] (value: 1)
+│   │   │       │   └── IntegerLiteral[role: High] (value: 5)
+│   │   │       └── NamedType[role: Element] (name: integer) -> (type: integer, tabIndex: 22, lexicalLevel: 0)
+│   │   └── TypeDeclaration[role: Type] (name: NumberArray) -> (type: NumberList, tabIndex: 40, lexicalLevel: 0)
+│   │       └── NamedType[role: Type] (name: NumberList)
+│   └── VarDeclarations[role: Declaration] 
+│       ├── VarDeclaration[role: Variable] (name: a) -> (type: integer, tabIndex: 41, lexicalLevel: 0)
+│       │   └── NamedType[role: Type] (name: integer)
+│       ├── VarDeclaration[role: Variable] (name: b) -> (type: integer, tabIndex: 42, lexicalLevel: 0)
+│       │   └── NamedType[role: Type] (name: integer)
+│       ├── VarDeclaration[role: Variable] (name: c) -> (type: integer, tabIndex: 43, lexicalLevel: 0)
+│       │   └── NamedType[role: Type] (name: integer)
+│       └── VarDeclaration[role: Variable] (name: yes) -> (type: boolean, tabIndex: 44, lexicalLevel: 0)
+│           └── NamedType[role: Type] (name: boolean)
+└── CompoundStatement[role: Body] 
+    └── StatementList[role: Body] 
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: a) -> (type: integer, tabIndex: 41, lexicalLevel: 0)
+        │   └── BinaryOperation[role: Value] (operator: *) -> (type: integer, lexicalLevel: 0)
+        │       ├── BinaryOperation[role: Left] (operator: +) -> (type: integer, lexicalLevel: 0)
+        │       │   ├── BinaryOperation[role: Left] (operator: +) -> (type: integer, lexicalLevel: 0)
+        │       │   │   ├── Variable[role: Left] (name: b) -> (type: integer, tabIndex: 42, lexicalLevel: 0)
+        │       │   │   └── Variable[role: Right] (name: c) -> (type: integer, tabIndex: 43, lexicalLevel: 0)
+        │       │   └── IntegerLiteral[role: Right] (value: 3)
+        │       └── IntegerLiteral[role: Right] (value: 2)
+        ├── Assignment[role: Statement] 
+        │   ├── Variable[role: Target] (name: yes) -> (type: boolean, tabIndex: 44, lexicalLevel: 0)
+        │   └── UnaryOperation[role: Value] (operator: not) -> (type: boolean, lexicalLevel: 0)
+        │       └── BinaryOperation[role: Expression] (operator: <) -> (type: boolean, lexicalLevel: 0)
+        │           ├── Variable[role: Left] (name: a) -> (type: integer, tabIndex: 41, lexicalLevel: 0)
+        │           └── Variable[role: Right] (name: c) -> (type: integer, tabIndex: 43, lexicalLevel: 0)
+        └── Assignment[role: Statement] 
+            ├── Variable[role: Target] (name: c) -> (type: integer, tabIndex: 43, lexicalLevel: 0)
+            └── BinaryOperation[role: Value] (operator: mod) -> (type: integer, lexicalLevel: 0)
+                ├── BinaryOperation[role: Left] (operator: div) -> (type: integer, lexicalLevel: 0)
+                │   ├── Variable[role: Left] (name: a) -> (type: integer, tabIndex: 41, lexicalLevel: 0)
+                │   └── IntegerLiteral[role: Right] (value: 2)
+                └── IntegerLiteral[role: Right] (value: 3)
