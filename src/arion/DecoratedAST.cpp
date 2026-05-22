@@ -55,12 +55,9 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             decorateBlock(astNode);
             return false;
 
-        case ASTNodeKind::EmptyStatement:
-            return true;
-
         case ASTNodeKind::Assignment:
             decorateAssignmentStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::IfStatement:
             decorateIfStatement(astNode);
@@ -70,41 +67,21 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
             decorateCaseStatement(astNode);
             return true;
 
-        case ASTNodeKind::CaseBranch:
-            // decorateCaseBranch(astNode);
-            return true;
-
         case ASTNodeKind::WhileStatement:
             decorateWhileStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::RepeatStatement:
             decorateRepeatStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::ForStatement:
             decorateForStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::ProcedureCall:
             decorateProcedureCall(astNode);
             return false;
-
-        case ASTNodeKind::FunctionCall:
-            // decorateFunctionCall(astNode);
-            return true;
-
-        case ASTNodeKind::Arguments:
-            // decorateArguments(astNode);
-            return true;
-
-        case ASTNodeKind::ReturnType:
-            // decorateReturnType(astNode);
-            return true;
-
-        case ASTNodeKind::Identifier:
-            // decorateIdentifier(astNode);
-            return true;
 
         default:
             return true;
@@ -816,11 +793,13 @@ void DecoratedAST::decorateBlock(ASTNode &node, std::string name) {
     for (size_t i = 0; i < node.getChildren().size(); i++) {
         dfs(node.childAt(i));
     }
-    symbolTable_.leaveBlock();
+
     ASTAnnotation annotation;
     annotation.blockIndex = blockIndex;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
+
+    symbolTable_.leaveBlock();
 }
 void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     ASTNode *targetNode = node.childWithRole(ASTChildRole::Target);
@@ -892,7 +871,6 @@ void DecoratedAST::decorateCaseStatement(ASTNode &node) {
         }
     }
 }
-void DecoratedAST::decorateCaseBranches(ASTNode &node) {}
 void DecoratedAST::decorateWhileStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
@@ -915,6 +893,27 @@ void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
     }
 }
 void DecoratedAST::decorateForStatement(ASTNode &node) {
+    ASTNode *variableNode = node.childWithRole(ASTChildRole::Variable);
+    auto [variableRef, variableType] = decorateVariable(*variableNode);
+
+    ASTNode *startNode = node.childWithRole(ASTChildRole::Start);
+    auto [startRef, startType] = decorateExpression(*startNode);
+
+    ASTNode *endNode = node.childWithRole(ASTChildRole::End);
+    auto [endRef, endType] = decorateExpression(*endNode);
+
+    if (!isAssignmentCompatible(variableRef, variableType, startRef, startType) ||
+        !isAssignmentCompatible(variableRef, variableType, endRef, endType)) {
+        throw std::runtime_error("Incompatible type in for statement: " +
+                                 symbolTable_.typeKindToString(variableType) +
+                                 ":=" +
+                                 symbolTable_.typeKindToString(startType) +
+                                 " to " +
+                                 symbolTable_.typeKindToString(endType));
+    }
+
+    ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
+    decorateBlock(*bodyNode, "for");
 }
 void DecoratedAST::decorateProcedureCall(ASTNode &node) {
     std::string procedureName = node.getAttribute("name");
@@ -1225,9 +1224,6 @@ std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
 std::pair<int, TypeKind> DecoratedAST::decorateExpression(ASTNode &node) {
     std::pair<int, TypeKind> valueType = {0, TypeKind::Unknown};
     if (node.getKind() == ASTNodeKind::BinaryOperation) {
-        valueType = decorateBinaryOperator(node);
-    }
-    else if (node.getKind() == ASTNodeKind::BinaryOperation) {
         valueType = decorateBinaryOperator(node);
     }
     else if (node.getKind() == ASTNodeKind::UnaryOperation) {
