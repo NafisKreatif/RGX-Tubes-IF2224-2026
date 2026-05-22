@@ -31,7 +31,6 @@ namespace arion
         void decorateAssignmentStatement(ASTNode &node);
         void decorateIfStatement(ASTNode &node);
         void decorateCaseStatement(ASTNode &node);
-        void decorateCaseBranches(ASTNode &node);
         void decorateWhileStatement(ASTNode &node);
         void decorateRepeatStatement(ASTNode &node);
         void decorateForStatement(ASTNode &node);
