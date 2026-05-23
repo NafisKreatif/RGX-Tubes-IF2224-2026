@@ -9,10 +9,15 @@ type
   Meong == array[1 .. 10] of real;
   MinMax == Min .. Max;
   Matrix == array[1 .. 10] of array[1 .. 10] of real;
-  Something == record
-    Direction1 : (Left, Center, Right);
-  end;
   Direction == (Left, Center, Right);
+  Something == record
+    dir : (Left, Center, Right);
+  end;
 
+var
+  dir : Direction;
+  smth : Something;
 begin
+  dir := Center;
+  smth.dir := Left;
 end.
