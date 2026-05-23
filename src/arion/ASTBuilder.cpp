@@ -53,7 +53,7 @@ ASTNode ASTBuilder::buildNode(const ParseNode &node) const {
     if (label == "<case-statement>") return buildCaseStatement(node);
     if (label == "<case-block>") {
         std::vector<ASTNode> branches = buildCaseBranches(node);
-        return branches.empty() ? ASTNode(ASTNodeKind::Unknown) : std::move(branches.front());
+        return branches.empty() ? ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine()) : std::move(branches.front());
     }
     if (label == "<while-statement>") return buildWhileStatement(node);
     if (label == "<repeat-statement>") return buildRepeatStatement(node);
@@ -67,7 +67,7 @@ ASTNode ASTBuilder::buildNode(const ParseNode &node) const {
     if (label == "<variable>") return buildVariable(node);
     if (label == "<index-list>") {
         std::vector<ASTNode> indexes = buildIndexList(node);
-        ASTNode arguments(ASTNodeKind::Arguments);
+        ASTNode arguments(ASTNodeKind::Arguments, node.getSymbol().getLine());
         for (ASTNode &index : indexes) {
             arguments.addChild(ASTChildRole::Index, std::move(index));
         }
@@ -79,7 +79,7 @@ ASTNode ASTBuilder::buildNode(const ParseNode &node) const {
         return terminalAsLiteralOrIdentifier(node);
     }
 
-    ASTNode unknown(ASTNodeKind::Unknown);
+    ASTNode unknown(ASTNodeKind::Unknown, node.getSymbol().getLine());
     unknown.setAttribute("parse_node", label);
     for (const ParseNode &child : node.getChildren()) {
         if (!child.getSymbol().isTerminal()) {
@@ -90,7 +90,7 @@ ASTNode ASTBuilder::buildNode(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildProgram(const ParseNode &node) const {
-    ASTNode program(ASTNodeKind::Program);
+    ASTNode program(ASTNodeKind::Program, node.getSymbol().getLine());
 
     const ParseNode *header = firstChildWithLabel(node, "<program-header>");
     if (header != nullptr) {
@@ -112,7 +112,7 @@ ASTNode ASTBuilder::buildProgram(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildDeclarationPart(const ParseNode &node) const {
-    ASTNode declarations(ASTNodeKind::Declarations);
+    ASTNode declarations(ASTNodeKind::Declarations, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (!child.getSymbol().isTerminal()) {
             declarations.addChild(ASTChildRole::Declaration, buildNode(child));
@@ -122,13 +122,13 @@ ASTNode ASTBuilder::buildDeclarationPart(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildConstDeclaration(const ParseNode &node) const {
-    ASTNode declarations(ASTNodeKind::ConstDeclarations);
+    ASTNode declarations(ASTNodeKind::ConstDeclarations, node.getSymbol().getLine());
     const auto &children = node.getChildren();
 
     for (std::size_t i = 0; i < children.size(); ++i) {
         if (!isTerminal(children[i], Tokenizer::TOKEN_IDENT)) continue;
 
-        ASTNode declaration(ASTNodeKind::ConstDeclaration);
+        ASTNode declaration(ASTNodeKind::ConstDeclaration, node.getSymbol().getLine());
         declaration.setAttribute("name", terminalValue(children[i]));
 
         for (std::size_t j = i + 1; j < children.size(); ++j) {
@@ -144,13 +144,13 @@ ASTNode ASTBuilder::buildConstDeclaration(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildTypeDeclaration(const ParseNode &node) const {
-    ASTNode declarations(ASTNodeKind::TypeDeclarations);
+    ASTNode declarations(ASTNodeKind::TypeDeclarations, node.getSymbol().getLine());
     const auto &children = node.getChildren();
 
     for (std::size_t i = 0; i < children.size(); ++i) {
         if (!isTerminal(children[i], Tokenizer::TOKEN_IDENT)) continue;
 
-        ASTNode declaration(ASTNodeKind::TypeDeclaration);
+        ASTNode declaration(ASTNodeKind::TypeDeclaration, node.getSymbol().getLine());
         declaration.setAttribute("name", terminalValue(children[i]));
         for (std::size_t j = i + 1; j < children.size(); ++j) {
             if (isNonTerminalLabel(children[j], "<type>")) {
@@ -165,7 +165,7 @@ ASTNode ASTBuilder::buildTypeDeclaration(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildVarDeclaration(const ParseNode &node) const {
-    ASTNode declarations(ASTNodeKind::VarDeclarations);
+    ASTNode declarations(ASTNodeKind::VarDeclarations, node.getSymbol().getLine());
     const auto &children = node.getChildren();
 
     for (std::size_t i = 0; i < children.size(); ++i) {
@@ -183,7 +183,7 @@ ASTNode ASTBuilder::buildVarDeclaration(const ParseNode &node) const {
         if (typeNode == nullptr) continue;
 
         for (const std::string &name : names) {
-            ASTNode declaration(ASTNodeKind::VarDeclaration);
+            ASTNode declaration(ASTNodeKind::VarDeclaration, node.getSymbol().getLine());
             declaration.setAttribute("name", name);
             declaration.addChild(ASTChildRole::Type, buildType(*typeNode));
             declarations.addChild(ASTChildRole::Variable, std::move(declaration));
@@ -195,7 +195,7 @@ ASTNode ASTBuilder::buildVarDeclaration(const ParseNode &node) const {
 ASTNode ASTBuilder::buildType(const ParseNode &node) const {
     for (const ParseNode &child : node.getChildren()) {
         if (isTerminal(child, Tokenizer::TOKEN_IDENT)) {
-            ASTNode type(ASTNodeKind::NamedType);
+            ASTNode type(ASTNodeKind::NamedType, node.getSymbol().getLine());
             type.setAttribute("name", terminalValue(child));
             return type;
         }
@@ -203,11 +203,11 @@ ASTNode ASTBuilder::buildType(const ParseNode &node) const {
             return buildNode(child);
         }
     }
-    return ASTNode(ASTNodeKind::Unknown);
+    return ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine());
 }
 
 ASTNode ASTBuilder::buildArrayType(const ParseNode &node) const {
-    ASTNode arrayType(ASTNodeKind::ArrayType);
+    ASTNode arrayType(ASTNodeKind::ArrayType, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<range>")) {
             arrayType.addChild(ASTChildRole::Index, buildRange(child));
@@ -221,7 +221,7 @@ ASTNode ASTBuilder::buildArrayType(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildRange(const ParseNode &node) const {
-    ASTNode range(ASTNodeKind::RangeType);
+    ASTNode range(ASTNodeKind::RangeType, node.getSymbol().getLine());
     bool lowFilled = false;
     for (const ParseNode &child : node.getChildren()) {
         if (!isNonTerminalLabel(child, "<constant>")) continue;
@@ -238,7 +238,7 @@ ASTNode ASTBuilder::buildRange(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildEnumerated(const ParseNode &node) const {
-    ASTNode enumerated(ASTNodeKind::EnumeratedType);
+    ASTNode enumerated(ASTNodeKind::EnumeratedType, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isTerminal(child, Tokenizer::TOKEN_IDENT)) {
             enumerated.addChild(ASTChildRole::Element, makeIdentifier(terminalValue(child)));
@@ -248,7 +248,7 @@ ASTNode ASTBuilder::buildEnumerated(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildRecordType(const ParseNode &node) const {
-    ASTNode record(ASTNodeKind::RecordType);
+    ASTNode record(ASTNodeKind::RecordType, node.getSymbol().getLine());
     if (const ParseNode *fields = firstChildWithLabel(node, "<field-list>")) {
         ASTNode fieldList = buildFieldList(*fields);
         for (ASTChild child : fieldList.getChildren()) {
@@ -259,7 +259,7 @@ ASTNode ASTBuilder::buildRecordType(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildFieldList(const ParseNode &node) const {
-    ASTNode fields(ASTNodeKind::RecordType);
+    ASTNode fields(ASTNodeKind::RecordType, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<field-part>")) {
             ASTNode fieldPart = buildFieldPart(child);
@@ -272,13 +272,13 @@ ASTNode ASTBuilder::buildFieldList(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildFieldPart(const ParseNode &node) const {
-    ASTNode fields(ASTNodeKind::RecordType);
+    ASTNode fields(ASTNodeKind::RecordType, node.getSymbol().getLine());
     const ParseNode *identifierList = firstChildWithLabel(node, "<identifier-list>");
     const ParseNode *typeNode = firstChildWithLabel(node, "<type>");
     if (identifierList == nullptr || typeNode == nullptr) return fields;
 
     for (const std::string &name : collectIdentifierList(*identifierList)) {
-        ASTNode field(ASTNodeKind::FieldDeclaration);
+        ASTNode field(ASTNodeKind::FieldDeclaration, node.getSymbol().getLine());
         field.setAttribute("name", name);
         field.addChild(ASTChildRole::Type, buildType(*typeNode));
         fields.addChild(ASTChildRole::Field, std::move(field));
@@ -290,11 +290,11 @@ ASTNode ASTBuilder::buildSubprogramDeclaration(const ParseNode &node) const {
     for (const ParseNode &child : node.getChildren()) {
         if (!child.getSymbol().isTerminal()) return buildNode(child);
     }
-    return ASTNode(ASTNodeKind::Unknown);
+    return ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine());
 }
 
 ASTNode ASTBuilder::buildProcedureDeclaration(const ParseNode &node) const {
-    ASTNode procedure(ASTNodeKind::ProcedureDeclaration);
+    ASTNode procedure(ASTNodeKind::ProcedureDeclaration, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isTerminal(child, Tokenizer::TOKEN_IDENT)) {
             procedure.setAttribute("name", terminalValue(child));
@@ -311,7 +311,7 @@ ASTNode ASTBuilder::buildProcedureDeclaration(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildFunctionDeclaration(const ParseNode &node) const {
-    ASTNode function(ASTNodeKind::FunctionDeclaration);
+    ASTNode function(ASTNodeKind::FunctionDeclaration, node.getSymbol().getLine());
     bool nameFilled = false;
     bool returnTypeFilled = false;
 
@@ -321,7 +321,7 @@ ASTNode ASTBuilder::buildFunctionDeclaration(const ParseNode &node) const {
                 function.setAttribute("name", terminalValue(child));
                 nameFilled = true;
             } else if (!returnTypeFilled) {
-                ASTNode returnType(ASTNodeKind::ReturnType);
+                ASTNode returnType(ASTNodeKind::ReturnType, node.getSymbol().getLine());
                 returnType.addChild(ASTChildRole::Type, makeIdentifier(terminalValue(child)));
                 function.addChild(ASTChildRole::ReturnType, std::move(returnType));
                 returnTypeFilled = true;
@@ -338,7 +338,7 @@ ASTNode ASTBuilder::buildFunctionDeclaration(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildBlock(const ParseNode &node) const {
-    ASTNode block(ASTNodeKind::Block);
+    ASTNode block(ASTNodeKind::Block, node.getSymbol().getLine());
     if (const ParseNode *declarations = firstChildWithLabel(node, "<declaration-part>")) {
         block.addChild(ASTChildRole::Declaration, buildDeclarationPart(*declarations));
     }
@@ -349,7 +349,7 @@ ASTNode ASTBuilder::buildBlock(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildFormalParameterList(const ParseNode &node) const {
-    ASTNode parameters(ASTNodeKind::Parameters);
+    ASTNode parameters(ASTNodeKind::Parameters, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<parameter-group>")) {
             parameters.addChild(ASTChildRole::Group, buildParameterGroup(child));
@@ -359,7 +359,7 @@ ASTNode ASTBuilder::buildFormalParameterList(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildParameterGroup(const ParseNode &node) const {
-    ASTNode group(ASTNodeKind::ParameterGroup);
+    ASTNode group(ASTNodeKind::ParameterGroup, node.getSymbol().getLine());
     const ParseNode *identifierList = firstChildWithLabel(node, "<identifier-list>");
     if (identifierList == nullptr) return group;
 
@@ -391,11 +391,11 @@ ASTNode ASTBuilder::buildParameterGroup(const ParseNode &node) const {
     }
 
     for (const std::string &name : collectIdentifierList(*identifierList)) {
-        ASTNode parameter(ASTNodeKind::Parameter);
+        ASTNode parameter(ASTNodeKind::Parameter, node.getSymbol().getLine());
         parameter.setAttribute("name", name);
         if (typeNode != nullptr) {
             if (typeNode->getSymbol().isTerminal()) {
-                ASTNode type(ASTNodeKind::NamedType);
+                ASTNode type(ASTNodeKind::NamedType, node.getSymbol().getLine());
                 type.setAttribute("name", terminalValue(*typeNode));
                 parameter.addChild(ASTChildRole::Type, std::move(type));
             } else {
@@ -408,7 +408,7 @@ ASTNode ASTBuilder::buildParameterGroup(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildCompoundStatement(const ParseNode &node) const {
-    ASTNode compound(ASTNodeKind::CompoundStatement);
+    ASTNode compound(ASTNodeKind::CompoundStatement, node.getSymbol().getLine());
     if (const ParseNode *statements = firstChildWithLabel(node, "<statement-list>")) {
         compound.addChild(ASTChildRole::Body, buildStatementList(*statements));
     }
@@ -416,7 +416,7 @@ ASTNode ASTBuilder::buildCompoundStatement(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildStatementList(const ParseNode &node) const {
-    ASTNode statements(ASTNodeKind::StatementList);
+    ASTNode statements(ASTNodeKind::StatementList, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<statement>")) {
             statements.addChild(ASTChildRole::Statement, buildStatement(child));
@@ -434,11 +434,11 @@ ASTNode ASTBuilder::buildStatement(const ParseNode &node) const {
             return buildNode(child);
         }
     }
-    return ASTNode(ASTNodeKind::EmptyStatement);
+    return ASTNode(ASTNodeKind::EmptyStatement, node.getSymbol().getLine());
 }
 
 ASTNode ASTBuilder::buildAssignmentStatement(const ParseNode &node) const {
-    ASTNode assignment(ASTNodeKind::Assignment);
+    ASTNode assignment(ASTNodeKind::Assignment, node.getSymbol().getLine());
     if (const ParseNode *variable = firstChildWithLabel(node, "<variable>")) {
         assignment.addChild(ASTChildRole::Target, buildVariable(*variable));
     }
@@ -449,7 +449,7 @@ ASTNode ASTBuilder::buildAssignmentStatement(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildIfStatement(const ParseNode &node) const {
-    ASTNode ifStatement(ASTNodeKind::IfStatement);
+    ASTNode ifStatement(ASTNodeKind::IfStatement, node.getSymbol().getLine());
     bool conditionFilled = false;
     bool thenFilled = false;
 
@@ -470,7 +470,7 @@ ASTNode ASTBuilder::buildIfStatement(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildCaseStatement(const ParseNode &node) const {
-    ASTNode caseStatement(ASTNodeKind::CaseStatement);
+    ASTNode caseStatement(ASTNodeKind::CaseStatement, node.getSymbol().getLine());
     if (const ParseNode *expression = firstChildWithLabel(node, "<expression>")) {
         caseStatement.addChild(ASTChildRole::Expression, buildExpression(*expression));
     }
@@ -486,7 +486,7 @@ ASTNode ASTBuilder::buildCaseStatement(const ParseNode &node) const {
 
 std::vector<ASTNode> ASTBuilder::buildCaseBranches(const ParseNode &node) const {
     std::vector<ASTNode> branches;
-    ASTNode branch(ASTNodeKind::CaseBranch);
+    ASTNode branch(ASTNodeKind::CaseBranch, node.getSymbol().getLine());
 
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<constant>")) {
@@ -506,7 +506,7 @@ std::vector<ASTNode> ASTBuilder::buildCaseBranches(const ParseNode &node) const 
 }
 
 ASTNode ASTBuilder::buildWhileStatement(const ParseNode &node) const {
-    ASTNode whileStatement(ASTNodeKind::WhileStatement);
+    ASTNode whileStatement(ASTNodeKind::WhileStatement, node.getSymbol().getLine());
     if (const ParseNode *condition = firstChildWithLabel(node, "<expression>")) {
         whileStatement.addChild(ASTChildRole::Condition, buildExpression(*condition));
     }
@@ -519,7 +519,7 @@ ASTNode ASTBuilder::buildWhileStatement(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildRepeatStatement(const ParseNode &node) const {
-    ASTNode repeat(ASTNodeKind::RepeatStatement);
+    ASTNode repeat(ASTNodeKind::RepeatStatement, node.getSymbol().getLine());
     if (const ParseNode *body = firstChildWithLabel(node, "<statement-list>")) {
         repeat.addChild(ASTChildRole::Body, buildStatementList(*body));
     }
@@ -530,7 +530,7 @@ ASTNode ASTBuilder::buildRepeatStatement(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildForStatement(const ParseNode &node) const {
-    ASTNode forStatement(ASTNodeKind::ForStatement);
+    ASTNode forStatement(ASTNodeKind::ForStatement, node.getSymbol().getLine());
     bool startFilled = false;
     bool controlVariableFilled = false;
 
@@ -573,7 +573,7 @@ ASTNode ASTBuilder::buildProcedureOrFunctionCall(const ParseNode &node, bool asF
 }
 
 ASTNode ASTBuilder::buildParameterList(const ParseNode &node) const {
-    ASTNode arguments(ASTNodeKind::Arguments);
+    ASTNode arguments(ASTNodeKind::Arguments, node.getSymbol().getLine());
     for (const ParseNode &child : node.getChildren()) {
         if (isNonTerminalLabel(child, "<expression>")) {
             arguments.addChild(ASTChildRole::Arg, buildExpression(child));
@@ -583,7 +583,7 @@ ASTNode ASTBuilder::buildParameterList(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildExpression(const ParseNode &node) const {
-    ASTNode current(ASTNodeKind::Unknown);
+    ASTNode current(ASTNodeKind::Unknown, node.getSymbol().getLine());
     bool hasCurrent = false;
     std::string pendingOperator;
 
@@ -594,7 +594,7 @@ ASTNode ASTBuilder::buildExpression(const ParseNode &node) const {
                 current = std::move(operand);
                 hasCurrent = true;
             } else {
-                ASTNode operation(ASTNodeKind::BinaryOperation);
+                ASTNode operation(ASTNodeKind::BinaryOperation, node.getSymbol().getLine());
                 operation.setAttribute("operator", pendingOperator);
                 operation.addChild(ASTChildRole::Left, std::move(current));
                 operation.addChild(ASTChildRole::Right, std::move(operand));
@@ -608,7 +608,7 @@ ASTNode ASTBuilder::buildExpression(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildSimpleExpression(const ParseNode &node) const {
-    ASTNode current(ASTNodeKind::Unknown);
+    ASTNode current(ASTNodeKind::Unknown, node.getSymbol().getLine());
     bool hasCurrent = false;
     std::string pendingOperator;
     std::string unaryOperator;
@@ -623,7 +623,7 @@ ASTNode ASTBuilder::buildSimpleExpression(const ParseNode &node) const {
             ASTNode operand = buildTerm(child);
             if (!hasCurrent) {
                 if (!unaryOperator.empty()) {
-                    ASTNode unary(ASTNodeKind::UnaryOperation);
+                    ASTNode unary(ASTNodeKind::UnaryOperation, node.getSymbol().getLine());
                     unary.setAttribute("operator", unaryOperator);
                     unary.addChild(ASTChildRole::Expression, std::move(operand));
                     current = std::move(unary);
@@ -632,7 +632,7 @@ ASTNode ASTBuilder::buildSimpleExpression(const ParseNode &node) const {
                 }
                 hasCurrent = true;
             } else {
-                ASTNode operation(ASTNodeKind::BinaryOperation);
+                ASTNode operation(ASTNodeKind::BinaryOperation, node.getSymbol().getLine());
                 operation.setAttribute("operator", pendingOperator);
                 operation.addChild(ASTChildRole::Left, std::move(current));
                 operation.addChild(ASTChildRole::Right, std::move(operand));
@@ -644,7 +644,7 @@ ASTNode ASTBuilder::buildSimpleExpression(const ParseNode &node) const {
 }
 
 ASTNode ASTBuilder::buildTerm(const ParseNode &node) const {
-    ASTNode current(ASTNodeKind::Unknown);
+    ASTNode current(ASTNodeKind::Unknown, node.getSymbol().getLine());
     bool hasCurrent = false;
     std::string pendingOperator;
 
@@ -655,7 +655,7 @@ ASTNode ASTBuilder::buildTerm(const ParseNode &node) const {
                 current = std::move(operand);
                 hasCurrent = true;
             } else {
-                ASTNode operation(ASTNodeKind::BinaryOperation);
+                ASTNode operation(ASTNodeKind::BinaryOperation, node.getSymbol().getLine());
                 operation.setAttribute("operator", pendingOperator);
                 operation.addChild(ASTChildRole::Left, std::move(current));
                 operation.addChild(ASTChildRole::Right, std::move(operand));
@@ -670,7 +670,7 @@ ASTNode ASTBuilder::buildTerm(const ParseNode &node) const {
 
 ASTNode ASTBuilder::buildFactor(const ParseNode &node) const {
     const auto &children = node.getChildren();
-    if (children.empty()) return ASTNode(ASTNodeKind::Unknown);
+    if (children.empty()) return ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine());
 
     if (children.size() == 1) {
         const ParseNode &child = children.front();
@@ -686,7 +686,7 @@ ASTNode ASTBuilder::buildFactor(const ParseNode &node) const {
             }
         }
         if (isTerminal(children[i], Tokenizer::TOKEN_NOT)) {
-            ASTNode unary(ASTNodeKind::UnaryOperation);
+            ASTNode unary(ASTNodeKind::UnaryOperation, node.getSymbol().getLine());
             unary.setAttribute("operator", "not");
             for (const ParseNode &child : children) {
                 if (isNonTerminalLabel(child, "<factor>")) {
@@ -697,22 +697,22 @@ ASTNode ASTBuilder::buildFactor(const ParseNode &node) const {
             return unary;
         }
     }
-    return ASTNode(ASTNodeKind::Unknown);
+    return ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine());
 }
 
 ASTNode ASTBuilder::buildVariable(const ParseNode &node) const {
-    ASTNode current(ASTNodeKind::Unknown);
+    ASTNode current(ASTNodeKind::Unknown, node.getSymbol().getLine());
     bool hasBase = false;
 
     for (const ParseNode &child : node.getChildren()) {
         if (isTerminal(child, Tokenizer::TOKEN_IDENT) && !hasBase) {
-            current = ASTNode(ASTNodeKind::Variable);
+            current = ASTNode(ASTNodeKind::Variable, node.getSymbol().getLine());
             current.setAttribute("name", terminalValue(child));
             hasBase = true;
         } else if (isNonTerminalLabel(child, "<component-variable>")) {
             const ParseNode *indexList = firstChildWithLabel(child, "<index-list>");
             if (indexList != nullptr) {
-                ASTNode access(ASTNodeKind::ArrayAccess);
+                ASTNode access(ASTNodeKind::ArrayAccess, node.getSymbol().getLine());
                 access.addChild(ASTChildRole::Base, std::move(current));
                 for (ASTNode &index : buildIndexList(*indexList)) {
                     access.addChild(ASTChildRole::Index, std::move(index));
@@ -721,7 +721,7 @@ ASTNode ASTBuilder::buildVariable(const ParseNode &node) const {
             } else {
                 for (const ParseNode &componentChild : child.getChildren()) {
                     if (isTerminal(componentChild, Tokenizer::TOKEN_IDENT)) {
-                        ASTNode access(ASTNodeKind::FieldAccess);
+                        ASTNode access(ASTNodeKind::FieldAccess, node.getSymbol().getLine());
                         access.setAttribute("field", terminalValue(componentChild));
                         access.addChild(ASTChildRole::Base, std::move(current));
                         current = std::move(access);
@@ -762,7 +762,7 @@ ASTNode ASTBuilder::buildConstant(const ParseNode &node) const {
         if (child.getSymbol().isTerminal()) {
             ASTNode value = terminalAsLiteralOrIdentifier(child);
             if (!unaryOperator.empty()) {
-                ASTNode unary(ASTNodeKind::UnaryOperation);
+                ASTNode unary(ASTNodeKind::UnaryOperation, node.getSymbol().getLine());
                 unary.setAttribute("operator", unaryOperator);
                 unary.addChild(ASTChildRole::Expression, std::move(value));
                 return unary;
@@ -770,7 +770,7 @@ ASTNode ASTBuilder::buildConstant(const ParseNode &node) const {
             return value;
         }
     }
-    return ASTNode(ASTNodeKind::Unknown);
+    return ASTNode(ASTNodeKind::Unknown, node.getSymbol().getLine());
 }
 
 std::vector<std::string> ASTBuilder::collectIdentifierList(const ParseNode &node) const {
@@ -811,23 +811,23 @@ ASTNode ASTBuilder::terminalAsLiteralOrIdentifier(const ParseNode &node) const {
     const int id = node.getSymbol().getId();
     const std::string value = terminalValue(node);
 
-    if (id == Tokenizer::TOKEN_INT) return ASTNode(ASTNodeKind::IntegerLiteral).setAttribute("value", value);
-    if (id == Tokenizer::TOKEN_REAL) return ASTNode(ASTNodeKind::RealLiteral).setAttribute("value", value);
+    if (id == Tokenizer::TOKEN_INT) return ASTNode(ASTNodeKind::IntegerLiteral, node.getSymbol().getLine()).setAttribute("value", value);
+    if (id == Tokenizer::TOKEN_REAL) return ASTNode(ASTNodeKind::RealLiteral, node.getSymbol().getLine()).setAttribute("value", value);
     if (id == Tokenizer::TOKEN_CHAR_END || id == Tokenizer::TOKEN_CHAR_ESCAPE_OR_END) {
-        return ASTNode(ASTNodeKind::CharLiteral).setAttribute("value", value);
+        return ASTNode(ASTNodeKind::CharLiteral, node.getSymbol().getLine()).setAttribute("value", value);
     }
     if (id == Tokenizer::TOKEN_STRING_ESCAPE_OR_END) {
-        return ASTNode(ASTNodeKind::StringLiteral).setAttribute("value", value);
+        return ASTNode(ASTNodeKind::StringLiteral, node.getSymbol().getLine()).setAttribute("value", value);
     }
     if (id == Tokenizer::TOKEN_IDENT) {
         const std::string lowered = lowerCopy(value);
         if (lowered == "true" || lowered == "false") {
-            return ASTNode(ASTNodeKind::BooleanLiteral).setAttribute("value", lowered);
+            return ASTNode(ASTNodeKind::BooleanLiteral, node.getSymbol().getLine()).setAttribute("value", lowered);
         }
-        return ASTNode(ASTNodeKind::Variable).setAttribute("name", value);
+        return ASTNode(ASTNodeKind::Variable, node.getSymbol().getLine()).setAttribute("name", value);
     }
 
-    ASTNode unknown(ASTNodeKind::Unknown);
+    ASTNode unknown(ASTNodeKind::Unknown, node.getSymbol().getLine());
     unknown.setAttribute("token", node.getLabel());
     return unknown;
 }
