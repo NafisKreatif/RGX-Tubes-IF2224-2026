@@ -61,7 +61,7 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
 
         case ASTNodeKind::IfStatement:
             decorateIfStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::CaseStatement:
             decorateCaseStatement(astNode);
