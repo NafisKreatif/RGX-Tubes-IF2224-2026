@@ -61,7 +61,7 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
 
         case ASTNodeKind::IfStatement:
             decorateIfStatement(astNode);
-            return true;
+            return false;
 
         case ASTNodeKind::CaseStatement:
             decorateCaseStatement(astNode);
@@ -89,11 +89,15 @@ bool DecoratedAST::decorateNode(ASTNode &astNode) {
 }
 
 void DecoratedAST::decorateProgram(ASTNode &node) {
-    int index = symbolTable_.declareProgram(node.getAttribute("name"));
-    ASTAnnotation annotation;
-    annotation.tabIndex = index;
-    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-    node.setAnnotation(annotation);
+    try {
+        int tabIndex = symbolTable_.declareProgram(node.getAttribute("name"));
+        ASTAnnotation annotation;
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+    } catch (const std::exception &e) {
+        throw SemanticError(node.getLine(), "Failed to declare program " + node.getAttribute("name") + ". " + e.what());
+    }
 }
 
 static TypeKind nodeKindLiteralToTypeKind(ASTNodeKind kind) {
@@ -131,7 +135,7 @@ static bool isLiteralKind(ASTNodeKind kind) {
 }
 
 void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
-    const ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
+    ASTNode *valueNode = node.childWithRole(ASTChildRole::Value);
 
     std::string name = node.getAttribute("name");
     TypeKind typeKind;
@@ -139,45 +143,58 @@ void DecoratedAST::decorateConstDeclaration(ASTNode &node) {
     std::string value;
 
     if (valueNode->getKind() != ASTNodeKind::UnaryOperation) {
-        typeKind = nodeKindLiteralToTypeKind(valueNode->getKind());
-        typeName = ASTNode::kindToString(valueNode->getKind());
-        value = valueNode->getAttribute("value");
+        try {
+            auto [valueTemp, typeTemp] = decorateValue(*valueNode);
+            typeKind = typeTemp;
+            value = valueTemp;
+        } catch (const std::exception &e) {
+            throw SemanticError(valueNode->getLine(), "Failed to declare constant '" + name + "'. " + e.what());
+        }
     }
     else {
-        const ASTNode *unaryValueNode = valueNode->childWithRole(ASTChildRole::Expression);
-        typeKind = nodeKindLiteralToTypeKind(unaryValueNode->getKind());
-        typeName = ASTNode::kindToString(valueNode->getKind());
-        value = valueNode->getAttribute("name") + unaryValueNode->getAttribute("value");
+        try {
+            ASTNode *unaryValueNode = valueNode->childWithRole(ASTChildRole::Expression);
+            auto [valueTemp, typeTemp] = decorateValue(*unaryValueNode);
+            typeKind = typeTemp;
+            value = valueNode->getAttribute("name") + valueTemp;
+        } catch (const std::exception &e) {
+            throw SemanticError(valueNode->getLine(), "Failed to declare constant '" + name + "'. " + e.what());
+        }
     }
 
-    int index = symbolTable_.declareConstant(name, typeKind, value);
-    ASTAnnotation annotation;
-    annotation.typeName = symbolTable_.typeKindToString(typeKind);
-    annotation.tabIndex = index;
-    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-    node.setAnnotation(annotation);
+    try {
+        int tabIndex = symbolTable_.declareConstant(name, typeKind, value);
+        ASTAnnotation annotation;
+        annotation.typeName = symbolTable_.typeKindToString(typeKind);
+        annotation.tabIndex = tabIndex;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+    } catch (const std::exception &e) {
+        throw SemanticError(node.getLine(), "Failed to declare constant '" + name + "'. " + e.what());
+    }
 }
+
 void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
     ASTNode *typeNode = node.childWithRole(ASTChildRole::Type);
     std::string name = node.getAttribute("name");
 
     if (typeNode->getKind() == ASTNodeKind::NamedType) {
-        auto [ref, type] = decorateNamedType(*typeNode);
-        int tabIndex = symbolTable_.declareType(name, type, ref);
+        try {
+            auto [ref, type] = decorateNamedType(*typeNode);
+            int tabIndex = symbolTable_.declareType(name, type, ref);
 
-        ASTAnnotation annotation;
-        annotation.typeName = symbolTable_.typeKindToString(type);
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = symbolTable_.typeKindToString(type);
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(node.getLine(), "Failed to declare type '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
         ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
-
-        if (indexNode == nullptr || elementNode == nullptr) {
-            throw std::runtime_error("Can't get index or element of array: " + name);
-        }
 
         std::string indexName = indexNode->getAttribute("name");
         TypeKind indexType;
@@ -185,79 +202,103 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
         std::string low = "";
         std::string high = "";
 
-        if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
-            indexRef = symbolTable_.requireTypeIndex(indexName);
-
-            if (indexTabEntry.type == TypeKind::Subrange) {
-                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
-                low = typeDescriptor.low;
-                high = typeDescriptor.high;
-                indexType = typeDescriptor.baseType;
+        try {
+            if (indexNode->getKind() == ASTNodeKind::Identifier) {
+                indexRef = symbolTable_.requireTypeIndex(indexName);
+                const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                if (indexTabEntry.type == TypeKind::Subrange) {
+                    const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                    low = typeDescriptor.low;
+                    high = typeDescriptor.high;
+                    indexType = typeDescriptor.baseType;
+                }
+                else {
+                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                }
             }
-            else {
-                throw std::runtime_error("Identifier is not an array range: " + name);
+            else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+                ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+                ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+                auto lowValue = decorateValue(*lowNode);
+                auto highValue = decorateValue(*highNode);
+                low = lowValue.first;
+                high = highValue.first;
+                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
+                    throw std::runtime_error("Range low or high type is unknown");
+                }
+                if (lowValue.second != highValue.second) {
+                    throw std::runtime_error("Range low and high type is not the same: " +
+                                             symbolTable_.typeKindToString(lowValue.second) +
+                                             " .. " +
+                                             symbolTable_.typeKindToString(highValue.second));
+                }
+                indexType = lowValue.second;
             }
-        }
-        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            auto lowValue = decorateValue(*lowNode);
-            auto highValue = decorateValue(*highNode);
-            low = lowValue.first;
-            high = highValue.first;
-            if (lowValue.second != highValue.second) {
-                throw std::runtime_error("Range low and high type is not the same: " + name);
-            }
-            indexType = lowValue.second;
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array type '" + name + "'. Invalid array index type. " + e.what());
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int tabIndex = symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementType, elementRef);
-        const TabEntry tabEntry = symbolTable_.tab().at(tabIndex);
+        try {
+            int tabIndex = symbolTable_.declareArrayType(name, indexType, indexRef, low, high, elementType, elementRef);
+            const TabEntry tabEntry = symbolTable_.tab().at(tabIndex);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "array";
-        annotation.tabIndex = tabIndex;
-        annotation.arrayIndex = tabEntry.ref;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "array";
+            annotation.tabIndex = tabIndex;
+            annotation.arrayIndex = tabEntry.ref;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array type '" + name + "'. Invalid array index type. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        auto [low, lowType] = decorateValue(*lowNode);
-        auto [high, highType] = decorateValue(*highNode);
+        try {
+            ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+            auto [low, lowType] = decorateValue(*lowNode);
+            auto [high, highType] = decorateValue(*highNode);
 
-        if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
-            throw std::runtime_error("Range low and high type is unknown");
+            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
+                throw std::runtime_error("Range low and high type is unknown");
+            }
+            if (lowType != highType) {
+                throw std::runtime_error("Range low and high type is not the same: " +
+                                         symbolTable_.typeKindToString(lowType) +
+                                         " .. " +
+                                         symbolTable_.typeKindToString(highType));
+            }
+
+            TypeKind baseKind = lowType;
+            int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
+
+            int tabIndex = symbolTable_.declareSubrangeType(name, baseKind, low, high, baseRef);
+            ASTAnnotation annotation;
+            annotation.typeName = "subrange";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare subrange type '" + name + "'. " + e.what());
         }
-        if (lowType != highType) {
-            throw std::runtime_error("Range low and high type is not the same: " + name);
-        }
-
-        TypeKind baseKind = lowType;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(lowType));
-
-        int tabIndex = symbolTable_.declareSubrangeType(name, baseKind, low, high, baseRef);
-        ASTAnnotation annotation;
-        annotation.typeName = "subrange";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::EnumeratedType) {
-        std::vector<std::string> values;
-        for (auto &&child : typeNode->getChildren()) {
-            const ASTNode &enumNode = child.node;
-            values.push_back(enumNode.getAttribute("name"));
+        try {
+            std::vector<std::string> values;
+            for (auto &&child : typeNode->getChildren()) {
+                const ASTNode &enumNode = child.node;
+                values.push_back(enumNode.getAttribute("name"));
+            }
+            int tabIndex = symbolTable_.declareEnumeratedType(name, values);
+            ASTAnnotation annotation;
+            annotation.typeName = "enumerated";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare enumerated type '" + name + "'. " + e.what());
         }
-        int tabIndex = symbolTable_.declareEnumeratedType(name, values);
-        ASTAnnotation annotation;
-        annotation.typeName = "enumerated";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
@@ -265,14 +306,18 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             decorateFieldDeclaration(*fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
-        int recordTabIndex = symbolTable_.declareRecordType(name, recordRef);
+        try {
+            int recordTabIndex = symbolTable_.declareRecordType(name, recordRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "record";
-        annotation.tabIndex = recordTabIndex;
-        annotation.blockIndex = recordRef;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "record";
+            annotation.tabIndex = recordTabIndex;
+            annotation.blockIndex = recordRef;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare record type '" + name + "'. " + e.what());
+        }
     }
 }
 void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
@@ -280,22 +325,22 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
     std::string name = node.getAttribute("name");
 
     if (typeNode->getKind() == ASTNodeKind::NamedType) {
-        auto [ref, type] = decorateNamedType(*typeNode);
-        int tabIndex = symbolTable_.declareField(name, type, recordBlockRef);
+        try {
+            auto [ref, type] = decorateNamedType(*typeNode);
+            int tabIndex = symbolTable_.declareField(name, type, recordBlockRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = symbolTable_.typeKindToString(type);
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = symbolTable_.typeKindToString(type);
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare field '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
         ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
-
-        if (indexNode == nullptr || elementNode == nullptr) {
-            throw std::runtime_error("Can't get index or element of array: " + name);
-        }
 
         std::string indexName = indexNode->getAttribute("name");
         TypeKind indexType;
@@ -303,79 +348,108 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
         std::string low = "";
         std::string high = "";
 
-        if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
-            indexRef = symbolTable_.requireTypeIndex(indexName);
+        try {
+            if (indexNode->getKind() == ASTNodeKind::Identifier) {
+                const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                indexRef = symbolTable_.requireTypeIndex(indexName);
 
-            if (indexTabEntry.type == TypeKind::Subrange) {
-                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
-                low = typeDescriptor.low;
-                high = typeDescriptor.high;
-                indexType = typeDescriptor.baseType;
+                if (indexTabEntry.type == TypeKind::Subrange) {
+                    const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                    low = typeDescriptor.low;
+                    high = typeDescriptor.high;
+                    indexType = typeDescriptor.baseType;
+                }
+                else {
+                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                }
             }
-            else {
-                throw std::runtime_error("Identifier is not an array range: " + name);
+            else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+                ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+                ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+                auto lowValue = decorateValue(*lowNode);
+                auto highValue = decorateValue(*highNode);
+                low = lowValue.first;
+                high = highValue.first;
+
+                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
+                    throw std::runtime_error("Range low or high type is unknown");
+                }
+                if (lowValue.second != highValue.second) {
+                    throw std::runtime_error("Range low and high type is not the same: " +
+                                             symbolTable_.typeKindToString(lowValue.second) +
+                                             " .. " +
+                                             symbolTable_.typeKindToString(highValue.second));
+                }
+
+                indexType = lowValue.second;
             }
-        }
-        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            auto lowValue = decorateValue(*lowNode);
-            auto highValue = decorateValue(*highNode);
-            low = lowValue.first;
-            high = highValue.first;
-            if (lowValue.second != highValue.second) {
-                throw std::runtime_error("Range low and high type is not the same: " + name);
-            }
-            indexType = lowValue.second;
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array field '" + name + "'. Invalid array index type. " + e.what());
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
-        int tabIndex = symbolTable_.declareField(name, TypeKind::Array, arrIndex);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "array";
-        annotation.tabIndex = tabIndex;
-        annotation.arrayIndex = arrIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+        try {
+            int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
+            int tabIndex = symbolTable_.declareField(name, TypeKind::Array, arrIndex);
+
+            ASTAnnotation annotation;
+            annotation.typeName = "array";
+            annotation.tabIndex = tabIndex;
+            annotation.arrayIndex = arrIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare array field '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        auto lowValue = decorateValue(*lowNode);
-        auto highValue = decorateValue(*highNode);
-        std::string low = lowValue.first;
-        std::string high = highValue.first;
-        if (lowValue.second != highValue.second) {
-            throw std::runtime_error("Range low and high type is not the same: " + name);
+        try {
+            ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+            auto [low, lowType] = decorateValue(*lowNode);
+            auto [high, highType] = decorateValue(*highNode);
+
+            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
+                throw std::runtime_error("Range low and high type is unknown");
+            }
+            if (lowType != highType) {
+                throw std::runtime_error("Range low and high type is not the same: " +
+                                         symbolTable_.typeKindToString(lowType) +
+                                         " .. " +
+                                         symbolTable_.typeKindToString(highType));
+            }
+            TypeKind baseKind = lowType;
+            int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
+            int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
+            int tabIndex = symbolTable_.declareField(name, TypeKind::Subrange, subrangeIndex);
+
+            ASTAnnotation annotation;
+            annotation.typeName = "subrange";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare subrange field '" + name + "'. " + e.what());
         }
-
-        TypeKind baseKind = lowValue.second;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
-        int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
-        int tabIndex = symbolTable_.declareField(name, TypeKind::Subrange, subrangeIndex);
-
-        ASTAnnotation annotation;
-        annotation.typeName = "subrange";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
     }
     else if (typeNode->getKind() == ASTNodeKind::EnumeratedType) {
-        std::vector<std::string> values;
-        for (auto enumNode : typeNode->childrenWithRole(ASTChildRole::Element)) {
-            values.push_back(enumNode->getAttribute("name"));
-        }
-        int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
-        int tabIndex = symbolTable_.declareField(name, TypeKind::Enumerated, enumIndex);
+        try {
+            std::vector<std::string> values;
+            for (auto enumNode : typeNode->childrenWithRole(ASTChildRole::Element)) {
+                values.push_back(enumNode->getAttribute("name"));
+            }
+            int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
+            int tabIndex = symbolTable_.declareField(name, TypeKind::Enumerated, enumIndex);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "enumerated";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "enumerated";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare enumerated field '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
@@ -383,14 +457,18 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
             decorateFieldDeclaration(*fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
-        int tabIndex = symbolTable_.declareField(name, TypeKind::Record, recordRef);
+        try {
+            int tabIndex = symbolTable_.declareField(name, TypeKind::Record, recordRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "record";
-        annotation.tabIndex = tabIndex;
-        annotation.blockIndex = recordRef;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "record";
+            annotation.tabIndex = tabIndex;
+            annotation.blockIndex = recordRef;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare record field '" + name + "'. " + e.what());
+        }
     }
 }
 std::pair<int, TypeKind> DecoratedAST::decorateNamedType(ASTNode &node) {
@@ -409,25 +487,24 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
     ASTNode &typeNode = node;
 
     if (typeNode.getKind() == ASTNodeKind::NamedType) {
-        std::string typeName = node.getAttribute("name");
-        const TabEntry &tabEntry = symbolTable_.requireType(typeName);
-        int tabIndex = symbolTable_.requireTypeIndex(typeName);
+        try {
+            std::string typeName = node.getAttribute("name");
+            const TabEntry &tabEntry = symbolTable_.requireType(typeName);
+            int tabIndex = symbolTable_.requireTypeIndex(typeName);
 
-        ASTAnnotation annotation;
-        annotation.typeName = symbolTable_.typeKindToString(tabEntry.type);
-        annotation.tabIndex = tabIndex;
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = symbolTable_.typeKindToString(tabEntry.type);
+            annotation.tabIndex = tabIndex;
+            node.setAnnotation(annotation);
 
-        return {tabIndex, tabEntry.type};
+            return {tabIndex, tabEntry.type};
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode.getLine(), std::string("Failed to declare type. ") + e.what());
+        }
     }
     else if (typeNode.getKind() == ASTNodeKind::ArrayType) {
-
         ASTNode *indexNode = typeNode.childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode.childWithRole(ASTChildRole::Element);
-
-        if (indexNode == nullptr || elementNode == nullptr) {
-            throw std::runtime_error("Can't get index or element of array");
-        }
 
         std::string indexName = indexNode->getAttribute("name");
         TypeKind indexType;
@@ -435,82 +512,110 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         std::string low = "";
         std::string high = "";
 
-        if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
-            indexRef = symbolTable_.requireTypeIndex(indexName);
+        try {
+            if (indexNode->getKind() == ASTNodeKind::Identifier) {
+                const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                indexRef = symbolTable_.requireTypeIndex(indexName);
 
-            if (indexTabEntry.type == TypeKind::Subrange) {
-                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
-                low = typeDescriptor.low;
-                high = typeDescriptor.high;
-                indexType = typeDescriptor.baseType;
+                if (indexTabEntry.type == TypeKind::Subrange) {
+                    const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                    low = typeDescriptor.low;
+                    high = typeDescriptor.high;
+                    indexType = typeDescriptor.baseType;
+                }
+                else {
+                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                }
             }
-            else {
-                throw std::runtime_error("Identifier is not an array range");
-            }
-        }
-        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+            else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+                ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+                ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+                auto lowValue = decorateValue(*lowNode);
+                auto highValue = decorateValue(*highNode);
+                low = lowValue.first;
+                high = highValue.first;
 
-            auto lowValue = decorateValue(*lowNode);
-            auto highValue = decorateValue(*highNode);
-            low = lowValue.first;
-            high = highValue.first;
-            if (lowValue.second != highValue.second) {
-                throw std::runtime_error("Range low and high type is not the same");
+                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
+                    throw std::runtime_error("Range low or high type is unknown");
+                }
+                if (lowValue.second != highValue.second) {
+                    throw std::runtime_error("Range low and high type is not the same: " +
+                                             symbolTable_.typeKindToString(lowValue.second) +
+                                             " .. " +
+                                             symbolTable_.typeKindToString(highValue.second));
+                }
+
+                indexType = lowValue.second;
             }
-            indexType = TypeKind::Integer;
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), std::string("Failed to declare array type. Invalid array index type. ") + e.what());
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrRef = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "array";
-        annotation.arrayIndex = arrRef;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+        try {
+            int arrRef = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
 
-        return {arrRef, TypeKind::Array};
+            ASTAnnotation annotation;
+            annotation.typeName = "array";
+            annotation.arrayIndex = arrRef;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+
+            return {arrRef, TypeKind::Array};
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode.getLine(), std::string("Failed to declare type. ") + e.what());
+        }
     }
     else if (typeNode.getKind() == ASTNodeKind::RangeType) {
-        ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
-        ASTNode *highNode = typeNode.childWithRole(ASTChildRole::High);
-        auto lowValue = decorateValue(*lowNode);
-        auto highValue = decorateValue(*highNode);
-        std::string low = lowValue.first;
-        std::string high = highValue.first;
-        if (lowValue.second != highValue.second) {
-            throw std::runtime_error("Range low and high type is not the same");
+        try {
+            ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = typeNode.childWithRole(ASTChildRole::High);
+
+            auto [low, lowType] = decorateValue(*lowNode);
+            auto [high, highType] = decorateValue(*highNode);
+
+            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
+                throw std::runtime_error("Range low and high type is unknown");
+            }
+            if (lowType != highType) {
+                throw std::runtime_error("Range low and high type is not the same: " +
+                                         symbolTable_.typeKindToString(lowType) +
+                                         " .. " +
+                                         symbolTable_.typeKindToString(highType));
+            }
+            TypeKind baseKind = lowType;
+            int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
+            int tabIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
+            ASTAnnotation annotation;
+            annotation.typeName = "subrange";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+
+            return {tabIndex, TypeKind::Subrange};
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode.getLine(), std::string("Failed to declare subrange type. ") + e.what());
         }
-
-        TypeKind baseKind = lowValue.second;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
-
-        int tabIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
-        ASTAnnotation annotation;
-        annotation.typeName = "subrange";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
-
-        return {tabIndex, TypeKind::Subrange};
     }
     else if (typeNode.getKind() == ASTNodeKind::EnumeratedType) {
-        std::vector<std::string> values;
-        for (auto &&child : typeNode.getChildren()) {
-            const ASTNode &enumNode = child.node;
-            values.push_back(enumNode.getAttribute("name"));
-        }
-        int tabIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
-        ASTAnnotation annotation;
-        annotation.typeName = "enumerated";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+        try {
+            std::vector<std::string> values;
+            for (auto &&child : typeNode.getChildren()) {
+                const ASTNode &enumNode = child.node;
+                values.push_back(enumNode.getAttribute("name"));
+            }
+            int tabIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
+            ASTAnnotation annotation;
+            annotation.typeName = "enumerated";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
 
-        return {tabIndex, TypeKind::Enumerated};
+            return {tabIndex, TypeKind::Enumerated};
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode.getLine(), std::string("Failed to declare enumerated type. ") + e.what());
+        }
     }
     else if (typeNode.getKind() == ASTNodeKind::RecordType) {
         std::string name = "_anonymousType" + std::to_string(anonymousTypeCount_++);
@@ -535,22 +640,22 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
     std::string name = node.getAttribute("name");
 
     if (typeNode->getKind() == ASTNodeKind::NamedType) {
-        auto [ref, type] = decorateNamedType(*typeNode);
-        int tabIndex = symbolTable_.declareVariable(name, type, ref);
+        try {
+            auto [ref, type] = decorateNamedType(*typeNode);
+            int tabIndex = symbolTable_.declareVariable(name, type, ref);
 
-        ASTAnnotation annotation;
-        annotation.typeName = symbolTable_.typeKindToString(type);
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = symbolTable_.typeKindToString(type);
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare variable '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
         ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
-
-        if (indexNode == nullptr || elementNode == nullptr) {
-            throw std::runtime_error("Can't get index or element of array: " + name);
-        }
 
         std::string indexName = indexNode->getAttribute("name");
         TypeKind indexType;
@@ -558,79 +663,110 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
         std::string low = "";
         std::string high = "";
 
-        if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
-            indexRef = symbolTable_.requireTypeIndex(indexName);
+        try {
+            if (indexNode->getKind() == ASTNodeKind::Identifier) {
+                const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                indexRef = symbolTable_.requireTypeIndex(indexName);
 
-            if (indexTabEntry.type == TypeKind::Subrange) {
-                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
-                low = typeDescriptor.low;
-                high = typeDescriptor.high;
-                indexType = typeDescriptor.baseType;
+                if (indexTabEntry.type == TypeKind::Subrange) {
+                    const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                    low = typeDescriptor.low;
+                    high = typeDescriptor.high;
+                    indexType = typeDescriptor.baseType;
+                }
+                else {
+                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                }
             }
-            else {
-                throw std::runtime_error("Identifier is not an array range: " + name);
+            else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+                ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+                ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+                auto lowValue = decorateValue(*lowNode);
+                auto highValue = decorateValue(*highNode);
+                low = lowValue.first;
+                high = highValue.first;
+
+                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
+                    throw std::runtime_error("Range low or high type is unknown");
+                }
+                if (lowValue.second != highValue.second) {
+                    throw std::runtime_error("Range low and high type is not the same: " +
+                                             symbolTable_.typeKindToString(lowValue.second) +
+                                             " .. " +
+                                             symbolTable_.typeKindToString(highValue.second));
+                }
+
+                indexType = lowValue.second;
             }
-        }
-        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            auto lowValue = decorateValue(*lowNode);
-            auto highValue = decorateValue(*highNode);
-            low = lowValue.first;
-            high = highValue.first;
-            if (lowValue.second != highValue.second) {
-                throw std::runtime_error("Range low and high type is not the same: " + name);
-            }
-            indexType = lowValue.second;
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array variable '" + name + "'. Invalid array index type. " + e.what());
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
-        int tabIndex = symbolTable_.declareVariable(name, TypeKind::Array, arrIndex);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "array";
-        annotation.tabIndex = tabIndex;
-        annotation.arrayIndex = arrIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+        try {
+            int arrIndex = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
+            int tabIndex = symbolTable_.declareVariable(name, TypeKind::Array, arrIndex);
+
+            ASTAnnotation annotation;
+            annotation.typeName = "array";
+            annotation.tabIndex = tabIndex;
+            annotation.arrayIndex = arrIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare array variable '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::RangeType) {
-        ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
-        ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
-        auto lowValue = decorateValue(*lowNode);
-        auto highValue = decorateValue(*highNode);
-        std::string low = lowValue.first;
-        std::string high = highValue.first;
-        if (lowValue.second != highValue.second) {
-            throw std::runtime_error("Range low and high type is not the same: " + name);
-        }
-        TypeKind baseKind = lowValue.second;
-        int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
-        int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
-        int tabIndex = symbolTable_.declareVariable(name, TypeKind::Subrange, subrangeIndex);
+        try {
+            ASTNode *lowNode = typeNode->childWithRole(ASTChildRole::Low);
+            ASTNode *highNode = typeNode->childWithRole(ASTChildRole::High);
+            auto [low, lowType] = decorateValue(*lowNode);
+            auto [high, highType] = decorateValue(*highNode);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "subrange";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
+                throw std::runtime_error("Range low and high type is unknown");
+            }
+            if (lowType != highType) {
+                throw std::runtime_error("Range low and high type is not the same: " +
+                                         symbolTable_.typeKindToString(lowType) +
+                                         " .. " +
+                                         symbolTable_.typeKindToString(highType));
+            }
+
+            TypeKind baseKind = lowType;
+            int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
+            int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
+            int tabIndex = symbolTable_.declareVariable(name, TypeKind::Subrange, subrangeIndex);
+
+            ASTAnnotation annotation;
+            annotation.typeName = "subrange";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare subrange variable '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::EnumeratedType) {
-        std::vector<std::string> values;
-        for (auto &&child : typeNode->getChildren()) {
-            const ASTNode &enumNode = child.node;
-            values.push_back(enumNode.getAttribute("name"));
-        }
-        int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
-        int tabIndex = symbolTable_.declareVariable(name, TypeKind::Enumerated, enumIndex);
+        try {
+            std::vector<std::string> values;
+            for (auto &&child : typeNode->getChildren()) {
+                const ASTNode &enumNode = child.node;
+                values.push_back(enumNode.getAttribute("name"));
+            }
+            int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
+            int tabIndex = symbolTable_.declareVariable(name, TypeKind::Enumerated, enumIndex);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "enumerated";
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "enumerated";
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare enumerated variable '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::RecordType) {
         int recordRef = symbolTable_.beginRecordType(name);
@@ -638,14 +774,18 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
             decorateFieldDeclaration(*fieldNode, recordRef);
         }
         symbolTable_.endRecordType();
-        int tabIndex = symbolTable_.declareVariable(name, TypeKind::Record, recordRef);
+        try {
+            int tabIndex = symbolTable_.declareVariable(name, TypeKind::Record, recordRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "record";
-        annotation.tabIndex = tabIndex;
-        annotation.blockIndex = recordRef;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = "record";
+            annotation.tabIndex = tabIndex;
+            annotation.blockIndex = recordRef;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(typeNode->getLine(), "Failed to declare record variable '" + name + "'. " + e.what());
+        }
     }
 }
 void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {
@@ -653,7 +793,13 @@ void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {
     ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
     ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
 
-    int tabIndex = symbolTable_.declareProcedureWithBlock(name);
+    int tabIndex;
+    try {
+        tabIndex = symbolTable_.declareProcedureWithBlock(name);
+    } catch (const std::exception &e) {
+        throw SemanticError(node.getLine(), "Failed to declare procedure '" + name + "'. " + e.what());
+    }
+
     const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
     dfs(*parametersNode);
@@ -674,10 +820,22 @@ void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {
     ASTNode *parametersNode = node.childWithRole(ASTChildRole::Parameters);
     ASTNode *blockNode = node.childWithRole(ASTChildRole::Block);
 
-    TypeKind returnType = decorateNamedType(*typeNode).second;
-    int returnTypeRef = symbolTable_.requireTypeIndex(typeNode->getAttribute("name"));
+    TypeKind returnType;
+    int returnTypeRef;
+    try {
+        returnType = decorateNamedType(*typeNode).second;
+        returnTypeRef = symbolTable_.requireTypeIndex(typeNode->getAttribute("name"));
+    } catch (const std::exception &e) {
+        throw SemanticError(typeNode->getLine(), "Failed to declare function '" + name + "'. Invalid return type. " + e.what());
+    }
 
-    int tabIndex = symbolTable_.declareFunctionWithBlock(name, returnType, returnTypeRef);
+    int tabIndex;
+    try {
+        tabIndex = symbolTable_.declareFunctionWithBlock(name, returnType, returnTypeRef);
+    } catch (const std::exception &e) {
+        throw SemanticError(node.getLine(), "Failed to declare function '" + name + "'. " + e.what());
+    }
+
     const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
     dfs(*parametersNode);
@@ -695,24 +853,24 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
     std::string name = node.getAttribute("name");
 
     if (typeNode->getKind() == ASTNodeKind::NamedType) {
-        std::string typeName = typeNode->getAttribute("name");
+        try {
+            std::string typeName = typeNode->getAttribute("name");
 
-        auto [ref, type] = decorateNamedType(*typeNode);
-        int tabIndex = symbolTable_.declareParameter(name, type, ref);
+            auto [ref, type] = decorateNamedType(*typeNode);
+            int tabIndex = symbolTable_.declareParameter(name, type, ref);
 
-        ASTAnnotation annotation;
-        annotation.typeName = symbolTable_.typeKindToString(type);
-        annotation.tabIndex = tabIndex;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+            ASTAnnotation annotation;
+            annotation.typeName = symbolTable_.typeKindToString(type);
+            annotation.tabIndex = tabIndex;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(node.getLine(), "Failed to declare parameter '" + name + "'. " + e.what());
+        }
     }
     else if (typeNode->getKind() == ASTNodeKind::ArrayType) {
         ASTNode *indexNode = typeNode->childWithRole(ASTChildRole::Index);
         ASTNode *elementNode = typeNode->childWithRole(ASTChildRole::Element);
-
-        if (indexNode == nullptr || elementNode == nullptr) {
-            throw std::runtime_error("Can't get index or element of array: " + name);
-        }
 
         std::string indexName = indexNode->getAttribute("name");
         TypeKind indexType;
@@ -720,43 +878,59 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
         std::string low = "";
         std::string high = "";
 
-        if (indexNode->getKind() == ASTNodeKind::Identifier) {
-            const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
-            indexRef = symbolTable_.requireTypeIndex(indexName);
+        try {
+            if (indexNode->getKind() == ASTNodeKind::Identifier) {
+                const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                indexRef = symbolTable_.requireTypeIndex(indexName);
 
-            if (indexTabEntry.type == TypeKind::Subrange) {
-                const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
-                low = typeDescriptor.low;
-                high = typeDescriptor.high;
-                indexType = typeDescriptor.baseType;
+                if (indexTabEntry.type == TypeKind::Subrange) {
+                    const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
+                    low = typeDescriptor.low;
+                    high = typeDescriptor.high;
+                    indexType = typeDescriptor.baseType;
+                }
+                else {
+                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                }
             }
-            else {
-                throw std::runtime_error("Identifier is not an array range: " + name);
+            else if (indexNode->getKind() == ASTNodeKind::RangeType) {
+                ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
+                ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
+                auto lowValue = decorateValue(*lowNode);
+                auto highValue = decorateValue(*highNode);
+                low = lowValue.first;
+                high = highValue.first;
+
+                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
+                    throw std::runtime_error("Range low or high type is unknown");
+                }
+                if (lowValue.second != highValue.second) {
+                    throw std::runtime_error("Range low and high type is not the same: " +
+                                             symbolTable_.typeKindToString(lowValue.second) +
+                                             " .. " +
+                                             symbolTable_.typeKindToString(highValue.second));
+                }
+                indexType = lowValue.second;
             }
-        }
-        else if (indexNode->getKind() == ASTNodeKind::RangeType) {
-            ASTNode *lowNode = indexNode->childWithRole(ASTChildRole::Low);
-            ASTNode *highNode = indexNode->childWithRole(ASTChildRole::High);
-            auto lowValue = decorateValue(*lowNode);
-            auto highValue = decorateValue(*highNode);
-            low = lowValue.first;
-            high = highValue.first;
-            if (lowValue.second != highValue.second) {
-                throw std::runtime_error("Range low and high type is not the same: " + name);
-            }
-            indexType = lowValue.second;
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array parameter '" + name + "'. Invalid array index type. " + e.what());
         }
 
         auto [elementRef, elementType] = decorateAnonymousType(*elementNode);
-        int arrRef = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
-        int paramRef = symbolTable_.declareParameter(name, TypeKind::Array, arrRef);
 
-        ASTAnnotation annotation;
-        annotation.typeName = "array";
-        annotation.tabIndex = paramRef;
-        annotation.arrayIndex = arrRef;
-        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
-        node.setAnnotation(annotation);
+        try {
+            int arrRef = symbolTable_.addArrayType(indexType, indexRef, low, high, elementType, elementRef);
+            int paramRef = symbolTable_.declareParameter(name, TypeKind::Array, arrRef);
+
+            ASTAnnotation annotation;
+            annotation.typeName = "array";
+            annotation.tabIndex = paramRef;
+            annotation.arrayIndex = arrRef;
+            annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+            node.setAnnotation(annotation);
+        } catch (const std::exception &e) {
+            throw SemanticError(indexNode->getLine(), "Failed to declare array variable '" + name + "'. " + e.what());
+        }
     }
 }
 void DecoratedAST::decorateBlock(ASTNode &node, std::string name) {
@@ -789,18 +963,18 @@ void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
 
     if (!isAssignmentCompatible(targetType.first, targetType.second, valueType.first, valueType.second)) {
-        throw std::runtime_error("Incompatible type: " +
-                                 symbolTable_.typeKindToString(targetType.second) +
-                                 " := " +
-                                 symbolTable_.typeKindToString(valueType.second));
+        throw SemanticError(node.getLine(), "Incompatible assignable type: " +
+                                                symbolTable_.typeKindToString(targetType.second) +
+                                                " := " +
+                                                symbolTable_.typeKindToString(valueType.second));
     }
 }
 void DecoratedAST::decorateIfStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
     if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
-        throw std::runtime_error("Condition must be a boolean: " +
-                                 symbolTable_.typeKindToString(valueType.second));
+        throw SemanticError(conditionNode->getLine(), "Condition must be a boolean: " +
+                                                          symbolTable_.typeKindToString(valueType.second));
     }
     ASTNode *thenNode = node.childWithRole(ASTChildRole::Then);
     ASTNode *elseNode = node.childWithRole(ASTChildRole::Else);
@@ -817,7 +991,10 @@ void DecoratedAST::decorateCaseStatement(ASTNode &node) {
         for (auto labelNode : branchNode->childrenWithRole(ASTChildRole::Label)) {
             TypeKind labelType = decorateValue(*labelNode).second;
             if (expressionType != labelType) {
-                throw std::runtime_error("Invalid label type");
+                throw SemanticError(labelNode->getLine(), "Invalid label type: " +
+                                                              symbolTable_.typeKindToString(labelType) +
+                                                              ", expected " +
+                                                              symbolTable_.typeKindToString(expressionType));
             }
         }
 
@@ -829,8 +1006,8 @@ void DecoratedAST::decorateWhileStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
     if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
-        throw std::runtime_error("Condition must be a boolean: " +
-                                 symbolTable_.typeKindToString(valueType.second));
+        throw SemanticError(conditionNode->getLine(), "Condition must be a boolean: " +
+                                                          symbolTable_.typeKindToString(valueType.second));
     }
     ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
     decorateBlock(*bodyNode, "while");
@@ -842,8 +1019,8 @@ void DecoratedAST::decorateRepeatStatement(ASTNode &node) {
     ASTNode *conditionNode = node.childWithRole(ASTChildRole::Condition);
     std::pair<int, TypeKind> valueType = decorateExpression(*conditionNode);
     if (!isTypeCompatible(0, TypeKind::Boolean, valueType.first, valueType.second)) {
-        throw std::runtime_error("Condition must be a boolean: " +
-                                 symbolTable_.typeKindToString(valueType.second));
+        throw SemanticError(conditionNode->getLine(), "Condition must be a boolean: " +
+                                                          symbolTable_.typeKindToString(valueType.second));
     }
 }
 void DecoratedAST::decorateForStatement(ASTNode &node) {
@@ -858,12 +1035,12 @@ void DecoratedAST::decorateForStatement(ASTNode &node) {
 
     if (!isAssignmentCompatible(variableRef, variableType, startRef, startType) ||
         !isAssignmentCompatible(variableRef, variableType, endRef, endType)) {
-        throw std::runtime_error("Incompatible type in for statement: " +
-                                 symbolTable_.typeKindToString(variableType) +
-                                 ":=" +
-                                 symbolTable_.typeKindToString(startType) +
-                                 " to " +
-                                 symbolTable_.typeKindToString(endType));
+        throw SemanticError(node.getLine(), "Incompatible type in for statement: " +
+                                                symbolTable_.typeKindToString(variableType) +
+                                                ":=" +
+                                                symbolTable_.typeKindToString(startType) +
+                                                " to " +
+                                                symbolTable_.typeKindToString(endType));
     }
 
     ASTNode *bodyNode = node.childWithRole(ASTChildRole::Body);
@@ -873,13 +1050,13 @@ void DecoratedAST::decorateProcedureCall(ASTNode &node) {
     std::string procedureName = node.getAttribute("name");
     int procedureTabIndex = symbolTable_.lookupIndex(procedureName);
     if (procedureTabIndex < 0) {
-        throw std::runtime_error("Semantic error: procedure '" + procedureName + "' is not declared");
+        throw SemanticError(node.getLine(), "Procedure '" + procedureName + "' is not declared");
     }
 
     const TabEntry &procedureTabEntry = symbolTable_.tab().at(procedureTabIndex);
     if (procedureTabEntry.object != SymbolObjectKind::Procedure &&
         procedureTabEntry.object != SymbolObjectKind::Function) {
-        throw std::runtime_error("Semantic error: '" + procedureName + "' is not callable");
+        throw SemanticError(node.getLine(), "'" + procedureName + "' is not callable");
     }
 
     const BTabEntry &procedureBTabEntry = symbolTable_.requireBlock(procedureTabEntry.ref);
@@ -899,9 +1076,9 @@ void DecoratedAST::decorateProcedureCall(ASTNode &node) {
                 (void)argRef;
 
                 if (!isPrintableType(argType)) {
-                    throw std::runtime_error("Semantic error: argument " +
-                                             std::to_string(argCount) + " of '" +
-                                             procedureName + "' is not printable");
+                    throw SemanticError(argNode.getLine(), "Argument " +
+                                                               std::to_string(argCount) + " of '" +
+                                                               procedureName + "' is not printable");
                 }
             }
         }
@@ -923,9 +1100,7 @@ void DecoratedAST::decorateProcedureCall(ASTNode &node) {
         for (auto argNode : argumentsNode->childrenWithRole(ASTChildRole::Arg)) {
             argCount++;
             if (argCount > expectedArgCount) {
-                throw std::runtime_error("Semantic error: procedure '" + procedureName +
-                                         "' expects " + std::to_string(expectedArgCount) +
-                                         " argument(s), got " + std::to_string(argCount));
+                continue;
             }
 
             int parTabRef = procedureTabIndex + argCount;
@@ -933,19 +1108,19 @@ void DecoratedAST::decorateProcedureCall(ASTNode &node) {
             auto [argRef, argType] = decorateExpression(*argNode);
 
             if (!isAssignmentCompatible(parTabEntry.ref, parTabEntry.type, argRef, argType)) {
-                throw std::runtime_error("Semantic error: argument " +
-                                         std::to_string(argCount) + " of '" +
-                                         procedureName + "' expects " +
-                                         symbolTable_.typeKindToString(parTabEntry.type) + ":" + std::to_string(parTabEntry.ref) +
-                                         ", got " +
-                                         symbolTable_.typeKindToString(argType) + ":" + std::to_string(argRef));
+                throw SemanticError(argNode->getLine(), "Argument " +
+                                                            std::to_string(argCount) + " of '" +
+                                                            procedureName + "' expects " +
+                                                            symbolTable_.typeKindToString(parTabEntry.type) + ":" + std::to_string(parTabEntry.ref) +
+                                                            ", got " +
+                                                            symbolTable_.typeKindToString(argType) + ":" + std::to_string(argRef));
             }
         }
     }
     if (argCount != expectedArgCount) {
-        throw std::runtime_error("Semantic error: procedure '" + procedureName +
-                                 "' expects " + std::to_string(expectedArgCount) +
-                                 " argument(s), got " + std::to_string(argCount));
+        throw SemanticError(node.getLine(), "Procedure '" + procedureName +
+                                                "' expects " + std::to_string(expectedArgCount) +
+                                                " argument(s), got " + std::to_string(argCount));
     }
 
     ASTAnnotation annotation;
@@ -963,27 +1138,33 @@ std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
 
     ASTNode *argumentsNode = node.childWithRole(ASTChildRole::Arg);
     int argCount = 0;
+    int expectedArgCount = functionBTabEntry.lastParameter > functionTabIndex
+                               ? functionBTabEntry.lastParameter - functionTabIndex
+                               : 0;
     if (argumentsNode != nullptr) {
         for (auto argNode : argumentsNode->childrenWithRole(ASTChildRole::Arg)) {
-            int parTabRef = functionTabIndex + ++argCount;
-            if (parTabRef > functionBTabEntry.lastParameter) {
-                throw std::runtime_error("Too many arguments in function call: " + functionName);
+            argCount++;
+            if (argCount > expectedArgCount) {
+                continue;
             }
+            int parTabRef = functionTabIndex + argCount;
             const TabEntry &parTabEntry = symbolTable_.tab().at(parTabRef);
             auto [argRef, argType] = decorateExpression(*argNode);
 
             if (!isAssignmentCompatible(parTabEntry.ref, parTabEntry.type, argRef, argType)) {
-                throw std::runtime_error("Invalid argument type: " +
-                                         std::to_string(parTabEntry.ref) + ":" +
-                                         symbolTable_.typeKindToString(parTabEntry.type) +
-                                         " <- " +
-                                         std::to_string(argRef) + ":" +
-                                         symbolTable_.typeKindToString(argType));
+                throw SemanticError(argNode->getLine(), "Argument " +
+                                                            std::to_string(argCount) + " of '" +
+                                                            functionName + "' expects " +
+                                                            symbolTable_.typeKindToString(parTabEntry.type) + ":" + std::to_string(parTabEntry.ref) +
+                                                            ", got " +
+                                                            symbolTable_.typeKindToString(argType) + ":" + std::to_string(argRef));
             }
         }
     }
-    if (functionTabIndex + argCount != functionBTabEntry.lastParameter) {
-        throw std::runtime_error("Too few arguments in function call: " + functionName);
+    if (argCount != expectedArgCount) {
+        throw SemanticError(node.getLine(), "Function '" + functionName +
+                                                "' expects " + std::to_string(expectedArgCount) +
+                                                " argument(s), got " + std::to_string(argCount));
     }
 
     const TabEntry &returnTabEntry = symbolTable_.tab().at(functionBTabEntry.returnRef);
@@ -997,10 +1178,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     std::pair<int, TypeKind> leftType = decorateExpression(*leftNode);
     std::pair<int, TypeKind> rightType = decorateExpression(*rightNode);
     if (!isTypeCompatible(leftType.first, leftType.second, rightType.first, rightType.second)) {
-        throw std::runtime_error("Incompatible type in binary operation: " +
-                                 symbolTable_.typeKindToString(leftType.second) + " " +
-                                 op + " " +
-                                 symbolTable_.typeKindToString(rightType.second));
+        throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                symbolTable_.typeKindToString(leftType.second) + " " +
+                                                op + " " +
+                                                symbolTable_.typeKindToString(rightType.second));
     }
 
     std::pair<int, TypeKind> type = {0, TypeKind::Unknown};
@@ -1017,10 +1198,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             }
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else if (op == "-" || op == "*") {
@@ -1033,10 +1214,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             }
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else if (op == "div" || op == "mod") {
@@ -1044,10 +1225,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             type = {0, TypeKind::Integer};
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else if (op == "/") {
@@ -1055,10 +1236,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             type = {0, TypeKind::Real};
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else if (op == "and" || op == "or") {
@@ -1066,10 +1247,10 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             type = {0, TypeKind::Boolean};
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else if (op == "==" || op == "<>") {
@@ -1080,14 +1261,14 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
             type = {0, TypeKind::Boolean};
         }
         else {
-            throw std::runtime_error("Incompatible type in binary operation: " +
-                                     symbolTable_.typeKindToString(leftType.second) + " " +
-                                     op + " " +
-                                     symbolTable_.typeKindToString(rightType.second));
+            throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
+                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    op + " " +
+                                                    symbolTable_.typeKindToString(rightType.second));
         }
     }
     else {
-        throw std::runtime_error("Unrecognized binary operator: " + op);
+        throw SemanticError(node.getLine(), "Unrecognized binary operator: " + op);
     }
 
     ASTAnnotation annotation;
@@ -1104,25 +1285,25 @@ std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
 
     if (op == "not") {
         if (!isBooleanType(expressionType.second)) {
-            throw std::runtime_error("Invalid unary operation: " + op + " " +
-                                     symbolTable_.typeKindToString(expressionType.second));
+            throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
+                                                    symbolTable_.typeKindToString(expressionType.second));
         }
     }
     else if (op == "+") {
         if (!isNumberType(expressionType.second)) {
-            throw std::runtime_error("Invalid unary operation: " + op + " " +
-                                     symbolTable_.typeKindToString(expressionType.second));
+            throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
+                                                    symbolTable_.typeKindToString(expressionType.second));
         }
     }
     else if (op == "-") {
         if (!isNumberType(expressionType.second)) {
-            throw std::runtime_error("Invalid unary operation: " + op + " " +
-                                     symbolTable_.typeKindToString(expressionType.second));
+            throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
+                                                    symbolTable_.typeKindToString(expressionType.second));
         }
     }
     else {
-        throw std::runtime_error("Invalid unary operation: " + op + " " +
-                                 symbolTable_.typeKindToString(expressionType.second));
+        throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
+                                                symbolTable_.typeKindToString(expressionType.second));
     }
 
     ASTAnnotation annotation;
@@ -1155,7 +1336,12 @@ std::pair<std::string, TypeKind> DecoratedAST::decorateValue(ASTNode &node) {
 }
 std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     std::string name = node.getAttribute("name");
-    int varRef = symbolTable_.requireLookupIndex(name);
+    int varRef;
+    try {
+        varRef = symbolTable_.requireLookupIndex(name);
+    } catch (const std::exception &e) {
+        throw SemanticError(node.getLine(), "Undefined variable '" + name + "'. " + e.what());
+    }
     const TabEntry &varEntry = symbolTable_.requireLookup(name);
 
     ASTAnnotation annotation;
@@ -1168,26 +1354,46 @@ std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
 std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
     ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
     std::string varName = varNode->getAttribute("name");
-    int varRef = symbolTable_.requireLookupIndex(varName);
+    int varRef;
+    try {
+        varRef = symbolTable_.requireLookupIndex(varName);
+    } catch (const std::exception &e) {
+        throw SemanticError(varNode->getLine(), "Undefined variable '" + varName + "'. " + e.what());
+    }
     const TabEntry &varEntry = symbolTable_.requireLookup(varName);
 
     int arrRef = varEntry.ref;
-    const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
+    TypeKind indexType = TypeKind::Unknown;
+    int elementRef = -1;
+    TypeKind elementType = TypeKind::Unknown;
+    try {
+        const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
+        indexType = arrEntry.indexType;
+        elementRef = arrEntry.elementRef;
+        elementType = arrEntry.elementType;
+    } catch (const std::exception &e) {
+        throw SemanticError(varNode->getLine(), "Invalid array access. Variable '" + varName + "' is not an array. " + e.what());
+    }
 
     for (auto indexNode : node.childrenWithRole(ASTChildRole::Index)) {
-        TypeKind indexType = decorateValue(*indexNode).second;
-        if (indexType != arrEntry.indexType) {
-            throw std::runtime_error("Invalid index type on array access");
+        TypeKind currentIndexType = decorateValue(*indexNode).second;
+        if (indexType != currentIndexType) {
+            throw SemanticError(indexNode->getLine(), "Invalid array access of variable '" + varName + "'. Invalid index type: " +
+                                                          symbolTable_.typeKindToString(currentIndexType) + ", expected " + symbolTable_.typeKindToString(indexType));
         }
     }
 
+    if (elementType != TypeKind::Array && elementType != TypeKind::Record) {
+        elementRef = symbolTable_.tab().at(elementRef).ref;
+    }
+
     ASTAnnotation annotation;
-    annotation.typeName = symbolTable_.typeKindToString(arrEntry.elementType);
+    annotation.typeName = symbolTable_.typeKindToString(elementType);
     annotation.tabIndex = varRef;
     annotation.arrayIndex = arrRef;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
-    return {arrEntry.elementRef, arrEntry.elementType};
+    return {elementRef, elementType};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
     ASTNode *baseNode = node.childWithRole(ASTChildRole::Base);
@@ -1197,7 +1403,12 @@ std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
         symbolTable_.enterBlockByIndex(blockRef);
 
         std::string fieldName = node.getAttribute("field");
-        int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        int fieldRef;
+        try {
+            fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        } catch (const std::exception &e) {
+            throw SemanticError(baseNode->getLine(), "Undefined field '" + fieldName + "'. " + e.what());
+        }
         const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
 
         symbolTable_.leaveBlock();
@@ -1215,7 +1426,12 @@ std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
         symbolTable_.enterBlockByIndex(varRef);
 
         std::string fieldName = node.getAttribute("field");
-        int fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        int fieldRef;
+        try {
+            fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        } catch (const std::exception &e) {
+            throw SemanticError(baseNode->getLine(), "Undefined field '" + fieldName + "'. " + e.what());
+        }
         const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
 
         symbolTable_.leaveBlock();
@@ -1276,9 +1492,13 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
         return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
     }
     if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
-
-    return false;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) {
+        const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+        const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
+        return typeEntry1.baseType == typeEntry2.baseType &&
+               typeEntry1.lowOrdinal == typeEntry2.lowOrdinal &&
+               typeEntry1.highOrdinal == typeEntry2.highOrdinal;
+    }
 
     return false;
 }
@@ -1301,7 +1521,13 @@ bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, 
         return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
     }
     if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) {
+        const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+        const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
+        return typeEntry1.baseType == typeEntry2.baseType &&
+               typeEntry1.lowOrdinal == typeEntry2.lowOrdinal &&
+               typeEntry1.highOrdinal == typeEntry2.highOrdinal;
+    }
 
     return false;
 }
@@ -1410,3 +1636,6 @@ void DecoratedAST::printTreeHelper(const ASTNode &node, int depth, std::vector<b
         isLast.pop_back();
     }
 }
+
+SemanticError::SemanticError(int line, std::string message)
+    : std::runtime_error{"Semantic error (line: " + std::to_string(line) + "): " + message + "\n"} {}

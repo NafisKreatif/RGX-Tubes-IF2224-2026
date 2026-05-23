@@ -188,6 +188,7 @@ void Tokenizer::setStream(const std::string &inputPath)
 }
 void Tokenizer::setStream(std::ifstream &inputStream)
 {
+    currentLine_ = 1;
     input_ = std::move(inputStream);
 }
 bool Tokenizer::isStreamOpen()
@@ -228,7 +229,7 @@ void Tokenizer::skipWhitespace()
         if (debug_) {
             std::cout << peekChar() << " -> [skipped whitespace]" << std::endl;
         }
-        getChar();
+        if (getChar() == '\n') currentLine_++;
     }
 }
 
@@ -240,7 +241,7 @@ Token Tokenizer::getNextToken()
     lexeme_.clear();
 
     if (peekChar() == EOF) {
-        return {TOKEN_EOF, ""};
+        return {TOKEN_EOF, "", currentLine_};
     }
 
     int lastFinalState = TOKEN_UNKNOWN;
@@ -294,14 +295,14 @@ Token Tokenizer::getNextToken()
             std::cout << c << " -> "
                       << "Got Token : " << tokenToString({TOKEN_UNKNOWN, lexeme_}) << std::endl;
         }
-        return {TOKEN_EOF, ""};
+        return {TOKEN_EOF, "", currentLine_};
     }
 
     if (lastFinalState == TOKEN_UNKNOWN) {
         if (!isspace(c)) {
             lexeme_ += getChar();
         }
-        return {TOKEN_UNKNOWN, lexeme_};
+        return {TOKEN_UNKNOWN, lexeme_, currentLine_};
     }
 
 
@@ -313,7 +314,7 @@ Token Tokenizer::getNextToken()
                 std::cout << c << " -> "
                           << "Got Token : " << tokenToString({it->second, getLexeme()}) << std::endl;
             }
-            return {it->second, lexeme_};
+            return {it->second, lexeme_, currentLine_};
         }
     }
 
@@ -322,7 +323,7 @@ Token Tokenizer::getNextToken()
                   << "Got Token : " << tokenToString({lastFinalState, getLexeme()}) << std::endl;
     }
 
-    return {lastFinalState, lexeme_};
+    return {lastFinalState, lexeme_, currentLine_};
 }
 
 std::vector<Token> Tokenizer::tokenizeAll() {

@@ -3,6 +3,7 @@
 
 #include "AST.hpp"
 #include "SymbolTable.hpp"
+#include <stdexcept>
 #include <iostream>
 
 namespace arion
@@ -64,6 +65,11 @@ namespace arion
 
         void printTable(std::ostream &out = std::cout) const;
         void printTree(std::ostream &out = std::cout) const;
+    };
+
+    class SemanticError : public std::runtime_error {
+    public:
+        SemanticError(int line, std::string message);
     };
 }
 

@@ -3,7 +3,7 @@
 
 using namespace arion;
 
-ASTNode::ASTNode(ASTNodeKind kind) : kind_(kind) {}
+ASTNode::ASTNode(ASTNodeKind kind, int line) : kind_(kind), line_{line} {}
 
 ASTNode &ASTNode::addChild(ASTNode child) {
     return addChild(ASTChildRole::None, std::move(child));
@@ -102,6 +102,14 @@ ASTAnnotation &ASTNode::annotation() {
 
 const ASTAnnotation &ASTNode::annotation() const {
     return annotation_;
+}
+
+ASTNode &ASTNode::setLine(int line) {
+    line_ = line;
+    return *this;
+}
+int ASTNode::getLine() const {
+    return line_;
 }
 
 std::string ASTNode::kindToString(ASTNodeKind kind) {
@@ -286,7 +294,7 @@ void ASTNode::printTree(std::ostream &out) const {
         }
     }
     out << "\n";
-    
+
     for (int i = 0; i < (int)children_.size(); i++) {
         isLast.push_back(i == ((int)children_.size() - 1));
         children_[i].node.printTreeHelper(1, isLast, children_[i].role, out);

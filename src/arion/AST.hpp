@@ -99,12 +99,11 @@ namespace arion {
         int blockIndex = -1;
         int arrayIndex = -1;
         int lexicalLevel = -1;
-
     };
 
     class ASTNode {
     public:
-        explicit ASTNode(ASTNodeKind kind = ASTNodeKind::Unknown);
+        explicit ASTNode(ASTNodeKind kind = ASTNodeKind::Unknown, int line = -1);
 
         ASTNode &addChild(ASTNode child);
         ASTNode &addChild(ASTChildRole role, ASTNode child);
@@ -125,6 +124,9 @@ namespace arion {
         ASTAnnotation &annotation();
         const ASTAnnotation &annotation() const;
 
+        ASTNode & setLine(int line);
+        int getLine() const;
+
         static std::string kindToString(ASTNodeKind kind);
         static std::string roleToString(ASTChildRole role);
 
@@ -132,6 +134,7 @@ namespace arion {
 
     private:
         ASTNodeKind kind_;
+        int line_;
         ASTAnnotation annotation_;
         std::vector<std::pair<std::string, std::string>> attributes_;
         std::vector<ASTChild> children_;

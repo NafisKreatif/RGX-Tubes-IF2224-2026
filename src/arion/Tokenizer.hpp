@@ -8,6 +8,7 @@ namespace arion {
     struct Token {
         int type;
         std::string value;
+        int line = -1;
     };
     class Tokenizer {
 
@@ -98,6 +99,7 @@ namespace arion {
         static std::string tokenToString(Token type);
 
     private:
+        int currentLine_ = 1;
         char peekChar();
         char getChar();
         void skipWhitespace();
