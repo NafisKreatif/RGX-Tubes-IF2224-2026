@@ -7,34 +7,56 @@ const
   Label == 'level';
 
 type
+  Bulat == integer;
   SmallRange == 1 .. 5;
+  MinMax == Min .. Max;
   Direction == (Left, Right, Center);
   Pair == record
     first, second: integer;
     tag: char
   end;
+  Circle == record
+    coords: record x, y: integer end;
+    radius: real
+  end;
   NumberList == array[1 .. 5] of integer;
+  NumberArray == NumberList;
+  Matrix == array[1 .. 10] of array[1 .. 10] of array[1 .. 10] of real;
 
 var
   i, total, middle: integer;
-  numbers: NumberList;
+  numbers: NumberArray;
   pairValue: Pair;
   isValid, isDone: boolean;
+{
+function EulerDistance(x, y: real; z: real): real;
+begin
+  EulerDistance := x * x + y * y + z * z; 
+end;
 
 procedure PrintValue(value: integer; data: array[1 .. 5] of integer);
 begin
-  writeln('value = ', value)
+  
 end;
 
+procedure PrintEnum(value: Direction);
+var
+  test: integer;
+  sirkel: Circle;
+begin
+  case Direction of 
+  Left, Right: test := 0; 
+  Center: test := 1; 
+  end
+end;
 function MirrorIndex(index: integer): integer;
 var
   result: integer;
 begin
   result := Max - index + Min;
   MirrorIndex := result
-end;
-
-begin
+end;}
+begin {
   i := Min;
   total := 0;
   middle := (Min + Max) div 2;
@@ -53,7 +75,7 @@ begin
     total := total + MirrorIndex(i) mod 3;
     i := i - 1
   until i < Min;
-  for i := Min to Max do
+  for i := Min downto Max do
   begin
     PrintValue(i, numbers)
   end;
@@ -66,5 +88,5 @@ begin
     1, 2: total := total - 1;
     3: PrintValue(total, numbers)
   end;
-  isDone := isValid and true or false
+  isDone := isValid and true or false}
 end.

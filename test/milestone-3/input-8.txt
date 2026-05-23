@@ -1,0 +1,12 @@
+program Test;
+
+const
+  Min == 1;
+  Max == 5;
+
+type
+  MinMax == Min .. Max;
+  Matrix == array[1 .. 10] of array[1 .. 10] of real;
+
+begin
+end.

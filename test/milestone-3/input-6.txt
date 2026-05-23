@@ -1,0 +1,19 @@
+program Types;
+
+const
+  Min == 1;
+  Max == 3;
+
+type
+  SmallRange == Min .. Max;
+  Pair == record
+    x: integer
+  end;
+  Numbers == array[SmallRange] of integer;
+
+var
+  p: Pair;
+  n: Numbers;
+
+begin
+end.

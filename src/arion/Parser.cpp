@@ -10,6 +10,19 @@ Symbol::Symbol(int id, std::string label, bool isTerminal, std::string value) {
     this->isTerminal_ = isTerminal;
     this->value_ = std::move(value);
 }
+
+int Symbol::getId() const {
+    return id_;
+}
+
+const std::string &Symbol::getLabel() const {
+    return label_;
+}
+
+const std::string &Symbol::getValue() const {
+    return value_;
+}
+
 std::string Symbol::toString() const {
     return label_;
 }
@@ -668,7 +681,7 @@ ParseNode Parser::parseWhileStatement() {
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_WHILE)));
     node.addChild(parseExpression());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
-    node.addChild(parseStatement());
+    node.addChild(parseCompoundStatement());
     return node;
 }
 
@@ -697,7 +710,7 @@ ParseNode Parser::parseForStatement() {
     }
     node.addChild(parseExpression());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
-    node.addChild(parseStatement());
+    node.addChild(parseCompoundStatement());
 
     return node;
 }

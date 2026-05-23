@@ -18,6 +18,9 @@ namespace arion {
 
     public:
         Symbol(int id, std::string label, bool isTerminal = false, std::string value = "");
+        int getId() const;
+        const std::string &getLabel() const;
+        const std::string &getValue() const;
         std::string toString() const;
         bool isTerminal() const;
     };
