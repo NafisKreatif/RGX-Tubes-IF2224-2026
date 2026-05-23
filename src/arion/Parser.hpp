@@ -15,12 +15,14 @@ namespace arion {
         std::string label_;
         std::string value_;
         bool isTerminal_;
+        int line_;
 
     public:
-        Symbol(int id, std::string label, bool isTerminal = false, std::string value = "");
+        Symbol(int id, std::string label, bool isTerminal = false, std::string value = "", int line = -1);
         int getId() const;
         const std::string &getLabel() const;
         const std::string &getValue() const;
+        int getLine() const;
         std::string toString() const;
         bool isTerminal() const;
     };
@@ -38,19 +40,19 @@ namespace arion {
         std::string toString() const;
 
     private:
-        Symbol symbol_;
-        std::vector<ParseNode> children_;
-        std::string toStringHelper(int depth, std::vector<bool> &isLast) const;
-    };
+    Symbol symbol_;
+    std::vector<ParseNode> children_;
+    std::string toStringHelper(int depth, std::vector<bool> &isLast) const;
+};
 
-    class Parser {
+class Parser {
     public:
-        Parser() = default;
-        explicit Parser(std::vector<Token> tokens);
-
-        void setTokens(std::vector<Token> tokens);
-        ParseNode parse();
-
+    Parser() = default;
+    explicit Parser(std::vector<Token> tokens);
+    
+    void setTokens(std::vector<Token> tokens);
+    ParseNode parse();
+    
     private:
         enum NonTerminal {
             PROGRAM = 2000,
@@ -108,11 +110,11 @@ namespace arion {
         Token expect(int tokenType);
 
         ParseNode variableNode(NonTerminal variable) const;
-        ParseNode terminalNode(const Token &token) const;
+        ParseNode terminalNode(const Token &token);
         std::string variableName(NonTerminal variable) const;
         std::string terminalName(int tokenType) const;
         std::string tokenName(const Token &token) const;
-        void syntaxError(const std::string &expectedName) const;
+        void syntaxError(const std::string &expectedName, int line = -1) const;
         void skipIgnoredTokens();
 
         ParseNode parseProgram();
@@ -159,6 +161,7 @@ namespace arion {
         ParseNode parseAdditiveOperator();
         ParseNode parseMultiplicativeOperator();
 
+        int lastLine_ = 1;
         std::vector<Token> tokens_;
         std::size_t current_ = 0;
         Token eofToken_{Tokenizer::TOKEN_EOF, ""};

@@ -4,11 +4,12 @@
 
 using namespace arion;
 
-Symbol::Symbol(int id, std::string label, bool isTerminal, std::string value) {
+Symbol::Symbol(int id, std::string label, bool isTerminal, std::string value, int line) {
     this->id_ = id;
     this->label_ = std::move(label);
     this->isTerminal_ = isTerminal;
     this->value_ = std::move(value);
+    this->line_ = line;
 }
 
 int Symbol::getId() const {
@@ -21,6 +22,10 @@ const std::string &Symbol::getLabel() const {
 
 const std::string &Symbol::getValue() const {
     return value_;
+}
+
+int Symbol::getLine() const {
+    return line_;
 }
 
 std::string Symbol::toString() const {
@@ -143,16 +148,16 @@ Token Parser::expect(int tokenType) {
     if (check(tokenType)) {
         return advance();
     }
-    syntaxError(terminalName(tokenType));
+    syntaxError(terminalName(tokenType), peek().line);
     return eofToken_;
 }
 
 ParseNode Parser::variableNode(NonTerminal variable) const {
-    return ParseNode(Symbol{variable, variableName(variable)});
+    return ParseNode(Symbol{variable, variableName(variable), false, "", lastLine_});
 }
 
-ParseNode Parser::terminalNode(const Token &token) const {
-    return ParseNode(Symbol{token.type, tokenName(token), true, token.value});
+ParseNode Parser::terminalNode(const Token &token) {
+    return ParseNode(Symbol{token.type, tokenName(token), true, token.value, lastLine_ = token.line});
 }
 
 std::string Parser::variableName(NonTerminal variable) const {
@@ -255,10 +260,16 @@ std::string Parser::tokenName(const Token &token) const {
     return Tokenizer::tokenToString(token);
 }
 
-void Parser::syntaxError(const std::string &expectedName) const {
+void Parser::syntaxError(const std::string &expectedName, int line) const {
     std::ostringstream message;
-    message << "Syntax error: unexpected token " << tokenName(peek())
-            << ", expected " << expectedName;
+    if (line == -1) {
+        message << "Syntax error: unexpected token " << tokenName(peek())
+                << ", expected " << expectedName;
+    }
+    else {
+        message << "Syntax error: line " << line << ", unexpected token " << tokenName(peek())
+                << ", expected " << expectedName;
+    }
     throw ParserError(message.str());
 }
 
@@ -345,7 +356,7 @@ ParseNode Parser::parseConstant() {
         return node;
     }
 
-    syntaxError("constant");
+    syntaxError("constant", node.getSymbol().getLine());
     return node;
 }
 
@@ -415,13 +426,14 @@ ParseNode Parser::parseType() {
     if (check(Tokenizer::TOKEN_IDENT)) {
         if (checkNext(Tokenizer::TOKEN_PERIOD)) {
             node.addChild(parseRange());
-        } else {
+        }
+        else {
             node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
         }
         return node;
     }
 
-    syntaxError("type");
+    syntaxError("type", node.getSymbol().getLine());
     return node;
 }
 
@@ -431,7 +443,8 @@ ParseNode Parser::parseArrayType() {
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_BRACKET)));
     if (check(Tokenizer::TOKEN_IDENT) && !checkNext(Tokenizer::TOKEN_PERIOD)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
-    } else {
+    }
+    else {
         node.addChild(parseRange());
     }
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_BRACKET)));
@@ -507,7 +520,7 @@ ParseNode Parser::parseSubprogramDeclaration() {
         node.addChild(parseFunctionDeclaration());
         return node;
     }
-    syntaxError("subprogram-declaration");
+    syntaxError("subprogram-declaration", node.getSymbol().getLine());
     return node;
 }
 
@@ -624,7 +637,7 @@ ParseNode Parser::parseStatement() {
     if (check(Tokenizer::TOKEN_END) || check(Tokenizer::TOKEN_UNTIL) || check(Tokenizer::TOKEN_ELSE) || check(Tokenizer::TOKEN_SEMICOLON)) {
         return node;
     }
-    syntaxError("statement");
+    syntaxError("statement", node.getSymbol().getLine());
     return node;
 }
 
@@ -703,10 +716,12 @@ ParseNode Parser::parseForStatement() {
     node.addChild(parseExpression());
     if (check(Tokenizer::TOKEN_TO)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_TO)));
-    } else if (check(Tokenizer::TOKEN_DOWNTO)) {
+    }
+    else if (check(Tokenizer::TOKEN_DOWNTO)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_DOWNTO)));
-    } else {
-        syntaxError("tosy or downtosy");
+    }
+    else {
+        syntaxError("tosy or downtosy", node.getSymbol().getLine());
     }
     node.addChild(parseExpression());
     node.addChild(terminalNode(expect(Tokenizer::TOKEN_DO)));
@@ -805,10 +820,12 @@ ParseNode Parser::parseFactor() {
     if (check(Tokenizer::TOKEN_IDENT)) {
         if (checkNext(Tokenizer::TOKEN_LEFT_PARENTHESES)) {
             node.addChild(parseProcedureOrFunctionCall());
-        } else if (checkNext(Tokenizer::TOKEN_LEFT_BRACKET) ||
-                   checkNext(Tokenizer::TOKEN_PERIOD)) {
+        }
+        else if (checkNext(Tokenizer::TOKEN_LEFT_BRACKET) ||
+                 checkNext(Tokenizer::TOKEN_PERIOD)) {
             node.addChild(parseVariable());
-        } else {
+        }
+        else {
             node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
         }
         return node;
@@ -833,7 +850,7 @@ ParseNode Parser::parseFactor() {
         return node;
     }
 
-    syntaxError("factor");
+    syntaxError("factor", node.getSymbol().getLine());
     return node;
 }
 
@@ -854,11 +871,13 @@ ParseNode Parser::parseComponentVariable() {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_LEFT_BRACKET)));
         node.addChild(parseIndexList());
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_RIGHT_BRACKET)));
-    } else if (check(Tokenizer::TOKEN_PERIOD)) {
+    }
+    else if (check(Tokenizer::TOKEN_PERIOD)) {
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_PERIOD)));
         node.addChild(terminalNode(expect(Tokenizer::TOKEN_IDENT)));
-    } else {
-        syntaxError("component variable");
+    }
+    else {
+        syntaxError("component variable", node.getSymbol().getLine());
     }
 
     return node;
@@ -871,8 +890,9 @@ ParseNode Parser::parseIndexList() {
         check(Tokenizer::TOKEN_CHAR_END) ||
         check(Tokenizer::TOKEN_CHAR_ESCAPE_OR_END)) {
         node.addChild(terminalNode(advance()));
-    } else {
-        syntaxError("index element");
+    }
+    else {
+        syntaxError("index element", node.getSymbol().getLine());
     }
     // Sesuai grammar, elemen setelah comma direpresentasikan sebagai index-list baru.
     while (check(Tokenizer::TOKEN_COMMA)) {
@@ -892,8 +912,9 @@ ParseNode Parser::parseRelationalOperator() {
         check(Tokenizer::TOKEN_LESS_THAN) ||
         check(Tokenizer::TOKEN_LESS_THAN_OR_EQUAL)) {
         node.addChild(terminalNode(advance()));
-    } else {
-        syntaxError("relational operator");
+    }
+    else {
+        syntaxError("relational operator", node.getSymbol().getLine());
     }
 
     return node;
@@ -905,8 +926,9 @@ ParseNode Parser::parseAdditiveOperator() {
         check(Tokenizer::TOKEN_MINUS) ||
         check(Tokenizer::TOKEN_OR)) {
         node.addChild(terminalNode(advance()));
-    } else {
-        syntaxError("additive operator");
+    }
+    else {
+        syntaxError("additive operator", node.getSymbol().getLine());
     }
 
     return node;
@@ -920,8 +942,9 @@ ParseNode Parser::parseMultiplicativeOperator() {
         check(Tokenizer::TOKEN_MOD) ||
         check(Tokenizer::TOKEN_AND)) {
         node.addChild(terminalNode(advance()));
-    } else {
-        syntaxError("multiplicative operator");
+    }
+    else {
+        syntaxError("multiplicative operator", node.getSymbol().getLine());
     }
 
     return node;
