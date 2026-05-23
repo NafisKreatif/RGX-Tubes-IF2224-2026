@@ -1492,9 +1492,13 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
         return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
     }
     if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
-
-    return false;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) {
+        const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+        const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
+        return typeEntry1.baseType == typeEntry2.baseType &&
+               typeEntry1.lowOrdinal == typeEntry2.lowOrdinal &&
+               typeEntry1.highOrdinal == typeEntry2.highOrdinal;
+    }
 
     return false;
 }
@@ -1517,7 +1521,13 @@ bool DecoratedAST::isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, 
         return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
     }
     if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) return typeRef1 == typeRef2;
+    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) {
+        const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+        const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
+        return typeEntry1.baseType == typeEntry2.baseType &&
+               typeEntry1.lowOrdinal == typeEntry2.lowOrdinal &&
+               typeEntry1.highOrdinal == typeEntry2.highOrdinal;
+    }
 
     return false;
 }
