@@ -267,7 +267,7 @@ void Parser::syntaxError(const std::string &expectedName, int line) const {
                 << ", expected " << expectedName;
     }
     else {
-        message << "Syntax error: line " << line << ", unexpected token " << tokenName(peek())
+        message << "Syntax error (line: " << line << " ): unexpected token " << tokenName(peek())
                 << ", expected " << expectedName;
     }
     throw ParserError(message.str());

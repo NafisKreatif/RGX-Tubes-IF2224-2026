@@ -3,10 +3,16 @@ program Test;
 const
   Min == 1;
   Max == 5;
+  PI == 3.141;
 
 type
+  Meong == array[1 .. 10] of real;
   MinMax == Min .. Max;
   Matrix == array[1 .. 10] of array[1 .. 10] of real;
+  Something == record
+    Direction1 : (Left, Center, Right);
+  end;
+  Direction == (Left, Center, Right);
 
 begin
 end.

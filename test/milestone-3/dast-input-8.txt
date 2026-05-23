@@ -1,92 +1,128 @@
 tab:
- idx |    identifier |      object |        type | ref | nrm | lvl | adr | link | value |  initialized 
------|---------------|-------------|-------------|-----|-----|-----|-----|------|-------|--------------
-   0 |         <nil> |    reserved |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
-   1 |           and |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   2 |         array |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   3 |         begin |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   4 |          case |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   5 |         const |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   6 |           div |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   7 |        downto |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   8 |            do |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-   9 |          else |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  10 |           end |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  11 |           for |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  12 |      function |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  13 |            if |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  14 |           mod |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  15 |           not |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  16 |            of |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  17 |            or |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  18 |     procedure |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  19 |       program |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  20 |        record |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  21 |        repeat |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  22 |       integer |        type |     integer |   0 |   1 |   0 |   0 |    0 |       |            1 
-  23 |          real |        type |        real |   0 |   1 |   0 |   0 |    0 |       |            1 
-  24 |       boolean |        type |     boolean |   0 |   1 |   0 |   0 |    0 |       |            1 
-  25 |          char |        type |        char |   0 |   1 |   0 |   0 |    0 |       |            1 
-  26 |        string |        type |      string |   0 |   1 |   0 |   0 |    0 |       |            1 
-  27 |          then |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  28 |            to |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  29 |          type |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  30 |         until |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  31 |           var |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  32 |         while |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
-  33 |          true |    constant |     boolean |   0 |   1 |   0 |   1 |    0 |  true |            1 
-  34 |         false |    constant |     boolean |   0 |   1 |   0 |   0 |    0 | false |            1 
-  35 |        readln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
-  36 |       writeln |   procedure |        void |   1 |   1 |   0 |   0 |    0 |       |            1 
-  37 | <writeln-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
-  38 |         write |   procedure |        void |   2 |   1 |   0 |   0 |    0 |       |            1 
-  39 |   <write-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
-  40 |          Test |     program |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
-  41 |           Min |    constant |     integer |   0 |   1 |   0 |   0 |   40 |     1 |            1 
-  42 |           Max |    constant |     integer |   0 |   1 |   0 |   0 |   41 |     5 |            1 
-  43 |        MinMax |        type |    subrange |   0 |   1 |   0 |   0 |   42 |       |            1 
-  44 |        Matrix |        type |       array |   1 |   1 |   0 |   0 |   43 |       |            1 
+ idx |      identifier |      object |        type | ref | nrm | lvl | adr | link | value |  initialized 
+-----|-----------------|-------------|-------------|-----|-----|-----|-----|------|-------|--------------
+   0 |           <nil> |    reserved |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+   1 |             and |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   2 |           array |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   3 |           begin |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   4 |            case |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   5 |           const |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   6 |             div |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   7 |          downto |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   8 |              do |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   9 |            else |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  10 |             end |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  11 |             for |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  12 |        function |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  13 |              if |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  14 |             mod |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  15 |             not |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  16 |              of |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  17 |              or |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  18 |       procedure |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  19 |         program |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  20 |          record |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  21 |          repeat |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  22 |         integer |        type |     integer |   0 |   1 |   0 |   0 |    0 |       |            1 
+  23 |            real |        type |        real |   0 |   1 |   0 |   0 |    0 |       |            1 
+  24 |         boolean |        type |     boolean |   0 |   1 |   0 |   0 |    0 |       |            1 
+  25 |            char |        type |        char |   0 |   1 |   0 |   0 |    0 |       |            1 
+  26 |          string |        type |      string |   0 |   1 |   0 |   0 |    0 |       |            1 
+  27 |            then |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  28 |              to |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  29 |            type |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  30 |           until |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  31 |             var |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  32 |           while |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  33 |            true |    constant |     boolean |   0 |   1 |   0 |   1 |    0 |  true |            1 
+  34 |           false |    constant |     boolean |   0 |   1 |   0 |   0 |    0 | false |            1 
+  35 |          readln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  36 |         writeln |   procedure |        void |   1 |   1 |   0 |   0 |    0 |       |            1 
+  37 |   <writeln-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
+  38 |           write |   procedure |        void |   2 |   1 |   0 |   0 |    0 |       |            1 
+  39 |     <write-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
+  40 |            Test |     program |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  41 |             Min |    constant |     integer |   0 |   1 |   0 |   0 |   40 |     1 |            1 
+  42 |             Max |    constant |     integer |   0 |   1 |   0 |   0 |   41 |     5 |            1 
+  43 |              PI |    constant |        real |   0 |   1 |   0 |   0 |   42 | 3.141 |            1 
+  44 |           Meong |        type |       array |   0 |   1 |   0 |   0 |   43 |       |            1 
+  45 |          MinMax |        type |    subrange |   0 |   1 |   0 |   0 |   44 |       |            1 
+  46 |          Matrix |        type |       array |   2 |   1 |   0 |   0 |   45 |       |            1 
+  47 | _anonymousType0 |        type |  enumerated |   1 |   1 |   1 |   0 |    0 |       |            1 
+  48 |            Left |    constant |  enumerated |   1 |   1 |   1 |   0 |   47 |     0 |            1 
+  49 |          Center |    constant |  enumerated |   1 |   1 |   1 |   1 |   48 |     1 |            1 
+  50 |           Right |    constant |  enumerated |   1 |   1 |   1 |   2 |   49 |     2 |            1 
+  51 |      Direction1 |       field |  enumerated |  47 |   1 |   1 |   0 |   50 |       |            0 
+  52 |       Something |        type |      record |   3 |   1 |   0 |   0 |   46 |       |            1 
+  53 |       Direction |        type |  enumerated |   2 |   1 |   0 |   0 |   52 |       |            1 
+  54 |            Left |    constant |  enumerated |   2 |   1 |   0 |   0 |   53 |     0 |            1 
+  55 |          Center |    constant |  enumerated |   2 |   1 |   0 |   1 |   54 |     1 |            1 
+  56 |           Right |    constant |  enumerated |   2 |   1 |   0 |   2 |   55 |     2 |            1 
 
 atab:
  idx |     idxType | idxRef |      elType |  elRef |  low | high | resolved |  lowOrd | highOrd | elSize | size 
 -----|-------------|--------|-------------|--------|------|------|----------|---------|---------|--------|------
    0 |     integer |      0 |        real |     23 |    1 |   10 |        1 |       1 |      10 |      1 |   10 
-   1 |     integer |      0 |       array |      0 |    1 |   10 |        1 |       1 |      10 |     10 |  100 
+   1 |     integer |      0 |        real |     23 |    1 |   10 |        1 |       1 |      10 |      1 |   10 
+   2 |     integer |      0 |       array |      1 |    1 |   10 |        1 |       1 |      10 |     10 |  100 
 
 btab:
- idx |    name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
------|---------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
-   0 |    Test |     program |     -1 |   44 |    0 |     0 |     0 |   0 |        void |         0 |    40 
-   1 | writeln |   procedure |      0 |   37 |   37 |     1 |     0 |   1 |        void |         0 |    36 
-   2 |   write |   procedure |      0 |   39 |   39 |     1 |     0 |   1 |        void |         0 |    38 
+ idx |      name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
+-----|-----------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
+   0 |      Test |     program |     -1 |   56 |    0 |     0 |     0 |   0 |        void |         0 |    40 
+   1 |   writeln |   procedure |      0 |   37 |   37 |     1 |     0 |   1 |        void |         0 |    36 
+   2 |     write |   procedure |      0 |   39 |   39 |     1 |     0 |   1 |        void |         0 |    38 
+   3 | Something |      record |      0 |   51 |    0 |     0 |     1 |   1 |        void |         0 |    52 
 
 type:
- idx |        kind |    baseType | baseRef |  low | high | resolved |  lowOrd | highOrd | size | values 
------|-------------|-------------|---------|------|------|----------|---------|---------|------|--------
-   0 |    subrange |     integer |      22 |    1 |    5 |        1 |       1 |       5 |    1 |      - 
+ idx |        kind |    baseType | baseRef |  low | high | resolved |  lowOrd | highOrd | size |            values 
+-----|-------------|-------------|---------|------|------|----------|---------|---------|------|-------------------
+   0 |    subrange |     integer |      22 |    1 |    5 |        1 |       1 |       5 |    1 |                 - 
+   1 |  enumerated |  enumerated |       0 |    0 |    2 |        1 |       0 |       2 |    1 | Left,Center,Right 
+   2 |  enumerated |  enumerated |       0 |    0 |    2 |        1 |       0 |       2 |    1 | Left,Center,Right 
 
 Program (name: Test) -> (tabIndex: 40, lexicalLevel: 0)
 ├── Declarations [role: Declaration]
 │   ├── ConstDeclarations [role: Declaration]
 │   │   ├── ConstDeclaration [role: Const] (name: Min) -> (type: integer, tabIndex: 41, lexicalLevel: 0)
-│   │   │   └── IntegerLiteral [role: Value] (value: 1)
-│   │   └── ConstDeclaration [role: Const] (name: Max) -> (type: integer, tabIndex: 42, lexicalLevel: 0)
-│   │       └── IntegerLiteral [role: Value] (value: 5)
+│   │   │   └── IntegerLiteral [role: Value] (value: 1) -> (type: integer)
+│   │   ├── ConstDeclaration [role: Const] (name: Max) -> (type: integer, tabIndex: 42, lexicalLevel: 0)
+│   │   │   └── IntegerLiteral [role: Value] (value: 5) -> (type: integer)
+│   │   └── ConstDeclaration [role: Const] (name: PI) -> (type: real, tabIndex: 43, lexicalLevel: 0)
+│   │       └── RealLiteral [role: Value] (value: 3.141) -> (type: real)
 │   └── TypeDeclarations [role: Declaration]
-│       ├── TypeDeclaration [role: Type] (name: MinMax) -> (type: subrange, tabIndex: 43, lexicalLevel: 0)
+│       ├── TypeDeclaration [role: Type] (name: Meong) -> (type: array, tabIndex: 44, arrayIndex: 0, lexicalLevel: 0)
+│       │   └── ArrayType [role: Type]
+│       │       ├── RangeType [role: Index]
+│       │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│       │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│       │       └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
+│       ├── TypeDeclaration [role: Type] (name: MinMax) -> (type: subrange, tabIndex: 45, lexicalLevel: 0)
 │       │   └── RangeType [role: Type]
 │       │       ├── Variable [role: Low] (name: Min) -> (type: integer)
 │       │       └── Variable [role: High] (name: Max) -> (type: integer)
-│       └── TypeDeclaration [role: Type] (name: Matrix) -> (type: array, tabIndex: 44, arrayIndex: 1, lexicalLevel: 0)
-│           └── ArrayType [role: Type]
-│               ├── RangeType [role: Index]
-│               │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
-│               │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
-│               └── ArrayType [role: Element] -> (type: array, arrayIndex: 0, lexicalLevel: 0)
-│                   ├── RangeType [role: Index]
-│                   │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
-│                   │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
-│                   └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
+│       ├── TypeDeclaration [role: Type] (name: Matrix) -> (type: array, tabIndex: 46, arrayIndex: 2, lexicalLevel: 0)
+│       │   └── ArrayType [role: Type]
+│       │       ├── RangeType [role: Index]
+│       │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│       │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│       │       └── ArrayType [role: Element] -> (type: array, arrayIndex: 1, lexicalLevel: 0)
+│       │           ├── RangeType [role: Index]
+│       │           │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│       │           │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│       │           └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
+│       ├── TypeDeclaration [role: Type] (name: Something) -> (type: record, tabIndex: 52, blockIndex: 3, lexicalLevel: 0)
+│       │   └── RecordType [role: Type]
+│       │       └── FieldDeclaration [role: Field] (name: Direction1) -> (type: enumerated, tabIndex: 51, lexicalLevel: 1)
+│       │           └── EnumeratedType [role: Type]
+│       │               ├── Identifier [role: Element] (name: Left)
+│       │               ├── Identifier [role: Element] (name: Center)
+│       │               └── Identifier [role: Element] (name: Right)
+│       └── TypeDeclaration [role: Type] (name: Direction) -> (type: enumerated, tabIndex: 53, lexicalLevel: 0)
+│           └── EnumeratedType [role: Type]
+│               ├── Identifier [role: Element] (name: Left)
+│               ├── Identifier [role: Element] (name: Center)
+│               └── Identifier [role: Element] (name: Right)
 └── CompoundStatement [role: Body]
     └── StatementList [role: Body]
         └── EmptyStatement [role: Statement]
