@@ -61,7 +61,6 @@ namespace arion
 
     class IntermediateCode {
     private:
-        SymbolTable &symbolTable_;
         std::vector<CodeLine> codeLines_;
         std::unordered_map<std::string, int> labelPosition_;
         
@@ -71,9 +70,6 @@ namespace arion
         std::string getNextAnonymousGoToLabel();
 
     public:
-        IntermediateCode(SymbolTable &symbolTable);
-
-        SymbolTable &getSymbolTable() const;
         size_t getTotalLine() const;
         const CodeLine *getCodeLine(int position) const;
         int getLabelPosition(std::string target) const;

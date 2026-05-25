@@ -94,11 +94,6 @@ std::string CodeLine::toString() const {
     return ss.str();
 }
 
-IntermediateCode::IntermediateCode(SymbolTable &symbolTable) : symbolTable_{symbolTable} {}
-
-SymbolTable &IntermediateCode::getSymbolTable() const {
-    return symbolTable_;
-}
 size_t IntermediateCode::getTotalLine() const {
     return codeLines_.size();
 }
