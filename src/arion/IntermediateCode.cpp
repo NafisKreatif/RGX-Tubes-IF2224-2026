@@ -118,7 +118,7 @@ int IntermediateCode::getLabelPosition(std::string target) const {
         return -1;
     }
 }
-void IntermediateCode::printCode(std::ostream &out = std::cout) const {
+void IntermediateCode::printCode(std::ostream &out) const {
     bool first = true;
     for (auto &&line : codeLines_) {
         if (line.codeType == CodeLineType::GoToLabel && !first) out << "\n";
