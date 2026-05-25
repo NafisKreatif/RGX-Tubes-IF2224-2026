@@ -963,7 +963,7 @@ void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
 
     if (!isAssignmentCompatible(targetType.first, targetType.second, valueType.first, valueType.second)) {
-        throw SemanticError(node.getLine(), "Incompatible assignable type: " +
+        throw SemanticError(targetNode->getLine(), "Incompatible assignable type: " +
                                                 symbolTable_.typeKindToString(targetType.second) +
                                                 " := " +
                                                 symbolTable_.typeKindToString(valueType.second));
