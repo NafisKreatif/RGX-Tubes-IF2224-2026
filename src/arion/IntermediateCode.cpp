@@ -80,6 +80,18 @@ std::string CodeLine::toString() const {
             ss << target << "[" << arg1 << "]" << " := " << arg2;
             break;
 
+        case CodeLineType::FunctionCall:
+            ss << "call " << arg1 << ", " << arg2;
+            break;
+
+        case CodeLineType::ProcedureCall:
+            ss << "call " << arg1 << ", " << arg2;
+            break;
+
+        case CodeLineType::Return:
+            ss << "return";
+            break;
+
         default:
             break;
     }

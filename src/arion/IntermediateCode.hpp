@@ -20,6 +20,7 @@ namespace arion
         Parameter,
         FunctionCall,
         ProcedureCall,
+        Return,
         ArrayRead,
         ArrayWrite
     };
