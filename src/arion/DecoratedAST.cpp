@@ -206,7 +206,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             if (indexNode->getKind() == ASTNodeKind::Identifier) {
                 const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
                 indexRef = symbolTable_.requireTypeIndex(indexName);
-                
+
                 if (indexTabEntry.type == TypeKind::Subrange) {
                     const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
                     low = typeDescriptor.low;
@@ -1048,6 +1048,12 @@ void DecoratedAST::decorateAssignmentStatement(ASTNode &node) {
     std::pair<int, TypeKind> valueType = decorateExpression(*valueNode);
 
     if (!isAssignmentCompatible(targetType.first, targetType.second, valueType.first, valueType.second)) {
+        if (targetType.second == TypeKind::Subrange) {
+            targetType.second = symbolTable_.requireTypeDescriptor(targetType.first).baseType;
+        }
+        if (valueType.second == TypeKind::Subrange) {
+            valueType.second = symbolTable_.requireTypeDescriptor(valueType.first).baseType;
+        }
         throw SemanticError(node.getLine(), "Incompatible assignable type: " +
                                                 symbolTable_.typeKindToString(targetType.second) +
                                                 " := " +
