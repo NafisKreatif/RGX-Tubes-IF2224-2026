@@ -112,6 +112,8 @@ namespace arion
         // call procedureName(arg1, arg2, arg3) { comment }
         void callProcedure(std::string procedureName, int argcount, std::string comment = "");
 
+        void makeReturn(std::string comment = "");
+
         // target := arrayName[index]
         std::string makeArrayRead(std::string arrayName, std::string index, std::string target = "", std::string comment = "");
 

@@ -248,6 +248,17 @@ void IntermediateCode::callProcedure(std::string procedureName, int argcount, st
         .codeType = CodeLineType::ProcedureCall});
 }
 
+void IntermediateCode::makeReturn(std::string comment) {
+    codeLines_.push_back(CodeLine{
+        .op = CodeLineOperator::None,
+        .arg1 = "",
+        .arg2 = "",
+        .target = "",
+
+        .comment = comment,
+        .codeType = CodeLineType::Return});
+}
+
 std::string IntermediateCode::makeArrayRead(std::string arrayName, std::string index, std::string target, std::string comment) {
     codeLines_.push_back(CodeLine{
         .op = CodeLineOperator::None,
