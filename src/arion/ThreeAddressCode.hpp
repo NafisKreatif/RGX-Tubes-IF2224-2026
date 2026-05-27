@@ -10,7 +10,7 @@
 
 namespace arion
 {
-    enum class CodeLineType {
+    enum class TACType {
         GoToLabel,
         ConditionalGoTo,
         UnconditionalGoTo,
@@ -25,7 +25,7 @@ namespace arion
         ArrayWrite
     };
 
-    enum class CodeLineOperator {
+    enum class TACOperator {
         Plus,
         Minus,
         Multiply,
@@ -44,27 +44,27 @@ namespace arion
         None
     };
 
-    class CodeLine {
+    class TACLine {
     public:
-        CodeLineOperator op;
+        TACOperator op;
         std::string arg1;
         std::string arg2;
         std::string target;
 
         std::string comment;
 
-        CodeLineType codeType;
+        TACType codeType;
 
         std::string toString() const;
-        static std::string operatorToString(CodeLineOperator op);
+        static std::string operatorToString(TACOperator op);
         static const int DEFAULT_COMMENT_OFFSET = 24;
     };
 
-    class IntermediateCode {
+    class ThreeAddressCode {
     private:
-        std::vector<CodeLine> codeLines_;
+        std::vector<TACLine> codeLines_;
         std::unordered_map<std::string, int> labelPosition_;
-        
+
         int anonymousVariableCount_ = 0;
         int anonymousGoToCount_ = 0;
         std::string getNextAnonymousVariableName();
@@ -72,7 +72,7 @@ namespace arion
 
     public:
         size_t getTotalLine() const;
-        const CodeLine *getCodeLine(int position) const;
+        const TACLine *getCodeLine(int position) const;
         int getLabelPosition(std::string target) const;
         void printCode(std::ostream &out = std::cout) const;
 
@@ -80,10 +80,10 @@ namespace arion
         std::string makeAssigmentWithoutOperator(std::string arg1, std::string target = "", std::string comment = "");
 
         // target := op arg1 { comment }
-        std::string makeAssigmentWithUnaryOperator(CodeLineOperator op, std::string arg1, std::string target = "", std::string comment = "");
+        std::string makeAssigmentWithUnaryOperator(TACOperator op, std::string arg1, std::string target = "", std::string comment = "");
 
         // target := arg1 op arg2 { comment }
-        std::string makeAssigmentWithBinaryOperator(CodeLineOperator op, std::string arg1, std::string arg2, std::string target = "", std::string comment = "");
+        std::string makeAssigmentWithBinaryOperator(TACOperator op, std::string arg1, std::string arg2, std::string target = "", std::string comment = "");
 
         // target: { comment }
         std::string makeGoToLabel(std::string target = "", std::string comment = "");
@@ -92,7 +92,7 @@ namespace arion
         std::string makeUnconditionalGoTo(std::string target = "", std::string comment = "");
 
         // if arg1 op arg2 then goto target { comment }
-        std::string makeConditionalGoTo(CodeLineOperator op, std::string arg1, std::string arg2, std::string target = "", std::string comment = "");
+        std::string makeConditionalGoTo(TACOperator op, std::string arg1, std::string arg2, std::string target = "", std::string comment = "");
 
         // Panggil ini beberapa kali untuk memasukkan nilai argument
         // param arg1 { comment }

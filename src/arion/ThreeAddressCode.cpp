@@ -1,94 +1,94 @@
-#include "IntermediateCode.hpp"
+#include "ThreeAddressCode.hpp"
 
 #include <iomanip>
 #include <sstream>
 
 using namespace arion;
 
-std::string CodeLine::operatorToString(CodeLineOperator op) {
+std::string TACLine::operatorToString(TACOperator op) {
     switch (op) {
-        case CodeLineOperator::Plus:
+        case TACOperator::Plus:
             return "+";
-        case CodeLineOperator::Minus:
+        case TACOperator::Minus:
             return "-";
-        case CodeLineOperator::Multiply:
+        case TACOperator::Multiply:
             return "*";
-        case CodeLineOperator::Divide:
+        case TACOperator::Divide:
             return "/";
-        case CodeLineOperator::IntegerDivide:
+        case TACOperator::IntegerDivide:
             return "div";
-        case CodeLineOperator::Mod:
+        case TACOperator::Mod:
             return "mod";
-        case CodeLineOperator::And:
+        case TACOperator::And:
             return "and";
-        case CodeLineOperator::Or:
+        case TACOperator::Or:
             return "or";
-        case CodeLineOperator::Not:
+        case TACOperator::Not:
             return "not";
-        case CodeLineOperator::Equal:
+        case TACOperator::Equal:
             return "==";
-        case CodeLineOperator::NotEqual:
+        case TACOperator::NotEqual:
             return "<>";
-        case CodeLineOperator::Less:
+        case TACOperator::Less:
             return "<";
-        case CodeLineOperator::LessOrEqual:
+        case TACOperator::LessOrEqual:
             return "<=";
-        case CodeLineOperator::More:
+        case TACOperator::More:
             return ">";
-        case CodeLineOperator::MoreOrEqual:
+        case TACOperator::MoreOrEqual:
             return ">=";
         default:
             return "";
     }
 }
-std::string CodeLine::toString() const {
+std::string TACLine::toString() const {
     std::stringstream ss;
     switch (codeType) {
-        case CodeLineType::AssignmentWithoutOperator:
+        case TACType::AssignmentWithoutOperator:
             ss << target << " := " << arg1;
             break;
 
-        case CodeLineType::AssignmentWithUnaryOperator:
+        case TACType::AssignmentWithUnaryOperator:
             ss << target << " := " << operatorToString(op) << " " << arg1;
             break;
 
-        case CodeLineType::AssignmentWithBinaryOperator:
+        case TACType::AssignmentWithBinaryOperator:
             ss << target << " := " << arg1 << " " << operatorToString(op) << " " << arg2;
             break;
 
-        case CodeLineType::GoToLabel:
+        case TACType::GoToLabel:
             ss << target << ":";
             break;
 
-        case CodeLineType::UnconditionalGoTo:
+        case TACType::UnconditionalGoTo:
             ss << "goto " << target;
             break;
 
-        case CodeLineType::ConditionalGoTo:
+        case TACType::ConditionalGoTo:
             ss << "if " << arg1 << " " << operatorToString(op) << " " << arg2 << " then goto " << target;
             break;
 
-        case CodeLineType::Parameter:
+        case TACType::Parameter:
             ss << "param " << arg1;
             break;
 
-        case CodeLineType::ArrayRead:
+        case TACType::ArrayRead:
             ss << target << " := " << arg1 << "[" << arg2 << "]";
             break;
 
-        case CodeLineType::ArrayWrite:
+        case TACType::ArrayWrite:
             ss << target << "[" << arg1 << "]" << " := " << arg2;
             break;
 
-        case CodeLineType::FunctionCall:
+        case TACType::FunctionCall:
             ss << "call " << arg1 << ", " << arg2;
             break;
 
-        case CodeLineType::ProcedureCall:
+        case TACType::ProcedureCall:
             ss << "call " << arg1 << ", " << arg2;
             break;
 
-        case CodeLineType::Return:
+        case TACType::Return:
             ss << "return";
             break;
 
@@ -106,10 +106,10 @@ std::string CodeLine::toString() const {
     return ss.str();
 }
 
-size_t IntermediateCode::getTotalLine() const {
+size_t ThreeAddressCode::getTotalLine() const {
     return codeLines_.size();
 }
-const CodeLine *IntermediateCode::getCodeLine(int position) const {
+const TACLine *ThreeAddressCode::getCodeLine(int position) const {
     if (position >= 0 || position < (int)codeLines_.size()) {
         return &codeLines_[position];
     }
@@ -117,7 +117,7 @@ const CodeLine *IntermediateCode::getCodeLine(int position) const {
         return nullptr;
     }
 }
-int IntermediateCode::getLabelPosition(std::string target) const {
+int ThreeAddressCode::getLabelPosition(std::string target) const {
     if (labelPosition_.count(target)) {
         return labelPosition_.at(target);
     }
@@ -125,159 +125,159 @@ int IntermediateCode::getLabelPosition(std::string target) const {
         return -1;
     }
 }
-void IntermediateCode::printCode(std::ostream &out) const {
+void ThreeAddressCode::printCode(std::ostream &out) const {
     bool first = true;
     for (auto &&line : codeLines_) {
-        if (line.codeType == CodeLineType::GoToLabel && !first) out << "\n";
+        if (line.codeType == TACType::GoToLabel && !first) out << "\n";
         out << line.toString() << "\n";
         first = false;
     }
 }
-std::string IntermediateCode::getNextAnonymousVariableName() {
+std::string ThreeAddressCode::getNextAnonymousVariableName() {
     return "_t" + std::to_string(anonymousVariableCount_++);
 }
-std::string IntermediateCode::getNextAnonymousGoToLabel() {
+std::string ThreeAddressCode::getNextAnonymousGoToLabel() {
     return "L" + std::to_string(anonymousGoToCount_++);
 }
 
-std::string IntermediateCode::makeAssigmentWithoutOperator(std::string arg1, std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+std::string ThreeAddressCode::makeAssigmentWithoutOperator(std::string arg1, std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = arg1,
         .arg2 = "",
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::AssignmentWithoutOperator});
+        .codeType = TACType::AssignmentWithoutOperator});
     return codeLines_.back().target;
 }
 
-std::string IntermediateCode::makeAssigmentWithUnaryOperator(CodeLineOperator op, std::string arg1, std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
+std::string ThreeAddressCode::makeAssigmentWithUnaryOperator(TACOperator op, std::string arg1, std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
         .op = op,
         .arg1 = arg1,
         .arg2 = "",
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::AssignmentWithUnaryOperator});
+        .codeType = TACType::AssignmentWithUnaryOperator});
     return codeLines_.back().target;
 }
 
-std::string IntermediateCode::makeAssigmentWithBinaryOperator(CodeLineOperator op, std::string arg1, std::string arg2, std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
+std::string ThreeAddressCode::makeAssigmentWithBinaryOperator(TACOperator op, std::string arg1, std::string arg2, std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
         .op = op,
         .arg1 = arg1,
         .arg2 = arg2,
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::AssignmentWithBinaryOperator});
+        .codeType = TACType::AssignmentWithBinaryOperator});
     return codeLines_.back().target;
 }
 
-std::string IntermediateCode::makeGoToLabel(std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+std::string ThreeAddressCode::makeGoToLabel(std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = "",
         .arg2 = "",
         .target = !target.empty() ? target : getNextAnonymousGoToLabel(),
 
         .comment = comment,
-        .codeType = CodeLineType::GoToLabel});
+        .codeType = TACType::GoToLabel});
     return codeLines_.back().target;
 }
 
-std::string IntermediateCode::makeUnconditionalGoTo(std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+std::string ThreeAddressCode::makeUnconditionalGoTo(std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = "",
         .arg2 = "",
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::UnconditionalGoTo});
+        .codeType = TACType::UnconditionalGoTo});
     return codeLines_.back().target;
 }
 
-std::string IntermediateCode::makeConditionalGoTo(CodeLineOperator op, std::string arg1, std::string arg2, std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
+std::string ThreeAddressCode::makeConditionalGoTo(TACOperator op, std::string arg1, std::string arg2, std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
         .op = op,
         .arg1 = arg1,
         .arg2 = arg2,
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::ConditionalGoTo});
+        .codeType = TACType::ConditionalGoTo});
     return codeLines_.back().target;
 }
 
-void IntermediateCode::setParameter(std::string arg1, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+void ThreeAddressCode::setParameter(std::string arg1, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = arg1,
         .arg2 = "",
         .target = "",
 
         .comment = comment,
-        .codeType = CodeLineType::Parameter});
+        .codeType = TACType::Parameter});
 }
 
-std::string IntermediateCode::callFunction(std::string functionName, int argcount, std::string target, std::string comment) {
+std::string ThreeAddressCode::callFunction(std::string functionName, int argcount, std::string target, std::string comment) {
     if (argcount < 0) throw std::runtime_error("Compiler Fault: argcount can't be negative, got " + std::to_string(argcount));
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = functionName,
         .arg2 = std::to_string(argcount),
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::FunctionCall});
+        .codeType = TACType::FunctionCall});
     return codeLines_.back().target;
 }
 
-void IntermediateCode::callProcedure(std::string procedureName, int argcount, std::string comment) {
+void ThreeAddressCode::callProcedure(std::string procedureName, int argcount, std::string comment) {
     if (argcount < 0) throw std::runtime_error("Compiler Fault: argcount can't be negative, got " + std::to_string(argcount));
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = procedureName,
         .arg2 = std::to_string(argcount),
         .target = "",
 
         .comment = comment,
-        .codeType = CodeLineType::ProcedureCall});
+        .codeType = TACType::ProcedureCall});
 }
 
-void IntermediateCode::makeReturn(std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+void ThreeAddressCode::makeReturn(std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = "",
         .arg2 = "",
         .target = "",
 
         .comment = comment,
-        .codeType = CodeLineType::Return});
+        .codeType = TACType::Return});
 }
 
-std::string IntermediateCode::makeArrayRead(std::string arrayName, std::string index, std::string target, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+std::string ThreeAddressCode::makeArrayRead(std::string arrayName, std::string index, std::string target, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = arrayName,
         .arg2 = index,
         .target = !target.empty() ? target : getNextAnonymousVariableName(),
 
         .comment = comment,
-        .codeType = CodeLineType::ArrayRead});
+        .codeType = TACType::ArrayRead});
     return codeLines_.back().target;
 }
 
-void IntermediateCode::makeArrayWrite(std::string arrayName, std::string index, std::string arg1, std::string comment) {
-    codeLines_.push_back(CodeLine{
-        .op = CodeLineOperator::None,
+void ThreeAddressCode::makeArrayWrite(std::string arrayName, std::string index, std::string arg1, std::string comment) {
+    codeLines_.push_back(TACLine{
+        .op = TACOperator::None,
         .arg1 = index,
         .arg2 = arg1,
         .target = arrayName,
 
         .comment = comment,
-        .codeType = CodeLineType::ArrayWrite});
+        .codeType = TACType::ArrayWrite});
 }
