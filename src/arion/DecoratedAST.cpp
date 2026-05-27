@@ -1581,7 +1581,7 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
     if (type1 == TypeKind::Unknown || type2 == TypeKind::Unknown) return true;
     if (isBooleanType(type1) && isBooleanType(type2)) return true;
     if (isStringType(type1) && isStringType(type2)) return !(type1 == TypeKind::Char && type2 == TypeKind::String);
-    if (isNumberType(type1) && isNumberType(type2)) return true;
+    if (isNumberType(type1) && isNumberType(type2)) return type1 == TypeKind::Real || type2 == TypeKind::Integer;
     if (type1 == TypeKind::Enumerated && type2 == TypeKind::Enumerated) return typeRef1 == typeRef2;
     if (type1 == TypeKind::Array && type2 == TypeKind::Array) {
         if (typeRef1 == typeRef2) return true;
