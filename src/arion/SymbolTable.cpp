@@ -401,6 +401,11 @@ int SymbolTable::addEnumeratedType(const std::vector<std::string> &values) {
 }
 
 int SymbolTable::declareEnumeratedType(const std::string &name, const std::vector<std::string> &values) {
+    int nonRecordBlock = currentBlockIndex();
+    while (btab_[nonRecordBlock].kind == BlockKind::Record) {
+        nonRecordBlock = btab_[nonRecordBlock].parent;
+    }
+    enterBlockByIndex(nonRecordBlock);
     ensureDeclarableIdentifier(name);
     for (const std::string &value : values) {
         if (sameIdentifier(name, value)) {
@@ -408,6 +413,7 @@ int SymbolTable::declareEnumeratedType(const std::string &name, const std::vecto
         }
         ensureDeclarableIdentifier(value);
     }
+    leaveBlock();
 
     int ref = addEnumeratedType(values);
     int typeIndex = declareType(name, TypeKind::Enumerated, ref);

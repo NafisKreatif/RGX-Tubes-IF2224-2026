@@ -214,12 +214,12 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    if (isSubrangeableType(indexType)) {
+                    if (isSubrangeableType(indexTabEntry.type)) {
                         indexType = indexTabEntry.type;
                     }
                     else {
                         throw std::runtime_error("Invalid array index type: " +
-                                                 symbolTable_.typeKindToString(indexType));
+                                                 symbolTable_.typeKindToString(indexTabEntry.type));
                     }
                 }
             }
@@ -378,12 +378,12 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    if (isSubrangeableType(indexType)) {
+                    if (isSubrangeableType(indexTabEntry.type)) {
                         indexType = indexTabEntry.type;
                     }
                     else {
                         throw std::runtime_error("Invalid array index type: " +
-                                                 symbolTable_.typeKindToString(indexType));
+                                                 symbolTable_.typeKindToString(indexTabEntry.type));
                     }
                 }
             }
@@ -559,12 +559,12 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    if (isSubrangeableType(indexType)) {
+                    if (isSubrangeableType(indexTabEntry.type)) {
                         indexType = indexTabEntry.type;
                     }
                     else {
                         throw std::runtime_error("Invalid array index type: " +
-                                                 symbolTable_.typeKindToString(indexType));
+                                                 symbolTable_.typeKindToString(indexTabEntry.type));
                     }
                 }
             }
@@ -726,12 +726,12 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    if (isSubrangeableType(indexType)) {
+                    if (isSubrangeableType(indexTabEntry.type)) {
                         indexType = indexTabEntry.type;
                     }
                     else {
                         throw std::runtime_error("Invalid array index type: " +
-                                                 symbolTable_.typeKindToString(indexType));
+                                                 symbolTable_.typeKindToString(indexTabEntry.type));
                     }
                 }
             }
@@ -957,12 +957,12 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    if (isSubrangeableType(indexType)) {
+                    if (isSubrangeableType(indexTabEntry.type)) {
                         indexType = indexTabEntry.type;
                     }
                     else {
                         throw std::runtime_error("Invalid array index type: " +
-                                                 symbolTable_.typeKindToString(indexType));
+                                                 symbolTable_.typeKindToString(indexTabEntry.type));
                     }
                 }
             }
