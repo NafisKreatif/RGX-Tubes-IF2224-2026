@@ -204,8 +204,9 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
 
         try {
             if (indexNode->getKind() == ASTNodeKind::Identifier) {
-                indexRef = symbolTable_.requireTypeIndex(indexName);
                 const TabEntry &indexTabEntry = symbolTable_.requireType(indexName);
+                indexRef = symbolTable_.requireTypeIndex(indexName);
+                
                 if (indexTabEntry.type == TypeKind::Subrange) {
                     const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(indexTabEntry.ref);
                     low = typeDescriptor.low;
@@ -213,7 +214,13 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                    if (isSubrangeableType(indexType)) {
+                        indexType = indexTabEntry.type;
+                    }
+                    else {
+                        throw std::runtime_error("Invalid array index type: " +
+                                                 symbolTable_.typeKindToString(indexType));
+                    }
                 }
             }
             else if (indexNode->getKind() == ASTNodeKind::RangeType) {
@@ -223,8 +230,13 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
                 auto highValue = decorateValue(*highNode);
                 low = lowValue.first;
                 high = highValue.first;
-                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
-                    throw std::runtime_error("Range low or high type is unknown");
+                if (!isSubrangeableType(lowValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(lowValue.second));
+                }
+                if (!isSubrangeableType(highValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(highValue.second));
                 }
                 if (lowValue.second != highValue.second) {
                     throw std::runtime_error("Range low and high type is not the same: " +
@@ -232,6 +244,7 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
                                              " .. " +
                                              symbolTable_.typeKindToString(highValue.second));
                 }
+
                 indexType = lowValue.second;
             }
         } catch (const std::exception &e) {
@@ -260,8 +273,13 @@ void DecoratedAST::decorateTypeDeclaration(ASTNode &node) {
             auto [low, lowType] = decorateValue(*lowNode);
             auto [high, highType] = decorateValue(*highNode);
 
-            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
-                throw std::runtime_error("Range low and high type is unknown");
+            if (!isSubrangeableType(lowType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(lowType));
+            }
+            if (!isSubrangeableType(highType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(highType));
             }
             if (lowType != highType) {
                 throw std::runtime_error("Range low and high type is not the same: " +
@@ -360,7 +378,13 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                    if (isSubrangeableType(indexType)) {
+                        indexType = indexTabEntry.type;
+                    }
+                    else {
+                        throw std::runtime_error("Invalid array index type: " +
+                                                 symbolTable_.typeKindToString(indexType));
+                    }
                 }
             }
             else if (indexNode->getKind() == ASTNodeKind::RangeType) {
@@ -371,8 +395,13 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
                 low = lowValue.first;
                 high = highValue.first;
 
-                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
-                    throw std::runtime_error("Range low or high type is unknown");
+                if (!isSubrangeableType(lowValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(lowValue.second));
+                }
+                if (!isSubrangeableType(highValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(highValue.second));
                 }
                 if (lowValue.second != highValue.second) {
                     throw std::runtime_error("Range low and high type is not the same: " +
@@ -410,8 +439,13 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
             auto [low, lowType] = decorateValue(*lowNode);
             auto [high, highType] = decorateValue(*highNode);
 
-            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
-                throw std::runtime_error("Range low and high type is unknown");
+            if (!isSubrangeableType(lowType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(lowType));
+            }
+            if (!isSubrangeableType(highType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(highType));
             }
             if (lowType != highType) {
                 throw std::runtime_error("Range low and high type is not the same: " +
@@ -419,6 +453,7 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
                                          " .. " +
                                          symbolTable_.typeKindToString(highType));
             }
+
             TypeKind baseKind = lowType;
             int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
             int subrangeIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
@@ -524,7 +559,13 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                    if (isSubrangeableType(indexType)) {
+                        indexType = indexTabEntry.type;
+                    }
+                    else {
+                        throw std::runtime_error("Invalid array index type: " +
+                                                 symbolTable_.typeKindToString(indexType));
+                    }
                 }
             }
             else if (indexNode->getKind() == ASTNodeKind::RangeType) {
@@ -535,8 +576,13 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
                 low = lowValue.first;
                 high = highValue.first;
 
-                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
-                    throw std::runtime_error("Range low or high type is unknown");
+                if (!isSubrangeableType(lowValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(lowValue.second));
+                }
+                if (!isSubrangeableType(highValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(highValue.second));
                 }
                 if (lowValue.second != highValue.second) {
                     throw std::runtime_error("Range low and high type is not the same: " +
@@ -571,12 +617,16 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
         try {
             ASTNode *lowNode = typeNode.childWithRole(ASTChildRole::Low);
             ASTNode *highNode = typeNode.childWithRole(ASTChildRole::High);
-
             auto [low, lowType] = decorateValue(*lowNode);
             auto [high, highType] = decorateValue(*highNode);
 
-            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
-                throw std::runtime_error("Range low and high type is unknown");
+            if (!isSubrangeableType(lowType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(lowType));
+            }
+            if (!isSubrangeableType(highType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(highType));
             }
             if (lowType != highType) {
                 throw std::runtime_error("Range low and high type is not the same: " +
@@ -584,6 +634,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateAnonymousType(ASTNode &node) {
                                          " .. " +
                                          symbolTable_.typeKindToString(highType));
             }
+
             TypeKind baseKind = lowType;
             int baseRef = symbolTable_.requireTypeIndex(SymbolTable::typeKindToString(baseKind));
             int tabIndex = symbolTable_.declareSubrangeType("_anonymousType" + std::to_string(anonymousTypeCount_++), baseKind, low, high, baseRef);
@@ -675,7 +726,13 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                    if (isSubrangeableType(indexType)) {
+                        indexType = indexTabEntry.type;
+                    }
+                    else {
+                        throw std::runtime_error("Invalid array index type: " +
+                                                 symbolTable_.typeKindToString(indexType));
+                    }
                 }
             }
             else if (indexNode->getKind() == ASTNodeKind::RangeType) {
@@ -686,8 +743,13 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
                 low = lowValue.first;
                 high = highValue.first;
 
-                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
-                    throw std::runtime_error("Range low or high type is unknown");
+                if (!isSubrangeableType(lowValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(lowValue.second));
+                }
+                if (!isSubrangeableType(highValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(highValue.second));
                 }
                 if (lowValue.second != highValue.second) {
                     throw std::runtime_error("Range low and high type is not the same: " +
@@ -725,8 +787,13 @@ void DecoratedAST::decorateVarDeclaration(ASTNode &node) {
             auto [low, lowType] = decorateValue(*lowNode);
             auto [high, highType] = decorateValue(*highNode);
 
-            if (lowType == TypeKind::Unknown || highType == TypeKind::Unknown) {
-                throw std::runtime_error("Range low and high type is unknown");
+            if (!isSubrangeableType(lowType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(lowType));
+            }
+            if (!isSubrangeableType(highType)) {
+                throw std::runtime_error("Invalid subrange base type: " +
+                                         symbolTable_.typeKindToString(highType));
             }
             if (lowType != highType) {
                 throw std::runtime_error("Range low and high type is not the same: " +
@@ -890,7 +957,13 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
                     indexType = typeDescriptor.baseType;
                 }
                 else {
-                    throw std::runtime_error("Identifier is not a subrange: " + symbolTable_.typeKindToString(indexTabEntry.type));
+                    if (isSubrangeableType(indexType)) {
+                        indexType = indexTabEntry.type;
+                    }
+                    else {
+                        throw std::runtime_error("Invalid array index type: " +
+                                                 symbolTable_.typeKindToString(indexType));
+                    }
                 }
             }
             else if (indexNode->getKind() == ASTNodeKind::RangeType) {
@@ -901,8 +974,13 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
                 low = lowValue.first;
                 high = highValue.first;
 
-                if (lowValue.second == TypeKind::Unknown || highValue.second == TypeKind::Unknown) {
-                    throw std::runtime_error("Range low or high type is unknown");
+                if (!isSubrangeableType(lowValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(lowValue.second));
+                }
+                if (!isSubrangeableType(highValue.second)) {
+                    throw std::runtime_error("Invalid array index type: " +
+                                             symbolTable_.typeKindToString(highValue.second));
                 }
                 if (lowValue.second != highValue.second) {
                     throw std::runtime_error("Range low and high type is not the same: " +
@@ -910,6 +988,7 @@ void DecoratedAST::decorateParameter(ASTNode &node) {
                                              " .. " +
                                              symbolTable_.typeKindToString(highValue.second));
                 }
+
                 indexType = lowValue.second;
             }
         } catch (const std::exception &e) {
@@ -1175,22 +1254,29 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
     ASTNode *leftNode = node.childWithRole(ASTChildRole::Left);
     ASTNode *rightNode = node.childWithRole(ASTChildRole::Right);
 
-    std::pair<int, TypeKind> leftType = decorateExpression(*leftNode);
-    std::pair<int, TypeKind> rightType = decorateExpression(*rightNode);
-    if (!isTypeCompatible(leftType.first, leftType.second, rightType.first, rightType.second)) {
+    auto [leftRef, leftType] = decorateExpression(*leftNode);
+    auto [rightRef, rightType] = decorateExpression(*rightNode);
+    if (!isTypeCompatible(leftRef, leftType, rightRef, rightType)) {
         throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                symbolTable_.typeKindToString(leftType.second) + " " +
+                                                symbolTable_.typeKindToString(leftType) + " " +
                                                 op + " " +
-                                                symbolTable_.typeKindToString(rightType.second));
+                                                symbolTable_.typeKindToString(rightType));
+    }
+
+    if (leftType == TypeKind::Subrange) {
+        leftType = symbolTable_.requireTypeDescriptor(leftRef).baseType;
+    }
+    if (rightType == TypeKind::Subrange) {
+        rightType = symbolTable_.requireTypeDescriptor(rightRef).baseType;
     }
 
     std::pair<int, TypeKind> type = {0, TypeKind::Unknown};
     if (op == "+") {
-        if (isStringType(leftType.second) && isStringType(rightType.second)) {
+        if (isStringType(leftType) && isStringType(rightType)) {
             type = {0, TypeKind::String};
         }
-        else if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
-            if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
+        else if (isNumberType(leftType) && isNumberType(rightType)) {
+            if (leftType == TypeKind::Real || rightType == TypeKind::Real) {
                 type = {0, TypeKind::Real};
             }
             else {
@@ -1199,14 +1285,14 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else if (op == "-" || op == "*") {
-        if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
-            if (leftType.second == TypeKind::Real || rightType.second == TypeKind::Real) {
+        if (isNumberType(leftType) && isNumberType(rightType)) {
+            if (leftType == TypeKind::Real || rightType == TypeKind::Real) {
                 type = {0, TypeKind::Real};
             }
             else {
@@ -1215,56 +1301,56 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else if (op == "div" || op == "mod") {
-        if (leftType.second == TypeKind::Integer || rightType.second == TypeKind::Integer) {
+        if (leftType == TypeKind::Integer || rightType == TypeKind::Integer) {
             type = {0, TypeKind::Integer};
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else if (op == "/") {
-        if (isNumberType(leftType.second) && isNumberType(rightType.second)) {
+        if (isNumberType(leftType) && isNumberType(rightType)) {
             type = {0, TypeKind::Real};
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else if (op == "and" || op == "or") {
-        if (isBooleanType(leftType.second) && isBooleanType(rightType.second)) {
+        if (isBooleanType(leftType) && isBooleanType(rightType)) {
             type = {0, TypeKind::Boolean};
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else if (op == "==" || op == "<>") {
         type = {0, TypeKind::Boolean};
     }
     else if (op == ">" || op == ">=" || op == "<" || op == "<=") {
-        if (isOrderedType(leftType.second) && isOrderedType(rightType.second)) {
+        if (isOrderedType(leftType) && isOrderedType(rightType)) {
             type = {0, TypeKind::Boolean};
         }
         else {
             throw SemanticError(node.getLine(), "Incompatible type in binary operation: " +
-                                                    symbolTable_.typeKindToString(leftType.second) + " " +
+                                                    symbolTable_.typeKindToString(leftType) + " " +
                                                     op + " " +
-                                                    symbolTable_.typeKindToString(rightType.second));
+                                                    symbolTable_.typeKindToString(rightType));
         }
     }
     else {
@@ -1281,37 +1367,42 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
 std::pair<int, TypeKind> DecoratedAST::decorateUnaryOperator(ASTNode &node) {
     std::string op = node.getAttribute("operator");
     ASTNode *expressionNode = node.childWithRole(ASTChildRole::Expression);
-    std::pair<int, TypeKind> expressionType = decorateExpression(*expressionNode);
+    auto [expressionRef, expressionType] = decorateExpression(*expressionNode);
+    if (expressionType == TypeKind::Subrange) {
+        const TypeDescriptor &typeDescriptor = symbolTable_.requireTypeDescriptor(expressionRef);
+        expressionType = typeDescriptor.baseType;
+        expressionRef = typeDescriptor.baseRef;
+    }
 
     if (op == "not") {
-        if (!isBooleanType(expressionType.second)) {
+        if (!isBooleanType(expressionType)) {
             throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
-                                                    symbolTable_.typeKindToString(expressionType.second));
+                                                    symbolTable_.typeKindToString(expressionType));
         }
     }
     else if (op == "+") {
-        if (!isNumberType(expressionType.second)) {
+        if (!isNumberType(expressionType)) {
             throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
-                                                    symbolTable_.typeKindToString(expressionType.second));
+                                                    symbolTable_.typeKindToString(expressionType));
         }
     }
     else if (op == "-") {
-        if (!isNumberType(expressionType.second)) {
+        if (!isNumberType(expressionType)) {
             throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
-                                                    symbolTable_.typeKindToString(expressionType.second));
+                                                    symbolTable_.typeKindToString(expressionType));
         }
     }
     else {
         throw SemanticError(node.getLine(), "Invalid unary operation: " + op + " " +
-                                                symbolTable_.typeKindToString(expressionType.second));
+                                                symbolTable_.typeKindToString(expressionType));
     }
 
     ASTAnnotation annotation;
-    annotation.typeName = symbolTable_.typeKindToString(expressionType.second);
+    annotation.typeName = symbolTable_.typeKindToString(expressionType);
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
 
-    return expressionType;
+    return {expressionRef, expressionType};
 }
 std::pair<std::string, TypeKind> DecoratedAST::decorateValue(ASTNode &node) {
     std::string value;
@@ -1492,12 +1583,18 @@ bool DecoratedAST::isAssignmentCompatible(int typeRef1, TypeKind type1, int type
         return validIndex && isAssignmentCompatible(elEntry1.ref, elEntry1.type, elEntry2.ref, elEntry2.type);
     }
     if (type1 == TypeKind::Record && type2 == TypeKind::Record) return typeRef1 == typeRef2;
-    if (type1 == TypeKind::Subrange && type2 == TypeKind::Subrange) {
-        const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
-        const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
-        return typeEntry1.baseType == typeEntry2.baseType &&
-               typeEntry1.lowOrdinal == typeEntry2.lowOrdinal &&
-               typeEntry1.highOrdinal == typeEntry2.highOrdinal;
+    if (type1 == TypeKind::Subrange) {
+        if (type2 == TypeKind::Subrange) {
+            const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+            const TypeDescriptor &typeEntry2 = symbolTable_.requireTypeDescriptor(typeRef2);
+            return typeEntry1.baseType == typeEntry2.baseType &&
+                   typeEntry1.lowOrdinal <= typeEntry2.lowOrdinal &&
+                   typeEntry1.highOrdinal >= typeEntry2.highOrdinal;
+        }
+        else {
+            const TypeDescriptor &typeEntry1 = symbolTable_.requireTypeDescriptor(typeRef1);
+            return typeEntry1.baseType == type2;
+        }
     }
 
     return false;
@@ -1537,6 +1634,12 @@ bool DecoratedAST::isOrderedType(TypeKind type) {
            type == TypeKind::Real ||
            type == TypeKind::Char ||
            type == TypeKind::String;
+}
+bool DecoratedAST::isSubrangeableType(TypeKind type) {
+    return type == TypeKind::Integer ||
+           type == TypeKind::Char ||
+           type == TypeKind::Boolean ||
+           type == TypeKind::Enumerated;
 }
 bool DecoratedAST::isNumberType(TypeKind type) {
     return type == TypeKind::Integer ||
