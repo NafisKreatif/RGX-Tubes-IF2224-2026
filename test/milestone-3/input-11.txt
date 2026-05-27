@@ -1,0 +1,10 @@
+program SemanticAssignmentType;
+
+var
+  a: integer;
+  flag: boolean;
+
+begin
+  flag := true;
+  a := flag
+end.
