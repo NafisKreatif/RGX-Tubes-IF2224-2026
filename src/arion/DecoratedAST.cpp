@@ -1125,7 +1125,8 @@ void DecoratedAST::decorateForStatement(ASTNode &node) {
     auto [endRef, endType] = decorateExpression(*endNode);
 
     if (!isAssignmentCompatible(variableRef, variableType, startRef, startType) ||
-        !isAssignmentCompatible(variableRef, variableType, endRef, endType)) {
+        !isAssignmentCompatible(variableRef, variableType, endRef, endType) || 
+        !isSubrangeableType(variableType) || !isSubrangeableType(startType) || !isSubrangeableType(endType)) {
         throw SemanticError(node.getLine(), "Incompatible type in for statement: " +
                                                 symbolTable_.typeKindToString(variableType) +
                                                 ":=" +
