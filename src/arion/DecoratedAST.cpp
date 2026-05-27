@@ -474,7 +474,13 @@ void DecoratedAST::decorateFieldDeclaration(ASTNode &node, int recordBlockRef) {
             for (auto enumNode : typeNode->childrenWithRole(ASTChildRole::Element)) {
                 values.push_back(enumNode->getAttribute("name"));
             }
+            int nonRecordBlock = symbolTable_.currentBlockIndex();
+            while (symbolTable_.btab()[nonRecordBlock].kind == BlockKind::Record) {
+                nonRecordBlock = symbolTable_.btab()[nonRecordBlock].parent;
+            }
+            symbolTable_.enterBlockByIndex(nonRecordBlock);
             int enumIndex = symbolTable_.declareEnumeratedType("_anonymousType" + std::to_string(anonymousTypeCount_++), values);
+            symbolTable_.leaveBlock();
             int tabIndex = symbolTable_.declareField(name, TypeKind::Enumerated, enumIndex);
 
             ASTAnnotation annotation;
