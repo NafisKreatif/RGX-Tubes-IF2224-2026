@@ -230,3 +230,219 @@ void IntermediateCodeGenerator::generateForStatement(const ASTNode &node) {
     code_.emitJMP(static_cast<int>(loopStart), "repeat for");
     code_.patchInstructionOperand(jumpToEnd, static_cast<int>(code_.getNextInstructionIndex()));
 }
+
+void IntermediateCodeGenerator::generateProcedureCall(const ASTNode &node) {
+    if (!isWriteProcedure(node) && !isWritelnProcedure(node)) {
+        int tabIndex = node.annotation().tabIndex;
+        if (tabIndex == -1) {
+            throw IntermediateCodeGeneratorError("Procedure call requires decorated tab index: " + node.getAttribute("name"));
+        }
+        const TabEntry &entry = symbolTable_.tab().at(static_cast<std::size_t>(tabIndex));
+        code_.emitCAL(entry.ref, "call " + node.getAttribute("name"));
+        return;
+    }
+
+    std::vector<const ASTNode *> arguments;
+    for (const ASTChild &child : node.getChildren()) {
+        if (child.role != ASTChildRole::Arg) {
+            continue;
+        }
+        if (child.node.getKind() == ASTNodeKind::Arguments) {
+            for (const ASTChild &argumentChild : child.node.getChildren()) {
+                if (argumentChild.role == ASTChildRole::Arg) {
+                    arguments.push_back(&argumentChild.node);
+                }
+            }
+        } else {
+            arguments.push_back(&child.node);
+        }
+    }
+
+    if (arguments.empty()) {
+        if (isWritelnProcedure(node)) {
+            code_.emitLIT("\"\"", "empty writeln");
+            code_.emitOPR(OperationCode::WRTLN, "writeln");
+        }
+        return;
+    }
+
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        generateExpression(*arguments[i]);
+        bool isLast = i + 1 == arguments.size();
+        code_.emitOPR(isWritelnProcedure(node) && isLast ? OperationCode::WRTLN : OperationCode::WRT,
+                      isWritelnProcedure(node) && isLast ? "writeln" : "write");
+    }
+}
+
+void IntermediateCodeGenerator::generateExpression(const ASTNode &node) {
+    switch (node.getKind()) {
+        case ASTNodeKind::IntegerLiteral:
+        case ASTNodeKind::RealLiteral:
+        case ASTNodeKind::CharLiteral:
+        case ASTNodeKind::StringLiteral:
+        case ASTNodeKind::BooleanLiteral:
+            code_.emitLIT(literalValue(node), "literal");
+            break;
+
+        case ASTNodeKind::Identifier:
+        case ASTNodeKind::Variable:
+            generateVariableLoad(node);
+            break;
+
+        case ASTNodeKind::BinaryOperation: {
+            const ASTNode *left = requiredChild(node, ASTChildRole::Left);
+            const ASTNode *right = requiredChild(node, ASTChildRole::Right);
+            generateExpression(*left);
+            generateExpression(*right);
+            code_.emitOPR(binaryOperation(node), "binary " + operatorText(node));
+            break;
+        }
+
+        case ASTNodeKind::UnaryOperation: {
+            const ASTNode *value = node.childWithRole(ASTChildRole::Expression);
+            if (value == nullptr) {
+                value = node.childWithRole(ASTChildRole::Value);
+            }
+            if (value == nullptr) {
+                throw IntermediateCodeGeneratorError("Unary operation has no operand");
+            }
+
+            generateExpression(*value);
+            const std::string op = lowerCopy(operatorText(node));
+            if (op == "-" || op == "minus") {
+                code_.emitOPR(OperationCode::NEG, "unary minus");
+            } else if (op == "not" || op == "notsy") {
+                code_.emitLIT("false", "not compare");
+                code_.emitOPR(OperationCode::EQL, "not");
+            }
+            break;
+        }
+
+        case ASTNodeKind::FunctionCall:
+            throw IntermediateCodeGeneratorError("Function call expression generation is not implemented yet: " + node.getAttribute("name"));
+
+        case ASTNodeKind::ArrayAccess:
+        case ASTNodeKind::FieldAccess:
+            generateVariableLoad(node);
+            break;
+
+        default:
+            throw IntermediateCodeGeneratorError("Unsupported expression node: " + ASTNode::kindToString(node.getKind()));
+    }
+}
+
+void IntermediateCodeGenerator::generateVariableLoad(const ASTNode &node) {
+    if (node.getKind() != ASTNodeKind::Variable && node.getKind() != ASTNodeKind::Identifier) {
+        throw IntermediateCodeGeneratorError("Only simple variable load is supported for now");
+    }
+    if (node.annotation().tabIndex == -1) {
+        const TabEntry *entry = symbolTable_.lookup(node.getAttribute("name"));
+        if (entry != nullptr && entry->object == SymbolObjectKind::Constant) {
+            code_.emitLIT(entry->value, "constant " + node.getAttribute("name"));
+            return;
+        }
+    }
+    code_.emitLOD(nodeAddress(node), "load " + node.getAttribute("name"));
+}
+
+void IntermediateCodeGenerator::generateVariableStore(const ASTNode &node) {
+    if (node.getKind() != ASTNodeKind::Variable && node.getKind() != ASTNodeKind::Identifier) {
+        throw IntermediateCodeGeneratorError("Only simple variable assignment target is supported for now");
+    }
+    code_.emitSTO(nodeAddress(node), "store " + node.getAttribute("name"));
+}
+
+int IntermediateCodeGenerator::frameSize(const ASTNode &programNode) const {
+    int blockIndex = programNode.annotation().blockIndex;
+    if (blockIndex == -1) {
+        blockIndex = 0;
+    }
+
+    if (blockIndex >= 0 && blockIndex < static_cast<int>(symbolTable_.btab().size())) {
+        return 3 + symbolTable_.btab().at(static_cast<std::size_t>(blockIndex)).variableSize;
+    }
+    return 3;
+}
+
+int IntermediateCodeGenerator::nodeTabIndex(const ASTNode &node) const {
+    const int tabIndex = node.annotation().tabIndex;
+    if (tabIndex != -1) {
+        return tabIndex;
+    }
+
+    const std::string name = node.getAttribute("name");
+    const int fallbackTabIndex = symbolTable_.lookupIndex(name);
+    if (fallbackTabIndex == -1) {
+        throw IntermediateCodeGeneratorError("Node has no tab index annotation: " + name);
+    }
+
+    return fallbackTabIndex;
+}
+
+int IntermediateCodeGenerator::nodeAddress(const ASTNode &node) const {
+    const int tabIndex = nodeTabIndex(node);
+    return tabAddress(tabIndex);
+}
+
+int IntermediateCodeGenerator::tabAddress(int tabIndex) const {
+    if (tabIndex < 0 || tabIndex >= static_cast<int>(symbolTable_.tab().size())) {
+        throw IntermediateCodeGeneratorError("Invalid tab index: " + std::to_string(tabIndex));
+    }
+    return 3 + symbolTable_.tab().at(static_cast<std::size_t>(tabIndex)).address;
+}
+
+std::string IntermediateCodeGenerator::literalValue(const ASTNode &node) const {
+    const std::string value = node.getAttribute("value");
+    if (!value.empty()) {
+        return value;
+    }
+    const std::string name = node.getAttribute("name");
+    if (!name.empty()) {
+        return name;
+    }
+    return "0";
+}
+
+OperationCode IntermediateCodeGenerator::binaryOperation(const ASTNode &node) const {
+    const std::string op = lowerCopy(operatorText(node));
+    if (op == "+" || op == "plus") return OperationCode::ADD;
+    if (op == "-" || op == "minus") return OperationCode::SUB;
+    if (op == "*" || op == "times") return OperationCode::MUL;
+    if (op == "/" || op == "rdiv" || op == "div") return OperationCode::DIV;
+    if (op == "mod" || op == "imod") return OperationCode::MOD;
+    if (op == "==" || op == "=" || op == "eql") return OperationCode::EQL;
+    if (op == "<>" || op == "!=" || op == "neq") return OperationCode::NEQ;
+    if (op == "<" || op == "lss") return OperationCode::LSS;
+    if (op == ">=" || op == "geq") return OperationCode::GEQ;
+    if (op == ">" || op == "gtr") return OperationCode::GTR;
+    if (op == "<=" || op == "leq") return OperationCode::LEQ;
+    if (op == "and" || op == "iand") return OperationCode::MUL;
+    if (op == "or" || op == "ior") return OperationCode::ADD;
+    throw IntermediateCodeGeneratorError("Unsupported binary operator: " + op);
+}
+
+std::string IntermediateCodeGenerator::operatorText(const ASTNode &node) const {
+    std::string op = node.getAttribute("operator");
+    if (op.empty()) {
+        op = node.getAttribute("op");
+    }
+    return op;
+}
+
+bool IntermediateCodeGenerator::isWriteProcedure(const ASTNode &node) const {
+    return lowerCopy(node.getAttribute("name")) == "write";
+}
+
+bool IntermediateCodeGenerator::isWritelnProcedure(const ASTNode &node) const {
+    return lowerCopy(node.getAttribute("name")) == "writeln";
+}
+
+const ASTNode *IntermediateCodeGenerator::requiredChild(const ASTNode &node, ASTChildRole role) const {
+    const ASTNode *child = node.childWithRole(role);
+    if (child == nullptr) {
+        throw IntermediateCodeGeneratorError(ASTNode::kindToString(node.getKind()) +
+                                             " missing child role " +
+                                             ASTNode::roleToString(role));
+    }
+    return child;
+}
