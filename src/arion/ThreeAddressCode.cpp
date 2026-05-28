@@ -110,7 +110,7 @@ size_t ThreeAddressCode::getTotalLine() const {
     return codeLines_.size();
 }
 const TACLine *ThreeAddressCode::getCodeLine(int position) const {
-    if (position >= 0 || position < (int)codeLines_.size()) {
+    if (position >= 0 && position < (int)codeLines_.size()) {
         return &codeLines_[position];
     }
     else {
