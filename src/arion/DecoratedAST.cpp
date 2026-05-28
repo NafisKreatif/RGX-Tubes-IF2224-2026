@@ -883,7 +883,9 @@ void DecoratedAST::decorateProcedureDeclaration(ASTNode &node) {
 
     const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
-    dfs(*parametersNode);
+    if (parametersNode != nullptr) {
+        dfs(*parametersNode);
+    }
     dfs(*blockNode);
     symbolTable_.leaveBlock();
 
@@ -919,7 +921,9 @@ void DecoratedAST::decorateFunctionDeclaration(ASTNode &node) {
 
     const TabEntry &tabEntry = symbolTable_.tab().at(tabIndex);
     symbolTable_.enterBlockByIndex(tabEntry.ref);
-    dfs(*parametersNode);
+    if (parametersNode != nullptr) {
+        dfs(*parametersNode);
+    }
     dfs(*blockNode);
     symbolTable_.leaveBlock();
 
@@ -1267,6 +1271,13 @@ std::pair<int, TypeKind> DecoratedAST::decorateFunctionCall(ASTNode &node) {
                                                 " argument(s), got " + std::to_string(argCount));
     }
 
+    ASTAnnotation annotation;
+    annotation.typeName = symbolTable_.typeKindToString(functionTabEntry.type);
+    annotation.tabIndex = functionTabIndex;
+    annotation.blockIndex = functionTabEntry.ref;
+    annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+    node.setAnnotation(annotation);
+
     const TabEntry &returnTabEntry = symbolTable_.tab().at(functionBTabEntry.returnRef);
     return {returnTabEntry.ref, returnTabEntry.type};
 }
@@ -1464,48 +1475,68 @@ std::pair<int, TypeKind> DecoratedAST::decorateVariable(ASTNode &node) {
     return {varEntry.ref, varEntry.type};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateArrayAccess(ASTNode &node) {
-    ASTNode *varNode = node.childWithRole(ASTChildRole::Base);
-    std::string varName = varNode->getAttribute("name");
-    int varRef;
-    try {
-        varRef = symbolTable_.requireLookupIndex(varName);
-    } catch (const std::exception &e) {
-        throw SemanticError(varNode->getLine(), "Undefined variable '" + varName + "'. " + e.what());
-    }
-    const TabEntry &varEntry = symbolTable_.requireLookup(varName);
-
-    int arrRef = varEntry.ref;
-    TypeKind indexType = TypeKind::Unknown;
-    int elementRef = -1;
-    TypeKind elementType = TypeKind::Unknown;
-    try {
-        const ATabEntry &arrEntry = symbolTable_.requireArray(arrRef);
-        indexType = arrEntry.indexType;
-        elementRef = arrEntry.elementRef;
-        elementType = arrEntry.elementType;
-    } catch (const std::exception &e) {
-        throw SemanticError(varNode->getLine(), "Invalid array access. Variable '" + varName + "' is not an array. " + e.what());
+    ASTNode *baseNode = node.childWithRole(ASTChildRole::Base);
+    if (baseNode == nullptr) {
+        throw SemanticError(node.getLine(), "Invalid array access. Missing base variable.");
     }
 
-    for (auto indexNode : node.childrenWithRole(ASTChildRole::Index)) {
-        TypeKind currentIndexType = decorateValue(*indexNode).second;
-        if (indexType != currentIndexType) {
-            throw SemanticError(indexNode->getLine(), "Invalid array access of variable '" + varName + "'. Invalid index type: " +
-                                                          symbolTable_.typeKindToString(currentIndexType) + ", expected " + symbolTable_.typeKindToString(indexType));
+    std::pair<int, TypeKind> currentType = {0, TypeKind::Unknown};
+    int baseTabIndex = -1;
+    if (baseNode->getKind() == ASTNodeKind::Variable) {
+        currentType = decorateVariable(*baseNode);
+        baseTabIndex = baseNode->annotation().tabIndex;
+    }
+    else if (baseNode->getKind() == ASTNodeKind::ArrayAccess) {
+        currentType = decorateArrayAccess(*baseNode);
+        baseTabIndex = baseNode->annotation().tabIndex;
+    }
+    else if (baseNode->getKind() == ASTNodeKind::FieldAccess) {
+        currentType = decorateFieldAccess(*baseNode);
+        baseTabIndex = baseNode->annotation().tabIndex;
+    }
+    else {
+        throw SemanticError(baseNode->getLine(), "Invalid array access base: " +
+                                                ASTNode::kindToString(baseNode->getKind()));
+    }
+
+    int lastArrayRef = -1;
+    for (ASTNode *indexNode : node.childrenWithRole(ASTChildRole::Index)) {
+        if (currentType.second != TypeKind::Array) {
+            throw SemanticError(indexNode->getLine(), "Too many indices for array access");
+        }
+
+        const ATabEntry &arrEntry = symbolTable_.requireArray(currentType.first);
+        lastArrayRef = currentType.first;
+
+        auto [indexRef, indexType] = decorateExpression(*indexNode);
+        if (!isAssignmentCompatible(arrEntry.indexRef, arrEntry.indexType, indexRef, indexType)) {
+            throw SemanticError(indexNode->getLine(), "Invalid array index type: " +
+                                                      symbolTable_.typeKindToString(indexType) +
+                                                      ", expected " +
+                                                      symbolTable_.typeKindToString(arrEntry.indexType));
+        }
+
+        currentType = {arrEntry.elementRef, arrEntry.elementType};
+    }
+
+    if (lastArrayRef == -1) {
+        throw SemanticError(node.getLine(), "Invalid array access. Missing index.");
+    }
+
+    int resultRef = currentType.first;
+    if (currentType.second != TypeKind::Array && currentType.second != TypeKind::Record) {
+        if (resultRef >= 0 && resultRef < static_cast<int>(symbolTable_.tab().size())) {
+            resultRef = symbolTable_.tab().at(resultRef).ref;
         }
     }
 
-    if (elementType != TypeKind::Array && elementType != TypeKind::Record) {
-        elementRef = symbolTable_.tab().at(elementRef).ref;
-    }
-
     ASTAnnotation annotation;
-    annotation.typeName = symbolTable_.typeKindToString(elementType);
-    annotation.tabIndex = varRef;
-    annotation.arrayIndex = arrRef;
+    annotation.typeName = symbolTable_.typeKindToString(currentType.second);
+    annotation.tabIndex = baseTabIndex;
+    annotation.arrayIndex = lastArrayRef;
     annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
     node.setAnnotation(annotation);
-    return {elementRef, elementType};
+    return {resultRef, currentType.second};
 }
 std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
     ASTNode *baseNode = node.childWithRole(ASTChildRole::Base);
@@ -1536,6 +1567,33 @@ std::pair<int, TypeKind> DecoratedAST::decorateFieldAccess(ASTNode &node) {
     else if (baseNode->getKind() == ASTNodeKind::Variable) {
         auto [varRef, varType] = decorateVariable(*baseNode);
         symbolTable_.enterBlockByIndex(varRef);
+
+        std::string fieldName = node.getAttribute("field");
+        int fieldRef;
+        try {
+            fieldRef = symbolTable_.requireLookupIndex(fieldName);
+        } catch (const std::exception &e) {
+            throw SemanticError(baseNode->getLine(), "Undefined field '" + fieldName + "'. " + e.what());
+        }
+        const TabEntry &fieldEntry = symbolTable_.requireLookup(fieldName);
+
+        symbolTable_.leaveBlock();
+
+        ASTAnnotation annotation;
+        annotation.typeName = symbolTable_.typeKindToString(fieldEntry.type);
+        annotation.tabIndex = fieldRef;
+        annotation.blockIndex = fieldEntry.ref;
+        annotation.lexicalLevel = symbolTable_.currentLexicalLevel();
+        node.setAnnotation(annotation);
+        return {fieldEntry.ref, fieldEntry.type};
+    }
+    else if (baseNode->getKind() == ASTNodeKind::ArrayAccess) {
+        auto [recordRef, elementType] = decorateArrayAccess(*baseNode);
+        if (elementType != TypeKind::Record) {
+            throw SemanticError(baseNode->getLine(), "Field access base is not a record");
+        }
+
+        symbolTable_.enterBlockByIndex(recordRef);
 
         std::string fieldName = node.getAttribute("field");
         int fieldRef;
