@@ -3,8 +3,8 @@
 
 #include "AST.hpp"
 #include "SymbolTable.hpp"
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 namespace arion
 {
@@ -49,6 +49,7 @@ namespace arion
         bool isAssignmentCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2);
         bool isTypeCompatible(int typeRef1, TypeKind type1, int typeRef2, TypeKind type2);
         bool isOrderedType(TypeKind type);
+        bool isSubrangeableType(TypeKind type);
         bool isNumberType(TypeKind type);
         bool isStringType(TypeKind type);
         bool isBooleanType(TypeKind type);

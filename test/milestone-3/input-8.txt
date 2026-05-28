@@ -9,10 +9,10 @@ type
   Meong == array[1 .. 10] of real;
   MinMax == Min .. Max;
   Matrix == array[1 .. 10] of array[1 .. 10] of real;
-  Direction == (Left, Center, Right);
   Something == record
     dir : (Left, Center, Right);
   end;
+  Direction == (Left, Center, Right);
 
 var
   dir : Direction;

@@ -1,0 +1,83 @@
+tab:
+ idx |             identifier |      object |        type | ref | nrm | lvl | adr | link | value |  initialized 
+-----|------------------------|-------------|-------------|-----|-----|-----|-----|------|-------|--------------
+   0 |                  <nil> |    reserved |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+   1 |                    and |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   2 |                  array |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   3 |                  begin |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   4 |                   case |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   5 |                  const |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   6 |                    div |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   7 |                 downto |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   8 |                     do |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+   9 |                   else |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  10 |                    end |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  11 |                    for |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  12 |               function |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  13 |                     if |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  14 |                    mod |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  15 |                    not |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  16 |                     of |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  17 |                     or |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  18 |              procedure |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  19 |                program |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  20 |                 record |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  21 |                 repeat |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  22 |                integer |        type |     integer |   0 |   1 |   0 |   0 |    0 |       |            1 
+  23 |                   real |        type |        real |   0 |   1 |   0 |   0 |    0 |       |            1 
+  24 |                boolean |        type |     boolean |   0 |   1 |   0 |   0 |    0 |       |            1 
+  25 |                   char |        type |        char |   0 |   1 |   0 |   0 |    0 |       |            1 
+  26 |                 string |        type |      string |   0 |   1 |   0 |   0 |    0 |       |            1 
+  27 |                   then |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  28 |                     to |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  29 |                   type |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  30 |                  until |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  31 |                    var |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  32 |                  while |    reserved |     unknown |   0 |   1 |   0 |   0 |    0 |       |            1 
+  33 |                   true |    constant |     boolean |   0 |   1 |   0 |   1 |    0 |  true |            1 
+  34 |                  false |    constant |     boolean |   0 |   1 |   0 |   0 |    0 | false |            1 
+  35 |                 readln |   procedure |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  36 |                writeln |   procedure |        void |   1 |   1 |   0 |   0 |    0 |       |            1 
+  37 |          <writeln-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
+  38 |                  write |   procedure |        void |   2 |   1 |   0 |   0 |    0 |       |            1 
+  39 |            <write-arg> |   parameter |      string |   0 |   1 |   1 |   0 |    0 |       |            0 
+  40 | SemanticArrayIndexType |     program |        void |   0 |   1 |   0 |   0 |    0 |       |            1 
+  41 |                Numbers |        type |       array |   0 |   1 |   0 |   0 |   40 |       |            1 
+  42 |                    arr |    variable |       array |   0 |   1 |   0 |   0 |   41 |       |            0 
+  43 |                   flag |    variable |     boolean |   0 |   1 |   0 |   3 |   42 |       |            0 
+
+atab:
+ idx |     idxType | idxRef |      elType |  elRef |  low | high | resolved |  lowOrd | highOrd | elSize | size 
+-----|-------------|--------|-------------|--------|------|------|----------|---------|---------|--------|------
+   0 |     integer |      0 |     integer |     22 |    1 |    3 |        1 |       1 |       3 |      1 |    3 
+
+btab:
+ idx |                   name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
+-----|------------------------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
+   0 | SemanticArrayIndexType |     program |     -1 |   43 |    0 |     0 |     4 |   0 |        void |         0 |    40 
+   1 |                writeln |   procedure |      0 |   37 |   37 |     1 |     0 |   1 |        void |         0 |    36 
+   2 |                  write |   procedure |      0 |   39 |   39 |     1 |     0 |   1 |        void |         0 |    38 
+
+type:
+ idx |        kind |    baseType | baseRef |  low | high | resolved |  lowOrd | highOrd | size | values 
+-----|-------------|-------------|---------|------|------|----------|---------|---------|------|--------
+
+Program (name: SemanticArrayIndexType) -> (tabIndex: 40, lexicalLevel: 0)
+├── Declarations [role: Declaration]
+│   ├── TypeDeclarations [role: Declaration]
+│   │   └── TypeDeclaration [role: Type] (name: Numbers) -> (type: array, tabIndex: 41, arrayIndex: 0, lexicalLevel: 0)
+│   │       └── ArrayType [role: Type]
+│   │           ├── RangeType [role: Index]
+│   │           │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│   │           │   └── IntegerLiteral [role: High] (value: 3) -> (type: integer)
+│   │           └── NamedType [role: Element] (name: integer) -> (type: integer, tabIndex: 22)
+│   └── VarDeclarations [role: Declaration]
+│       ├── VarDeclaration [role: Variable] (name: arr) -> (type: array, tabIndex: 42, lexicalLevel: 0)
+│       │   └── NamedType [role: Type] (name: Numbers) -> (type: array, tabIndex: 41)
+│       └── VarDeclaration [role: Variable] (name: flag) -> (type: boolean, tabIndex: 43, lexicalLevel: 0)
+│           └── NamedType [role: Type] (name: boolean) -> (type: boolean, tabIndex: 24)
+└── CompoundStatement [role: Body]
+    └── StatementList [role: Body]
+        └── Assignment [role: Statement]
+            ├── Variable [role: Target] (name: flag) -> (type: boolean, tabIndex: 43, lexicalLevel: 0)
+            └── BooleanLiteral [role: Value] (value: true)

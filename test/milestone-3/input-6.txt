@@ -10,10 +10,16 @@ type
     x: integer
   end;
   Numbers == array[SmallRange] of integer;
+  Booleans == array[false .. true] of boolean;
 
 var
   p: Pair;
   n: Numbers;
+  r: SmallRange;
 
 begin
+  r := 2;
+  r := 3;
+  r := '0';
+
 end.
