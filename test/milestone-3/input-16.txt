@@ -1,0 +1,12 @@
+program SemanticArrayIndexType;
+
+type
+  Numbers == array[1 .. 3] of integer;
+
+var
+  arr: Numbers;
+  flag: boolean;
+
+begin
+  flag := true
+end.

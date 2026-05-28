@@ -52,12 +52,14 @@ tab:
   48 |            Left |    constant |  enumerated |   1 |   1 |   1 |   0 |   47 |     0 |            1 
   49 |          Center |    constant |  enumerated |   1 |   1 |   1 |   1 |   48 |     1 |            1 
   50 |           Right |    constant |  enumerated |   1 |   1 |   1 |   2 |   49 |     2 |            1 
-  51 |      Direction1 |       field |  enumerated |  47 |   1 |   1 |   0 |   50 |       |            0 
+  51 |             dir |       field |  enumerated |  47 |   1 |   1 |   0 |   50 |       |            0 
   52 |       Something |        type |      record |   3 |   1 |   0 |   0 |   46 |       |            1 
   53 |       Direction |        type |  enumerated |   2 |   1 |   0 |   0 |   52 |       |            1 
   54 |            Left |    constant |  enumerated |   2 |   1 |   0 |   0 |   53 |     0 |            1 
   55 |          Center |    constant |  enumerated |   2 |   1 |   0 |   1 |   54 |     1 |            1 
   56 |           Right |    constant |  enumerated |   2 |   1 |   0 |   2 |   55 |     2 |            1 
+  57 |             dir |    variable |  enumerated |   2 |   1 |   0 |   0 |   56 |       |            0 
+  58 |            smth |    variable |      record |   3 |   1 |   0 |   1 |   57 |       |            0 
 
 atab:
  idx |     idxType | idxRef |      elType |  elRef |  low | high | resolved |  lowOrd | highOrd | elSize | size 
@@ -69,7 +71,7 @@ atab:
 btab:
  idx |      name |        kind | parent | last | lpar | pSize | vSize | lvl |  returnType | returnRef | owner 
 -----|-----------|-------------|--------|------|------|-------|-------|-----|-------------|-----------|-------
-   0 |      Test |     program |     -1 |   56 |    0 |     0 |     0 |   0 |        void |         0 |    40 
+   0 |      Test |     program |     -1 |   58 |    0 |     0 |     2 |   0 |        void |         0 |    40 
    1 |   writeln |   procedure |      0 |   37 |   37 |     1 |     0 |   1 |        void |         0 |    36 
    2 |     write |   procedure |      0 |   39 |   39 |     1 |     0 |   1 |        void |         0 |    38 
    3 | Something |      record |      0 |   51 |    0 |     0 |     1 |   1 |        void |         0 |    52 
@@ -90,39 +92,44 @@ Program (name: Test) -> (tabIndex: 40, lexicalLevel: 0)
 │   │   │   └── IntegerLiteral [role: Value] (value: 5) -> (type: integer)
 │   │   └── ConstDeclaration [role: Const] (name: PI) -> (type: real, tabIndex: 43, lexicalLevel: 0)
 │   │       └── RealLiteral [role: Value] (value: 3.141) -> (type: real)
-│   └── TypeDeclarations [role: Declaration]
-│       ├── TypeDeclaration [role: Type] (name: Meong) -> (type: array, tabIndex: 44, arrayIndex: 0, lexicalLevel: 0)
-│       │   └── ArrayType [role: Type]
-│       │       ├── RangeType [role: Index]
-│       │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
-│       │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
-│       │       └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
-│       ├── TypeDeclaration [role: Type] (name: MinMax) -> (type: subrange, tabIndex: 45, lexicalLevel: 0)
-│       │   └── RangeType [role: Type]
-│       │       ├── Variable [role: Low] (name: Min) -> (type: integer)
-│       │       └── Variable [role: High] (name: Max) -> (type: integer)
-│       ├── TypeDeclaration [role: Type] (name: Matrix) -> (type: array, tabIndex: 46, arrayIndex: 2, lexicalLevel: 0)
-│       │   └── ArrayType [role: Type]
-│       │       ├── RangeType [role: Index]
-│       │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
-│       │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
-│       │       └── ArrayType [role: Element] -> (type: array, arrayIndex: 1, lexicalLevel: 0)
-│       │           ├── RangeType [role: Index]
-│       │           │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
-│       │           │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
-│       │           └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
-│       ├── TypeDeclaration [role: Type] (name: Something) -> (type: record, tabIndex: 52, blockIndex: 3, lexicalLevel: 0)
-│       │   └── RecordType [role: Type]
-│       │       └── FieldDeclaration [role: Field] (name: Direction1) -> (type: enumerated, tabIndex: 51, lexicalLevel: 1)
-│       │           └── EnumeratedType [role: Type]
-│       │               ├── Identifier [role: Element] (name: Left)
-│       │               ├── Identifier [role: Element] (name: Center)
-│       │               └── Identifier [role: Element] (name: Right)
-│       └── TypeDeclaration [role: Type] (name: Direction) -> (type: enumerated, tabIndex: 53, lexicalLevel: 0)
-│           └── EnumeratedType [role: Type]
-│               ├── Identifier [role: Element] (name: Left)
-│               ├── Identifier [role: Element] (name: Center)
-│               └── Identifier [role: Element] (name: Right)
+│   ├── TypeDeclarations [role: Declaration]
+│   │   ├── TypeDeclaration [role: Type] (name: Meong) -> (type: array, tabIndex: 44, arrayIndex: 0, lexicalLevel: 0)
+│   │   │   └── ArrayType [role: Type]
+│   │   │       ├── RangeType [role: Index]
+│   │   │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│   │   │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│   │   │       └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
+│   │   ├── TypeDeclaration [role: Type] (name: MinMax) -> (type: subrange, tabIndex: 45, lexicalLevel: 0)
+│   │   │   └── RangeType [role: Type]
+│   │   │       ├── Variable [role: Low] (name: Min) -> (type: integer)
+│   │   │       └── Variable [role: High] (name: Max) -> (type: integer)
+│   │   ├── TypeDeclaration [role: Type] (name: Matrix) -> (type: array, tabIndex: 46, arrayIndex: 2, lexicalLevel: 0)
+│   │   │   └── ArrayType [role: Type]
+│   │   │       ├── RangeType [role: Index]
+│   │   │       │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│   │   │       │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│   │   │       └── ArrayType [role: Element] -> (type: array, arrayIndex: 1, lexicalLevel: 0)
+│   │   │           ├── RangeType [role: Index]
+│   │   │           │   ├── IntegerLiteral [role: Low] (value: 1) -> (type: integer)
+│   │   │           │   └── IntegerLiteral [role: High] (value: 10) -> (type: integer)
+│   │   │           └── NamedType [role: Element] (name: real) -> (type: real, tabIndex: 23)
+│   │   ├── TypeDeclaration [role: Type] (name: Something) -> (type: record, tabIndex: 52, blockIndex: 3, lexicalLevel: 0)
+│   │   │   └── RecordType [role: Type]
+│   │   │       └── FieldDeclaration [role: Field] (name: dir) -> (type: enumerated, tabIndex: 51, lexicalLevel: 1)
+│   │   │           └── EnumeratedType [role: Type]
+│   │   │               ├── Identifier [role: Element] (name: Left)
+│   │   │               ├── Identifier [role: Element] (name: Center)
+│   │   │               └── Identifier [role: Element] (name: Right)
+│   │   └── TypeDeclaration [role: Type] (name: Direction) -> (type: enumerated, tabIndex: 53, lexicalLevel: 0)
+│   │       └── EnumeratedType [role: Type]
+│   │           ├── Identifier [role: Element] (name: Left)
+│   │           ├── Identifier [role: Element] (name: Center)
+│   │           └── Identifier [role: Element] (name: Right)
+│   └── VarDeclarations [role: Declaration]
+│       ├── VarDeclaration [role: Variable] (name: dir) -> (type: enumerated, tabIndex: 57, lexicalLevel: 0)
+│       │   └── NamedType [role: Type] (name: Direction) -> (type: enumerated, tabIndex: 53)
+│       └── VarDeclaration [role: Variable] (name: smth) -> (type: record, tabIndex: 58, lexicalLevel: 0)
+│           └── NamedType [role: Type] (name: Something) -> (type: record, tabIndex: 52)
 └── CompoundStatement [role: Body]
     └── StatementList [role: Body]
         └── EmptyStatement [role: Statement]

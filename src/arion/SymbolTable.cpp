@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <sstream>
 #include <utility>
+#include <iostream>
 
 using namespace arion;
 
@@ -408,7 +409,6 @@ int SymbolTable::declareEnumeratedType(const std::string &name, const std::vecto
         }
         ensureDeclarableIdentifier(value);
     }
-
     int ref = addEnumeratedType(values);
     int typeIndex = declareType(name, TypeKind::Enumerated, ref);
     for (std::size_t ordinal = 0; ordinal < values.size(); ++ordinal) {
@@ -948,7 +948,8 @@ void SymbolTable::initializePredefinedIdentifiers() {
     auto appendWriteLikeProcedure = [this](const std::string &name) {
         int blockRef = createProcedureBlock(name);
         int tabIndex = appendEntry(TabEntry{name, 0, SymbolObjectKind::Procedure, TypeKind::Void,
-                                            blockRef, true, 0, 0, "", true}, false);
+                                            blockRef, true, 0, 0, "", true},
+                                   false);
         btab_[blockRef].ownerTabIndex = tabIndex;
 
         enterBlockByIndex(blockRef);
@@ -1418,7 +1419,7 @@ int SymbolTable::maxTypeDescriptorLowOrdWidth() const {
     return maxLength;
 }
 int SymbolTable::maxTypeDescriptorHighOrdWidth() const {
-     int maxLength = 7;
+    int maxLength = 7;
     for (auto &&entry : typeDescriptors_) {
         maxLength = std::max(digitCount(entry.highOrdinal), maxLength);
     }
@@ -1434,7 +1435,7 @@ int SymbolTable::maxTypeDescriptorSizeWidth() const {
 int SymbolTable::maxTypeDescriptorValuesWidth() const {
     int maxLength = 6;
     for (auto &&entry : typeDescriptors_) {
-        maxLength = std::max((int) descriptorValuesToString(entry).size(), maxLength);
+        maxLength = std::max((int)descriptorValuesToString(entry).size(), maxLength);
     }
     return maxLength;
 }
