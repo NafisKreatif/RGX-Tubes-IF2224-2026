@@ -9,6 +9,14 @@ DecoratedAST::DecoratedAST(const ASTNode &astTree) : astTree_{std::move(astTree)
     buildTableAndDecorateTree();
 }
 
+const ASTNode &DecoratedAST::getASTTree() const {
+    return astTree_;
+}
+
+const SymbolTable &DecoratedAST::getSymbolTable() const {
+    return symbolTable_;
+}
+
 void DecoratedAST::buildTableAndDecorateTree() {
     dfs(astTree_);
 }
