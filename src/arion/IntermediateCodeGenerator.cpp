@@ -98,9 +98,14 @@ void IntermediateCodeGenerator::generateStatement(const ASTNode &node) {
         case ASTNodeKind::ProcedureCall:
             generateProcedureCall(node);
             break;
+        case ASTNodeKind::EmptyStatement:
+            break;
         default:
             if (isStatementContainer(node.getKind())) {
                 generateNode(node);
+            } else {
+                throw IntermediateCodeGeneratorError("Unsupported statement node: " +
+                                                     ASTNode::kindToString(node.getKind()));
             }
             break;
     }
