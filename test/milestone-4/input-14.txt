@@ -1,0 +1,10 @@
+program SemanticConditionType;
+
+var
+  a: integer;
+
+begin
+  a := 1;
+  if a then
+    a := 2
+end.

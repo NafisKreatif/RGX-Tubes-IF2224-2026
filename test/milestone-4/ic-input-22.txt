@@ -1,0 +1,33 @@
+0 JMP 0 24 { program entry }
+1 JMP 0 2 { enter Inc }
+2 INT 0 5 { init frame Inc }
+3 LOD 0 3 { load Variable }
+4 LIT 0 1 { literal }
+5 OPR 0 2 { binary + }
+6 STO 0 4 { store function result Inc }
+7 LOD 0 4 { function result Inc }
+8 RET { return Inc }
+9 JMP 0 10 { enter Twice }
+10 INT 0 5 { init frame Twice }
+11 LOD 0 3 { load Variable }
+12 LIT 0 2 { literal }
+13 OPR 0 4 { binary * }
+14 STO 0 4 { store function result Twice }
+15 LOD 0 4 { function result Twice }
+16 RET { return Twice }
+17 JMP 0 18 { enter PrintValue }
+18 INT 0 4 { init frame PrintValue }
+19 LIT 0 'Nested call = ' { literal }
+20 OPR 0 13 { write }
+21 LOD 0 3 { load Variable }
+22 OPR 0 14 { writeln }
+23 RET { return PrintValue }
+24 INT 0 3 { init program frame }
+25 LIT 0 4 { literal }
+26 LIT 0 1 { argument count }
+27 CAL 0 1 { call Inc }
+28 LIT 0 1 { argument count }
+29 CAL 0 9 { call Twice }
+30 LIT 0 1 { argument count }
+31 CAL 0 17 { call PrintValue }
+32 RET { return }

@@ -1,0 +1,17 @@
+program RecordFieldAccess;
+
+type
+  Cell == record
+    value: integer;
+    active: boolean
+  end;
+
+var
+  store: Cell;
+
+begin
+  store.value := 11;
+  store.active := true;
+  if store.active then
+    writeln('Record value = ', store.value)
+end.

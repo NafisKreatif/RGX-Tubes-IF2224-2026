@@ -1,0 +1,20 @@
+program ProcedureFunctionRuntime;
+
+var
+  x: integer;
+
+procedure AddToX(delta: integer);
+begin
+  x := x + delta
+end;
+
+function Twice(value: integer): integer;
+begin
+  Twice := value * 2
+end;
+
+begin
+  x := 5;
+  AddToX(3);
+  writeln('Twice = ', Twice(x))
+end.

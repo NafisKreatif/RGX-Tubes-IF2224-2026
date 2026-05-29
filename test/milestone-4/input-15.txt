@@ -1,0 +1,14 @@
+program BentrokEnum;
+
+type
+  Direction1 == (Left, Center, Right);
+  Direction2 == record dir : (Left, Center, Right); end;
+
+var
+  dir1 : Direction1;
+  dir2 : Direction2;
+
+begin
+  dir1 := Center;
+  dir2.dir := Center;
+end.

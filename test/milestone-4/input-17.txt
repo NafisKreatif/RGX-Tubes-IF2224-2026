@@ -1,0 +1,20 @@
+program DynamicArraySum;
+
+type
+  Numbers == array[1 .. 4] of integer;
+
+var
+  nums: Numbers;
+  i, total: integer;
+
+begin
+  i := 1;
+  total := 0;
+  while i <= 4 do
+  begin
+    nums[i] := i * 2;
+    total := total + nums[i];
+    i := i + 1
+  end;
+  writeln('Dynamic sum = ', total)
+end.

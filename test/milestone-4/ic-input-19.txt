@@ -1,0 +1,13 @@
+0 JMP 0 1 { program entry }
+1 INT 0 5 { init program frame }
+2 LIT 0 11 { literal }
+3 STO 0 3 { store FieldAccess }
+4 LIT 0 true { literal }
+5 STO 0 4 { store FieldAccess }
+6 LOD 0 4 { load FieldAccess }
+7 JPC 0 12 { if false }
+8 LIT 0 'Record value = ' { literal }
+9 OPR 0 13 { write }
+10 LOD 0 3 { load FieldAccess }
+11 OPR 0 14 { writeln }
+12 RET { return }

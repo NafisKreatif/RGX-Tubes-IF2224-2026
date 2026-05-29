@@ -1,0 +1,3 @@
+0 JMP 0 1 { program entry }
+1 INT 0 16 { init program frame }
+2 RET { return }

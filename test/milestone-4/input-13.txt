@@ -1,0 +1,11 @@
+program SemanticCaseLabelType;
+
+var
+  flag: boolean;
+
+begin
+  flag := true;
+  case flag of
+    1: flag := false
+  end
+end.

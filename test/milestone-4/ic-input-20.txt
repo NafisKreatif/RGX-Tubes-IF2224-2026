@@ -1,0 +1,20 @@
+0 JMP 0 1 { program entry }
+1 INT 0 9 { init program frame }
+2 LIT 0 3 { literal }
+3 STO 0 3 { store ArrayAccess }
+4 LIT 0 4 { literal }
+5 STO 0 4 { store ArrayAccess }
+6 LIT 0 'b' { literal }
+7 STO 0 8 { store Variable }
+8 LOD 0 3 { load ArrayAccess }
+9 LOD 0 4 { load ArrayAccess }
+10 OPR 0 2 { binary + }
+11 LDA 0 5 { address letters }
+12 LOD 0 8 { load Variable }
+13 IXA 97 99 1 { array index }
+14 STI { store indirect ArrayAccess }
+15 LIT 0 'Indexed slots = ' { literal }
+16 OPR 0 13 { write }
+17 LOD 0 6 { load ArrayAccess }
+18 OPR 0 14 { writeln }
+19 RET { return }

@@ -1,0 +1,10 @@
+program SemanticBinaryOperator;
+
+var
+  a: integer;
+  s: string;
+
+begin
+  s := 'hello';
+  a := s + 1
+end.

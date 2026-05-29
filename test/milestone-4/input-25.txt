@@ -1,0 +1,20 @@
+program ArrayOfRecordUnsupported;
+
+type
+  Cell == record
+    value: integer;
+    active: boolean
+  end;
+  Cells == array[1 .. 2] of Cell;
+
+var
+  cells: Cells;
+  index: integer;
+
+begin
+  index := 2;
+  cells[index].value := 11;
+  cells[index].active := true;
+  if cells[index].active then
+    writeln(cells[index].value)
+end.

@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
 
     std::filesystem::path outputDir = "test/milestone-4";
     std::filesystem::create_directories(outputDir);
-    std::filesystem::path dastOutputPath = outputDir / ("dast-" + inputPath.filename().string());
     std::filesystem::path codeOutputPath = outputDir / ("ic-" + inputPath.filename().string());
     std::filesystem::path runtimeOutputPath = outputDir / ("output-" + inputPath.filename().string());
 
@@ -40,10 +39,6 @@ int main(int argc, char **argv) {
 
         arion::ASTNode astTree = builder.build(parseResult);
         arion::DecoratedAST decoratedAstTree(astTree);
-
-        std::ofstream dastOut(dastOutputPath);
-        decoratedAstTree.printTable(dastOut);
-        decoratedAstTree.printTree(dastOut);
 
         arion::IntermediateCodeGenerator generator(decoratedAstTree.getSymbolTable());
         arion::IntermediateCode intermediateCode = generator.generate(decoratedAstTree.getASTTree());
@@ -71,7 +66,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    std::cout << "Decorated AST outputted to " << dastOutputPath << std::endl;
     std::cout << "Intermediate code outputted to " << codeOutputPath << std::endl;
     std::cout << "Interpreter outputted to " << runtimeOutputPath << std::endl;
 }

@@ -1,0 +1,20 @@
+program NestedFunctionCallRuntime;
+
+function Inc(value: integer): integer;
+begin
+  Inc := value + 1
+end;
+
+function Twice(value: integer): integer;
+begin
+  Twice := value * 2
+end;
+
+procedure PrintValue(value: integer);
+begin
+  writeln('Nested call = ', value)
+end;
+
+begin
+  PrintValue(Twice(Inc(4)))
+end.
