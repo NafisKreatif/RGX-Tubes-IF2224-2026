@@ -1,5 +1,7 @@
 #include "arion/ASTBuilder.hpp"
 #include "arion/DecoratedAST.hpp"
+#include "arion/IntermediateCodeGenerator.hpp"
+#include "arion/Interpreter.hpp"
 #include "arion/Parser.hpp"
 #include "arion/Tokenizer.hpp"
 #include <filesystem>
@@ -18,8 +20,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    std::filesystem::path outputPath = "test/milestone-3/dast-" + inputPath.filename().string();
-    std::ofstream out(outputPath);
+    std::filesystem::path outputDir = "test/milestone-4";
+    std::filesystem::create_directories(outputDir);
+    std::filesystem::path dastOutputPath = outputDir / ("dast-" + inputPath.filename().string());
+    std::filesystem::path codeOutputPath = outputDir / ("ic-" + inputPath.filename().string());
+    std::filesystem::path runtimeOutputPath = outputDir / ("output-" + inputPath.filename().string());
 
     arion::Tokenizer tokenizer;
     tokenizer.setStream(in);
@@ -35,9 +40,28 @@ int main(int argc, char **argv) {
 
         arion::ASTNode astTree = builder.build(parseResult);
         arion::DecoratedAST decoratedAstTree(astTree);
-        
-        decoratedAstTree.printTable(out);
-        decoratedAstTree.printTree(out);
+
+        std::ofstream dastOut(dastOutputPath);
+        decoratedAstTree.printTable(dastOut);
+        decoratedAstTree.printTree(dastOut);
+
+        arion::IntermediateCodeGenerator generator(decoratedAstTree.getSymbolTable());
+        arion::IntermediateCode intermediateCode = generator.generate(decoratedAstTree.getASTTree());
+
+        std::ofstream codeOut(codeOutputPath);
+        intermediateCode.printCode(codeOut);
+
+        arion::Interpreter interpreter;
+        std::ostringstream runtimeOutput;
+        interpreter.execute(intermediateCode, runtimeOutput);
+
+        std::ofstream runtimeOut(runtimeOutputPath);
+        runtimeOut << runtimeOutput.str();
+
+        if (!runtimeOutput.str().empty()) {
+            std::cout << "Program output:" << std::endl;
+            std::cout << runtimeOutput.str();
+        }
 
     } catch (const arion::ParserError &e) {
         std::cerr << e.what() << std::endl;
@@ -47,5 +71,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    std::cout << "Outputted to " << outputPath << std::endl;
+    std::cout << "Decorated AST outputted to " << dastOutputPath << std::endl;
+    std::cout << "Intermediate code outputted to " << codeOutputPath << std::endl;
+    std::cout << "Interpreter outputted to " << runtimeOutputPath << std::endl;
 }
