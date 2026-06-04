@@ -1,0 +1,18 @@
+0 JMP 0 1 { program entry }
+1 INT 0 11 { init program frame }
+2 LIT 0 2 { literal }
+3 STO 0 9 { store Variable }
+4 LIT 0 3 { literal }
+5 STO 0 10 { store Variable }
+6 LIT 0 42 { literal }
+7 LDA 0 3 { address grid }
+8 LOD 0 9 { load Variable }
+9 IXA 1 2 3 { array index }
+10 LOD 0 10 { load Variable }
+11 IXA 1 3 1 { array index }
+12 STI { store indirect ArrayAccess }
+13 LIT 0 'Matrix value = ' { literal }
+14 OPR 0 13 { write }
+15 LOD 0 8 { load ArrayAccess }
+16 OPR 0 14 { writeln }
+17 RET { return }

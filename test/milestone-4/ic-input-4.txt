@@ -1,0 +1,23 @@
+0 JMP 0 1 { program entry }
+1 INT 0 7 { init program frame }
+2 LOD 0 4 { load Variable }
+3 LOD 0 5 { load Variable }
+4 OPR 0 2 { binary + }
+5 LIT 0 3 { literal }
+6 OPR 0 2 { binary + }
+7 LIT 0 2 { literal }
+8 OPR 0 4 { binary * }
+9 STO 0 3 { store Variable }
+10 LOD 0 3 { load Variable }
+11 LOD 0 5 { load Variable }
+12 OPR 0 9 { binary < }
+13 LIT 0 false { not compare }
+14 OPR 0 7 { not }
+15 STO 0 6 { store Variable }
+16 LOD 0 3 { load Variable }
+17 LIT 0 2 { literal }
+18 OPR 0 5 { binary div }
+19 LIT 0 3 { literal }
+20 OPR 0 6 { binary mod }
+21 STO 0 5 { store Variable }
+22 RET { return }

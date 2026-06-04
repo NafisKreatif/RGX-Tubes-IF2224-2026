@@ -1,0 +1,34 @@
+0 JMP 0 1 { program entry }
+1 INT 0 9 { init program frame }
+2 LIT 0 1 { literal }
+3 STO 0 7 { store Variable }
+4 LIT 0 0 { literal }
+5 STO 0 8 { store Variable }
+6 LOD 0 7 { load Variable }
+7 LIT 0 4 { literal }
+8 OPR 0 12 { binary <= }
+9 JPC 0 29 { while false }
+10 LOD 0 7 { load Variable }
+11 LIT 0 2 { literal }
+12 OPR 0 4 { binary * }
+13 LDA 0 3 { address nums }
+14 LOD 0 7 { load Variable }
+15 IXA 1 4 1 { array index }
+16 STI { store indirect ArrayAccess }
+17 LOD 0 8 { load Variable }
+18 LDA 0 3 { address nums }
+19 LOD 0 7 { load Variable }
+20 IXA 1 4 1 { array index }
+21 LDI { load indirect ArrayAccess }
+22 OPR 0 2 { binary + }
+23 STO 0 8 { store Variable }
+24 LOD 0 7 { load Variable }
+25 LIT 0 1 { literal }
+26 OPR 0 2 { binary + }
+27 STO 0 7 { store Variable }
+28 JMP 0 6 { repeat while }
+29 LIT 0 'Dynamic sum = ' { literal }
+30 OPR 0 13 { write }
+31 LOD 0 8 { load Variable }
+32 OPR 0 14 { writeln }
+33 RET { return }

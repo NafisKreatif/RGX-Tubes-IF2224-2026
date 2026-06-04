@@ -1,0 +1,14 @@
+program RuntimeArrayBoundsError;
+
+type
+  Numbers == array[1 .. 3] of integer;
+
+var
+  nums: Numbers;
+  i: integer;
+
+begin
+  i := 4;
+  nums[i] := 99;
+  writeln(nums[1])
+end.

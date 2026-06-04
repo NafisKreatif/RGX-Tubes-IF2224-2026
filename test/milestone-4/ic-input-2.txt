@@ -1,0 +1,47 @@
+0 JMP 0 1 { program entry }
+1 INT 0 11 { init program frame }
+2 LIT 0 'r' { literal }
+3 STO 0 3 { store ArrayAccess }
+4 LIT 0 'a' { literal }
+5 STO 0 4 { store ArrayAccess }
+6 LIT 0 'd' { literal }
+7 STO 0 5 { store ArrayAccess }
+8 LIT 0 'a' { literal }
+9 STO 0 6 { store ArrayAccess }
+10 LIT 0 'r' { literal }
+11 STO 0 7 { store ArrayAccess }
+12 LIT 0 1 { literal }
+13 STO 0 8 { store Variable }
+14 LIT 0 5 { literal }
+15 STO 0 9 { store Variable }
+16 LIT 0 true { literal }
+17 STO 0 10 { store Variable }
+18 LDA 0 3 { address chars }
+19 LOD 0 8 { load Variable }
+20 IXA 1 5 1 { array index }
+21 LDI { load indirect ArrayAccess }
+22 LDA 0 3 { address chars }
+23 LOD 0 9 { load Variable }
+24 IXA 1 5 1 { array index }
+25 LDI { load indirect ArrayAccess }
+26 OPR 0 8 { binary <> }
+27 JPC 0 30 { if false }
+28 LIT 0 false { literal }
+29 STO 0 10 { store Variable }
+30 LOD 0 8 { load Variable }
+31 LIT 0 1 { literal }
+32 OPR 0 2 { binary + }
+33 STO 0 8 { store Variable }
+34 LOD 0 9 { load Variable }
+35 LIT 0 1 { literal }
+36 OPR 0 3 { binary - }
+37 STO 0 9 { store Variable }
+38 LOD 0 8 { load Variable }
+39 LOD 0 9 { load Variable }
+40 OPR 0 10 { binary >= }
+41 JPC 0 18 { repeat until false }
+42 LIT 0 'Palindrome = ' { literal }
+43 OPR 0 13 { write }
+44 LOD 0 10 { load Variable }
+45 OPR 0 14 { writeln }
+46 RET { return }

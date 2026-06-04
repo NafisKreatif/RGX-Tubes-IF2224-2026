@@ -1,0 +1,18 @@
+program OrdinalArrayIndexes;
+
+type
+  BoolSlots == array[false .. true] of integer;
+  CharSlots == array['a' .. 'c'] of integer;
+
+var
+  flags: BoolSlots;
+  letters: CharSlots;
+  ch: char;
+
+begin
+  flags[false] := 3;
+  flags[true] := 4;
+  ch := 'b';
+  letters[ch] := flags[false] + flags[true];
+  writeln('Indexed slots = ', letters['b'])
+end.

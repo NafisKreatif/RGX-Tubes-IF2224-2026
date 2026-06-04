@@ -1,0 +1,15 @@
+program Expr;
+type
+  NumberList == array[1 .. 5] of integer;
+  NumberArray == NumberList;
+
+var
+  a, b, c: integer;
+  yes: boolean;
+
+begin
+  a := (b + c + 3) * 2;
+  yes := not (a < c);
+  c := a div 2 mod 3;
+
+end.

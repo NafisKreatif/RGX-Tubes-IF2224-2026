@@ -1,0 +1,29 @@
+0 JMP 0 16 { program entry }
+1 JMP 0 2 { enter AddToX }
+2 INT 0 4 { init frame AddToX }
+3 LOD 1 3 { load Variable }
+4 LOD 0 3 { load Variable }
+5 OPR 0 2 { binary + }
+6 STO 1 3 { store Variable }
+7 RET { return AddToX }
+8 JMP 0 9 { enter Twice }
+9 INT 0 5 { init frame Twice }
+10 LOD 0 3 { load Variable }
+11 LIT 0 2 { literal }
+12 OPR 0 4 { binary * }
+13 STO 0 4 { store function result Twice }
+14 LOD 0 4 { function result Twice }
+15 RET { return Twice }
+16 INT 0 4 { init program frame }
+17 LIT 0 5 { literal }
+18 STO 0 3 { store Variable }
+19 LIT 0 3 { literal }
+20 LIT 0 1 { argument count }
+21 CAL 0 1 { call AddToX }
+22 LIT 0 'Twice = ' { literal }
+23 OPR 0 13 { write }
+24 LOD 0 3 { load Variable }
+25 LIT 0 1 { argument count }
+26 CAL 0 8 { call Twice }
+27 OPR 0 14 { writeln }
+28 RET { return }

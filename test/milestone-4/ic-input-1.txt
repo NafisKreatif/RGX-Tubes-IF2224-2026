@@ -1,0 +1,13 @@
+0 JMP 0 1 { program entry }
+1 INT 0 5 { init program frame }
+2 LIT 0 5 { literal }
+3 STO 0 3 { store Variable }
+4 LOD 0 3 { load Variable }
+5 LIT 0 10 { literal }
+6 OPR 0 2 { binary + }
+7 STO 0 4 { store Variable }
+8 LIT 0 'Result = ' { literal }
+9 OPR 0 13 { write }
+10 LOD 0 4 { load Variable }
+11 OPR 0 14 { writeln }
+12 RET { return }

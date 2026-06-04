@@ -16,6 +16,10 @@ namespace arion {
         JMP,
         JPC,
         OPR,
+        LDA,
+        IXA,
+        LDI,
+        STI,
         RET
     };
 
@@ -61,12 +65,19 @@ namespace arion {
         std::size_t emitInstruction(InstructionOpCode opCode, int level = 0, std::string operand = "", std::string comment = "");
         std::size_t emitLIT(std::string value, std::string comment = "");
         std::size_t emitLOD(int address, std::string comment = "");
+        std::size_t emitLOD(int level, int address, std::string comment = "");
         std::size_t emitSTO(int address, std::string comment = "");
+        std::size_t emitSTO(int level, int address, std::string comment = "");
         std::size_t emitCAL(int line, std::string comment = "");
+        std::size_t emitCAL(int level, int line, std::string comment = "");
         std::size_t emitINT(int size, std::string comment = "");
         std::size_t emitJMP(int line, std::string comment = "");
         std::size_t emitJPC(int line, std::string comment = "");
         std::size_t emitOPR(OperationCode operation, std::string comment = "");
+        std::size_t emitLDA(int level, int address, std::string comment = "");
+        std::size_t emitIXA(int low, int high, int elementSize, std::string comment = "");
+        std::size_t emitLDI(std::string comment = "");
+        std::size_t emitSTI(std::string comment = "");
         std::size_t emitRET(std::string comment = "");
         void patchInstructionOperand(std::size_t line, int operand);
     };
