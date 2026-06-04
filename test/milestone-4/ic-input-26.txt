@@ -1,0 +1,92 @@
+0 JMP 0 55 { program entry }
+1 JMP 0 2 { enter abs }
+2 INT 0 5 { init frame abs }
+3 LOD 0 3 { load Variable }
+4 LIT 0 0 { literal }
+5 OPR 0 10 { binary >= }
+6 JPC 0 10 { if false }
+7 LOD 0 3 { load Variable }
+8 STO 0 4 { store function result abs }
+9 JMP 0 14 { end if }
+10 LOD 0 3 { load Variable }
+11 OPR 0 1 { unary minus }
+12 OPR 0 16 { integer to real }
+13 STO 0 4 { store function result abs }
+14 LOD 0 4 { function result abs }
+15 RET { return abs }
+16 JMP 0 17 { enter sqrt }
+17 INT 0 7 { init frame sqrt }
+18 LIT 0 0 { literal }
+19 OPR 0 16 { integer to real }
+20 STO 0 4 { store Variable }
+21 LOD 0 3 { load Variable }
+22 STO 0 5 { store Variable }
+23 LIT 0 1 { literal }
+24 OPR 0 16 { integer to real }
+25 STO 0 6 { store function result sqrt }
+26 LOD 0 6 { load function result sqrt }
+27 LOD 0 6 { load function result sqrt }
+28 OPR 0 4 { binary * }
+29 LOD 0 3 { load Variable }
+30 OPR 0 11 { binary > }
+31 JPC 0 35 { if false }
+32 LOD 0 6 { load function result sqrt }
+33 STO 0 5 { store Variable }
+34 JMP 0 37 { end if }
+35 LOD 0 6 { load function result sqrt }
+36 STO 0 4 { store Variable }
+37 LOD 0 4 { load Variable }
+38 LOD 0 5 { load Variable }
+39 OPR 0 2 { binary + }
+40 LIT 0 2 { literal }
+41 OPR 0 5 { binary / }
+42 STO 0 6 { store function result sqrt }
+43 LOD 0 6 { load function result sqrt }
+44 LOD 0 6 { load function result sqrt }
+45 OPR 0 4 { binary * }
+46 LOD 0 3 { load Variable }
+47 OPR 0 3 { binary - }
+48 LIT 0 1 { argument count }
+49 CAL 1 1 { call abs }
+50 LIT 0 0.0001 { literal }
+51 OPR 0 9 { binary < }
+52 JPC 0 26 { repeat until false }
+53 LOD 0 6 { function result sqrt }
+54 RET { return sqrt }
+55 INT 0 3 { init program frame }
+56 LIT 0 'sqrt(9) = ' { literal }
+57 OPR 0 13 { write }
+58 LIT 0 9 { literal }
+59 OPR 0 16 { integer to real }
+60 LIT 0 1 { argument count }
+61 CAL 0 16 { call sqrt }
+62 OPR 0 14 { writeln }
+63 LIT 0 'sqrt(100) = ' { literal }
+64 OPR 0 13 { write }
+65 LIT 0 100 { literal }
+66 OPR 0 16 { integer to real }
+67 LIT 0 1 { argument count }
+68 CAL 0 16 { call sqrt }
+69 OPR 0 14 { writeln }
+70 LIT 0 'sqrt(2) = ' { literal }
+71 OPR 0 13 { write }
+72 LIT 0 2 { literal }
+73 OPR 0 16 { integer to real }
+74 LIT 0 1 { argument count }
+75 CAL 0 16 { call sqrt }
+76 OPR 0 14 { writeln }
+77 LIT 0 'sqrt(4/9) = ' { literal }
+78 OPR 0 13 { write }
+79 LIT 0 4 { literal }
+80 LIT 0 9 { literal }
+81 OPR 0 5 { binary / }
+82 LIT 0 1 { argument count }
+83 CAL 0 16 { call sqrt }
+84 OPR 0 14 { writeln }
+85 LIT 0 'sqrt(0.01) = ' { literal }
+86 OPR 0 13 { write }
+87 LIT 0 0.01 { literal }
+88 LIT 0 1 { argument count }
+89 CAL 0 16 { call sqrt }
+90 OPR 0 14 { writeln }
+91 RET { return }
