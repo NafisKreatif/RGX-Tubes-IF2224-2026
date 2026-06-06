@@ -28,7 +28,7 @@ namespace arion {
         ADD = 2,
         SUB = 3,
         MUL = 4,
-        DIV = 5,
+        RDIV = 5,
         MOD = 6,
         EQL = 7,
         NEQ = 8,
@@ -37,7 +37,9 @@ namespace arion {
         GTR = 11,
         LEQ = 12,
         WRT = 13,
-        WRTLN = 14
+        WRTLN = 14,
+        IDIV = 15,
+        I2R = 16
     };
 
     class InstructionLine {

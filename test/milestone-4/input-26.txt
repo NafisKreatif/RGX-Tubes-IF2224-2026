@@ -1,0 +1,31 @@
+Program SquareRoot;
+
+function abs(x: real): real;
+begin
+    if (x >= 0) then
+        abs := x
+    else 
+        abs := -x;
+end;
+
+
+function sqrt(x: real): real;
+var
+    l, r: real;
+begin
+    l := 0;
+    r := x;
+    sqrt := 1;
+    repeat
+        if (sqrt * sqrt > x) then r := sqrt else l := sqrt;
+        sqrt := (l + r) / 2;
+    until (abs(sqrt * sqrt - x) < 0.0001);
+end;
+
+begin
+    writeln('sqrt(9) = ', sqrt(9));
+    writeln('sqrt(100) = ', sqrt(100));
+    writeln('sqrt(2) = ', sqrt(2));
+    writeln('sqrt(4/9) = ', sqrt(4/9));
+    writeln('sqrt(0.01) = ', sqrt(0.01));
+end.

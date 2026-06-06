@@ -80,6 +80,8 @@ namespace arion {
         bool isWritelnProcedure(const ASTNode &node) const;
         bool isActivationBlock(BlockKind kind) const;
         bool isFunctionReturnTarget(int tabIndex) const;
+        bool expressionProducesReal(const ASTNode &node) const;
+        void emitRealCoercionIfNeeded(TypeKind targetType, const ASTNode &value);
         const ASTNode *requiredChild(const ASTNode &node, ASTChildRole role) const;
     };
 

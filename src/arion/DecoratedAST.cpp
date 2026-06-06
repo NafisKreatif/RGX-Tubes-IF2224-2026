@@ -1339,7 +1339,7 @@ std::pair<int, TypeKind> DecoratedAST::decorateBinaryOperator(ASTNode &node) {
         }
     }
     else if (op == "div" || op == "mod") {
-        if (leftType == TypeKind::Integer || rightType == TypeKind::Integer) {
+        if (leftType == TypeKind::Integer && rightType == TypeKind::Integer) {
             type = {0, TypeKind::Integer};
         }
         else {

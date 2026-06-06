@@ -199,6 +199,7 @@ void IntermediateCodeGenerator::generateAssignment(const ASTNode &node) {
     const ASTNode *value = requiredChild(node, ASTChildRole::Value);
 
     generateExpression(*value);
+    emitRealCoercionIfNeeded(nodeValueType(*target).first, *value);
     generateVariableStore(*target);
 }
 
@@ -347,8 +348,10 @@ void IntermediateCodeGenerator::generateProcedureCall(const ASTNode &node) {
                                              node.getAttribute("name"));
     }
 
-    for (const ASTNode *argument : arguments) {
-        generateExpression(*argument);
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        generateExpression(*arguments[i]);
+        const TabEntry &parameter = symbolTable_.tab().at(static_cast<std::size_t>(tabIndex) + i + 1);
+        emitRealCoercionIfNeeded(parameter.type, *arguments[i]);
     }
     emitCall(entry, node.getAttribute("name"), arguments.size());
 }
@@ -362,8 +365,10 @@ void IntermediateCodeGenerator::generateFunctionCall(const ASTNode &node) {
                                              node.getAttribute("name"));
     }
 
-    for (const ASTNode *argument : arguments) {
-        generateExpression(*argument);
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        generateExpression(*arguments[i]);
+        const TabEntry &parameter = symbolTable_.tab().at(static_cast<std::size_t>(tabIndex) + i + 1);
+        emitRealCoercionIfNeeded(parameter.type, *arguments[i]);
     }
     emitCall(entry, node.getAttribute("name"), arguments.size());
 }
@@ -1011,7 +1016,8 @@ OperationCode IntermediateCodeGenerator::binaryOperation(const ASTNode &node) co
     if (op == "+" || op == "plus") return OperationCode::ADD;
     if (op == "-" || op == "minus") return OperationCode::SUB;
     if (op == "*" || op == "times") return OperationCode::MUL;
-    if (op == "/" || op == "rdiv" || op == "div") return OperationCode::DIV;
+    if (op == "/" || op == "rdiv") return OperationCode::RDIV;
+    if (op == "div" || op == "idiv") return OperationCode::IDIV;
     if (op == "mod" || op == "imod") return OperationCode::MOD;
     if (op == "==" || op == "=" || op == "eql") return OperationCode::EQL;
     if (op == "<>" || op == "!=" || op == "neq") return OperationCode::NEQ;
@@ -1076,6 +1082,32 @@ bool IntermediateCodeGenerator::isFunctionReturnTarget(int tabIndex) const {
         blockIndex = symbolTable_.btab().at(static_cast<std::size_t>(blockIndex)).parent;
     }
     return false;
+}
+
+bool IntermediateCodeGenerator::expressionProducesReal(const ASTNode &node) const {
+    if (lowerCopy(node.annotation().typeName) == "real" ||
+        node.getKind() == ASTNodeKind::RealLiteral) {
+        return true;
+    }
+
+    if (node.getKind() == ASTNodeKind::Variable ||
+        node.getKind() == ASTNodeKind::Identifier ||
+        node.getKind() == ASTNodeKind::FieldAccess ||
+        node.getKind() == ASTNodeKind::ArrayAccess) {
+        return nodeValueType(node).first == TypeKind::Real;
+    }
+
+    if (node.getKind() == ASTNodeKind::FunctionCall) {
+        return symbolTable_.tab().at(static_cast<std::size_t>(nodeTabIndex(node))).type == TypeKind::Real;
+    }
+
+    return false;
+}
+
+void IntermediateCodeGenerator::emitRealCoercionIfNeeded(TypeKind targetType, const ASTNode &value) {
+    if (targetType == TypeKind::Real && !expressionProducesReal(value)) {
+        code_.emitOPR(OperationCode::I2R, "integer to real");
+    }
 }
 
 const ASTNode *IntermediateCodeGenerator::requiredChild(const ASTNode &node, ASTChildRole role) const {

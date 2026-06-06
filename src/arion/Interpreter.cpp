@@ -273,6 +273,24 @@ namespace {
             throw runtimeError(ip, "arithmetic operation expects numeric operands");
         }
 
+        if (operation == OperationCode::RDIV) {
+            const double divisor = asReal(right, ip);
+            if (divisor == 0.0) {
+                throw runtimeError(ip, "division by zero");
+            }
+            return RuntimeValue::real(asReal(left, ip) / divisor);
+        }
+
+        if (operation == OperationCode::IDIV) {
+            if (left.kind != ValueKind::Integer || right.kind != ValueKind::Integer) {
+                throw runtimeError(ip, "integer division expects integer operands");
+            }
+            if (right.integerValue == 0) {
+                throw runtimeError(ip, "division by zero");
+            }
+            return RuntimeValue::integer(left.integerValue / right.integerValue);
+        }
+
         if (operation == OperationCode::MOD) {
             const long long divisor = asInteger(right, ip);
             if (divisor == 0) {
@@ -291,11 +309,6 @@ namespace {
                     return RuntimeValue::real(leftValue - rightValue);
                 case OperationCode::MUL:
                     return RuntimeValue::real(leftValue * rightValue);
-                case OperationCode::DIV:
-                    if (rightValue == 0.0) {
-                        throw runtimeError(ip, "division by zero");
-                    }
-                    return RuntimeValue::real(leftValue / rightValue);
                 default:
                     break;
             }
@@ -309,11 +322,6 @@ namespace {
                     return RuntimeValue::integer(leftValue - rightValue);
                 case OperationCode::MUL:
                     return RuntimeValue::integer(leftValue * rightValue);
-                case OperationCode::DIV:
-                    if (rightValue == 0) {
-                        throw runtimeError(ip, "division by zero");
-                    }
-                    return RuntimeValue::integer(leftValue / rightValue);
                 default:
                     break;
             }
@@ -371,8 +379,8 @@ namespace {
                 return OperationCode::SUB;
             case static_cast<int>(OperationCode::MUL):
                 return OperationCode::MUL;
-            case static_cast<int>(OperationCode::DIV):
-                return OperationCode::DIV;
+            case static_cast<int>(OperationCode::RDIV):
+                return OperationCode::RDIV;
             case static_cast<int>(OperationCode::MOD):
                 return OperationCode::MOD;
             case static_cast<int>(OperationCode::EQL):
@@ -391,6 +399,10 @@ namespace {
                 return OperationCode::WRT;
             case static_cast<int>(OperationCode::WRTLN):
                 return OperationCode::WRTLN;
+            case static_cast<int>(OperationCode::IDIV):
+                return OperationCode::IDIV;
+            case static_cast<int>(OperationCode::I2R):
+                return OperationCode::I2R;
             default:
                 throw runtimeError(ip, "unsupported OPR code: " + std::to_string(operation));
         }
@@ -668,7 +680,8 @@ void Interpreter::execute(const IntermediateCode &code, std::ostream &out) {
                     case OperationCode::ADD:
                     case OperationCode::SUB:
                     case OperationCode::MUL:
-                    case OperationCode::DIV:
+                    case OperationCode::RDIV:
+                    case OperationCode::IDIV:
                     case OperationCode::MOD: {
                         const RuntimeValue right = popValue(stack, ip);
                         const RuntimeValue left = popValue(stack, ip);
@@ -695,6 +708,18 @@ void Interpreter::execute(const IntermediateCode &code, std::ostream &out) {
 
                     case OperationCode::WRTLN: {
                         out << valueToString(popValue(stack, ip), ip) << '\n';
+                        break;
+                    }
+
+                    case OperationCode::I2R: {
+                        const RuntimeValue value = popValue(stack, ip);
+                        if (value.kind == ValueKind::Real) {
+                            stack.push_back(value);
+                        } else if (value.kind == ValueKind::Integer) {
+                            stack.push_back(RuntimeValue::real(static_cast<double>(value.integerValue)));
+                        } else {
+                            throw runtimeError(ip, "integer-to-real conversion expects an integer operand");
+                        }
                         break;
                     }
                 }
