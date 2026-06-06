@@ -1,0 +1,4 @@
+record active
+point = 6,8
+total = 14
+average = 7

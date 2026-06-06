@@ -1,0 +1,75 @@
+0 JMP 0 1 { program entry }
+1 INT 0 23 { init program frame }
+2 LIT 0 0 { literal }
+3 STO 0 20 { store Variable }
+4 LIT 0 1 { literal }
+5 STO 0 19 { store Identifier }
+6 LOD 0 19 { load Identifier }
+7 LIT 0 5 { literal }
+8 OPR 0 12 { for condition }
+9 JPC 0 29 { for false }
+10 LOD 0 19 { load Variable }
+11 LOD 0 19 { load Variable }
+12 OPR 0 4 { binary * }
+13 LDA 0 3 { address nums }
+14 LOD 0 19 { load Variable }
+15 IXA 1 5 1 { array index }
+16 STI { store indirect ArrayAccess }
+17 LOD 0 20 { load Variable }
+18 LDA 0 3 { address nums }
+19 LOD 0 19 { load Variable }
+20 IXA 1 5 1 { array index }
+21 LDI { load indirect ArrayAccess }
+22 OPR 0 2 { binary + }
+23 STO 0 20 { store Variable }
+24 LOD 0 19 { load Identifier }
+25 LIT 0 1 { for step }
+26 OPR 0 2 { for update }
+27 STO 0 19 { store Identifier }
+28 JMP 0 6 { repeat for }
+29 LOD 0 7 { load ArrayAccess }
+30 LOD 0 20 { load Variable }
+31 OPR 0 2 { binary + }
+32 STO 0 13 { store ArrayAccess }
+33 LIT 0 'b' { literal }
+34 STO 0 21 { store Variable }
+35 LOD 0 13 { load ArrayAccess }
+36 LDA 0 14 { address charScores }
+37 LOD 0 21 { load Variable }
+38 IXA 97 99 1 { array index }
+39 STI { store indirect ArrayAccess }
+40 LIT 0 true { literal }
+41 STO 0 22 { store Variable }
+42 LIT 0 7 { literal }
+43 STO 0 17 { store ArrayAccess }
+44 LOD 0 15 { load ArrayAccess }
+45 LIT 0 10 { literal }
+46 OPR 0 15 { binary div }
+47 LDA 0 17 { address flagScores }
+48 LOD 0 22 { load Variable }
+49 IXA 0 1 1 { array index }
+50 STI { store indirect ArrayAccess }
+51 LIT 0 'array total = ' { literal }
+52 OPR 0 13 { write }
+53 LOD 0 20 { load Variable }
+54 OPR 0 14 { writeln }
+55 LIT 0 'matrix[2,3] = ' { literal }
+56 OPR 0 13 { write }
+57 LOD 0 13 { load ArrayAccess }
+58 OPR 0 14 { writeln }
+59 LIT 0 'letters[b] = ' { literal }
+60 OPR 0 13 { write }
+61 LDA 0 14 { address charScores }
+62 LOD 0 21 { load Variable }
+63 IXA 97 99 1 { array index }
+64 LDI { load indirect ArrayAccess }
+65 OPR 0 14 { writeln }
+66 LIT 0 'flags[true] = ' { literal }
+67 OPR 0 13 { write }
+68 LOD 0 18 { load ArrayAccess }
+69 OPR 0 14 { writeln }
+70 LIT 0 'flags[false] = ' { literal }
+71 OPR 0 13 { write }
+72 LOD 0 17 { load ArrayAccess }
+73 OPR 0 14 { writeln }
+74 RET { return }

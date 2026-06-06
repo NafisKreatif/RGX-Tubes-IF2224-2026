@@ -1,0 +1,5 @@
+array total = 55
+matrix[2,3] = 80
+letters[b] = 80
+flags[true] = 8
+flags[false] = 7

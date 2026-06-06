@@ -1,0 +1,41 @@
+program ArithmeticControl;
+
+var
+  i, sum, countdown, branchValue: integer;
+  ratio: real;
+  ok: boolean;
+
+begin
+  sum := 0;
+  for i := 1 to 4 do
+  begin
+    sum := sum + i
+  end;
+
+  countdown := 3;
+  while countdown > 0 do
+  begin
+    sum := sum + countdown;
+    countdown := countdown - 1
+  end;
+
+  repeat
+    sum := sum - 1
+  until sum == 15;
+
+  ratio := 5 / 2;
+  ok := (sum == 15) and not false or false;
+
+  writeln('sum = ', sum);
+  writeln('5 / 2 = ', ratio);
+  writeln('5 div 2 = ', 5 div 2);
+  writeln('5 mod 2 = ', 5 mod 2);
+  writeln('logic = ', ok);
+
+  case sum of
+    10: branchValue := 1;
+    15: branchValue := 2;
+    20: branchValue := 3
+  end;
+  writeln('case branch = ', branchValue)
+end.

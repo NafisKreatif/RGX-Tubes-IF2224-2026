@@ -1,0 +1,84 @@
+0 JMP 0 41 { program entry }
+1 JMP 0 2 { enter Add }
+2 INT 0 4 { init frame Add }
+3 LOD 1 3 { load Variable }
+4 LOD 0 3 { load Variable }
+5 OPR 0 2 { binary + }
+6 STO 1 3 { store Variable }
+7 RET { return Add }
+8 JMP 0 9 { enter Inc }
+9 INT 0 5 { init frame Inc }
+10 LOD 0 3 { load Variable }
+11 LIT 0 1 { literal }
+12 OPR 0 2 { binary + }
+13 STO 0 4 { store function result Inc }
+14 LOD 0 4 { function result Inc }
+15 RET { return Inc }
+16 JMP 0 17 { enter Square }
+17 INT 0 5 { init frame Square }
+18 LOD 0 3 { load Variable }
+19 LOD 0 3 { load Variable }
+20 OPR 0 4 { binary * }
+21 STO 0 4 { store function result Square }
+22 LOD 0 4 { function result Square }
+23 RET { return Square }
+24 JMP 0 25 { enter AverageOf }
+25 INT 0 6 { init frame AverageOf }
+26 LOD 0 3 { load Variable }
+27 LOD 0 4 { load Variable }
+28 OPR 0 2 { binary + }
+29 LIT 0 2 { literal }
+30 OPR 0 5 { binary / }
+31 STO 0 5 { store function result AverageOf }
+32 LOD 0 5 { function result AverageOf }
+33 RET { return AverageOf }
+34 JMP 0 35 { enter ScaleAndStore }
+35 INT 0 4 { init frame ScaleAndStore }
+36 LOD 0 3 { load Variable }
+37 LIT 0 2 { literal }
+38 OPR 0 5 { binary / }
+39 STO 1 5 { store Variable }
+40 RET { return ScaleAndStore }
+41 INT 0 6 { init program frame }
+42 LIT 0 0 { literal }
+43 STO 0 3 { store Variable }
+44 LIT 0 3 { literal }
+45 LIT 0 1 { argument count }
+46 CAL 0 1 { call Add }
+47 LIT 0 2 { literal }
+48 LIT 0 1 { argument count }
+49 CAL 0 8 { call Inc }
+50 LIT 0 1 { argument count }
+51 CAL 0 16 { call Square }
+52 LIT 0 1 { argument count }
+53 CAL 0 1 { call Add }
+54 LOD 0 3 { load Variable }
+55 LIT 0 5 { literal }
+56 LIT 0 2 { argument count }
+57 CAL 0 24 { call AverageOf }
+58 STO 0 4 { store Variable }
+59 LOD 0 3 { load Variable }
+60 OPR 0 16 { integer to real }
+61 LIT 0 1 { argument count }
+62 CAL 0 34 { call ScaleAndStore }
+63 LIT 0 'total = ' { literal }
+64 OPR 0 13 { write }
+65 LOD 0 3 { load Variable }
+66 OPR 0 14 { writeln }
+67 LIT 0 'average = ' { literal }
+68 OPR 0 13 { write }
+69 LOD 0 4 { load Variable }
+70 OPR 0 14 { writeln }
+71 LIT 0 'half = ' { literal }
+72 OPR 0 13 { write }
+73 LOD 0 5 { load Variable }
+74 OPR 0 14 { writeln }
+75 LIT 0 'nested = ' { literal }
+76 OPR 0 13 { write }
+77 LIT 0 4 { literal }
+78 LIT 0 1 { argument count }
+79 CAL 0 8 { call Inc }
+80 LIT 0 1 { argument count }
+81 CAL 0 16 { call Square }
+82 OPR 0 14 { writeln }
+83 RET { return }

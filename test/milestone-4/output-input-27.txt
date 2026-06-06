@@ -1,0 +1,6 @@
+sum = 15
+5 / 2 = 2.5
+5 div 2 = 2
+5 mod 2 = 1
+logic = true
+case branch = 2

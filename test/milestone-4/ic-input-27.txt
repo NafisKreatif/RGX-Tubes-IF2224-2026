@@ -1,0 +1,113 @@
+0 JMP 0 1 { program entry }
+1 INT 0 9 { init program frame }
+2 LIT 0 0 { literal }
+3 STO 0 4 { store Variable }
+4 LIT 0 1 { literal }
+5 STO 0 3 { store Identifier }
+6 LOD 0 3 { load Identifier }
+7 LIT 0 4 { literal }
+8 OPR 0 12 { for condition }
+9 JPC 0 19 { for false }
+10 LOD 0 4 { load Variable }
+11 LOD 0 3 { load Variable }
+12 OPR 0 2 { binary + }
+13 STO 0 4 { store Variable }
+14 LOD 0 3 { load Identifier }
+15 LIT 0 1 { for step }
+16 OPR 0 2 { for update }
+17 STO 0 3 { store Identifier }
+18 JMP 0 6 { repeat for }
+19 LIT 0 3 { literal }
+20 STO 0 5 { store Variable }
+21 LOD 0 5 { load Variable }
+22 LIT 0 0 { literal }
+23 OPR 0 11 { binary > }
+24 JPC 0 34 { while false }
+25 LOD 0 4 { load Variable }
+26 LOD 0 5 { load Variable }
+27 OPR 0 2 { binary + }
+28 STO 0 4 { store Variable }
+29 LOD 0 5 { load Variable }
+30 LIT 0 1 { literal }
+31 OPR 0 3 { binary - }
+32 STO 0 5 { store Variable }
+33 JMP 0 21 { repeat while }
+34 LOD 0 4 { load Variable }
+35 LIT 0 1 { literal }
+36 OPR 0 3 { binary - }
+37 STO 0 4 { store Variable }
+38 LOD 0 4 { load Variable }
+39 LIT 0 15 { literal }
+40 OPR 0 7 { binary == }
+41 JPC 0 34 { repeat until false }
+42 LIT 0 5 { literal }
+43 LIT 0 2 { literal }
+44 OPR 0 5 { binary / }
+45 STO 0 7 { store Variable }
+46 LOD 0 4 { load Variable }
+47 LIT 0 15 { literal }
+48 OPR 0 7 { binary == }
+49 LIT 0 false { literal }
+50 LIT 0 false { not compare }
+51 OPR 0 7 { not }
+52 OPR 0 4 { binary and }
+53 LIT 0 false { normalize boolean }
+54 OPR 0 8 { boolean result }
+55 LIT 0 false { literal }
+56 OPR 0 2 { binary or }
+57 LIT 0 false { normalize boolean }
+58 OPR 0 8 { boolean result }
+59 STO 0 8 { store Variable }
+60 LIT 0 'sum = ' { literal }
+61 OPR 0 13 { write }
+62 LOD 0 4 { load Variable }
+63 OPR 0 14 { writeln }
+64 LIT 0 '5 / 2 = ' { literal }
+65 OPR 0 13 { write }
+66 LOD 0 7 { load Variable }
+67 OPR 0 14 { writeln }
+68 LIT 0 '5 div 2 = ' { literal }
+69 OPR 0 13 { write }
+70 LIT 0 5 { literal }
+71 LIT 0 2 { literal }
+72 OPR 0 15 { binary div }
+73 OPR 0 14 { writeln }
+74 LIT 0 '5 mod 2 = ' { literal }
+75 OPR 0 13 { write }
+76 LIT 0 5 { literal }
+77 LIT 0 2 { literal }
+78 OPR 0 6 { binary mod }
+79 OPR 0 14 { writeln }
+80 LIT 0 'logic = ' { literal }
+81 OPR 0 13 { write }
+82 LOD 0 8 { load Variable }
+83 OPR 0 14 { writeln }
+84 LOD 0 4 { load Variable }
+85 LIT 0 10 { literal }
+86 OPR 0 7 { case compare }
+87 JPC 0 92 { next case label }
+88 JMP 0 89 { case matched }
+89 LIT 0 1 { literal }
+90 STO 0 6 { store Variable }
+91 JMP 0 108 { end case }
+92 LOD 0 4 { load Variable }
+93 LIT 0 15 { literal }
+94 OPR 0 7 { case compare }
+95 JPC 0 100 { next case label }
+96 JMP 0 97 { case matched }
+97 LIT 0 2 { literal }
+98 STO 0 6 { store Variable }
+99 JMP 0 108 { end case }
+100 LOD 0 4 { load Variable }
+101 LIT 0 20 { literal }
+102 OPR 0 7 { case compare }
+103 JPC 0 108 { next case label }
+104 JMP 0 105 { case matched }
+105 LIT 0 3 { literal }
+106 STO 0 6 { store Variable }
+107 JMP 0 108 { end case }
+108 LIT 0 'case branch = ' { literal }
+109 OPR 0 13 { write }
+110 LOD 0 6 { load Variable }
+111 OPR 0 14 { writeln }
+112 RET { return }

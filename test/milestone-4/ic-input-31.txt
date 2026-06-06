@@ -1,0 +1,84 @@
+0 JMP 0 54 { program entry }
+1 JMP 0 2 { enter AbsValue }
+2 INT 0 5 { init frame AbsValue }
+3 LOD 0 3 { load Variable }
+4 LIT 0 0 { literal }
+5 OPR 0 10 { binary >= }
+6 JPC 0 10 { if false }
+7 LOD 0 3 { load Variable }
+8 STO 0 4 { store function result AbsValue }
+9 JMP 0 14 { end if }
+10 LOD 0 3 { load Variable }
+11 OPR 0 1 { unary minus }
+12 OPR 0 16 { integer to real }
+13 STO 0 4 { store function result AbsValue }
+14 LOD 0 4 { function result AbsValue }
+15 RET { return AbsValue }
+16 JMP 0 17 { enter SqrtApprox }
+17 INT 0 7 { init frame SqrtApprox }
+18 LIT 0 0 { literal }
+19 OPR 0 16 { integer to real }
+20 STO 0 4 { store Variable }
+21 LOD 0 3 { load Variable }
+22 STO 0 5 { store Variable }
+23 LIT 0 1.0 { literal }
+24 STO 0 6 { store function result SqrtApprox }
+25 LOD 0 6 { load function result SqrtApprox }
+26 LOD 0 6 { load function result SqrtApprox }
+27 OPR 0 4 { binary * }
+28 LOD 0 3 { load Variable }
+29 OPR 0 11 { binary > }
+30 JPC 0 34 { if false }
+31 LOD 0 6 { load function result SqrtApprox }
+32 STO 0 5 { store Variable }
+33 JMP 0 36 { end if }
+34 LOD 0 6 { load function result SqrtApprox }
+35 STO 0 4 { store Variable }
+36 LOD 0 4 { load Variable }
+37 LOD 0 5 { load Variable }
+38 OPR 0 2 { binary + }
+39 LIT 0 2 { literal }
+40 OPR 0 5 { binary / }
+41 STO 0 6 { store function result SqrtApprox }
+42 LOD 0 6 { load function result SqrtApprox }
+43 LOD 0 6 { load function result SqrtApprox }
+44 OPR 0 4 { binary * }
+45 LOD 0 3 { load Variable }
+46 OPR 0 3 { binary - }
+47 LIT 0 1 { argument count }
+48 CAL 1 1 { call AbsValue }
+49 LIT 0 0.0001 { literal }
+50 OPR 0 9 { binary < }
+51 JPC 0 25 { repeat until false }
+52 LOD 0 6 { function result SqrtApprox }
+53 RET { return SqrtApprox }
+54 INT 0 3 { init program frame }
+55 LIT 0 'sqrt(9) = ' { literal }
+56 OPR 0 13 { write }
+57 LIT 0 9 { literal }
+58 OPR 0 16 { integer to real }
+59 LIT 0 1 { argument count }
+60 CAL 0 16 { call SqrtApprox }
+61 OPR 0 14 { writeln }
+62 LIT 0 'sqrt(2) = ' { literal }
+63 OPR 0 13 { write }
+64 LIT 0 2 { literal }
+65 OPR 0 16 { integer to real }
+66 LIT 0 1 { argument count }
+67 CAL 0 16 { call SqrtApprox }
+68 OPR 0 14 { writeln }
+69 LIT 0 'sqrt(4/9) = ' { literal }
+70 OPR 0 13 { write }
+71 LIT 0 4 { literal }
+72 LIT 0 9 { literal }
+73 OPR 0 5 { binary / }
+74 LIT 0 1 { argument count }
+75 CAL 0 16 { call SqrtApprox }
+76 OPR 0 14 { writeln }
+77 LIT 0 'sqrt(0.01) = ' { literal }
+78 OPR 0 13 { write }
+79 LIT 0 0.01 { literal }
+80 LIT 0 1 { argument count }
+81 CAL 0 16 { call SqrtApprox }
+82 OPR 0 14 { writeln }
+83 RET { return }

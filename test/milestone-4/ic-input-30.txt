@@ -1,0 +1,58 @@
+0 JMP 0 1 { program entry }
+1 INT 0 9 { init program frame }
+2 LIT 0 6 { literal }
+3 STO 0 3 { store FieldAccess }
+4 LIT 0 8 { literal }
+5 STO 0 4 { store FieldAccess }
+6 LOD 0 3 { load FieldAccess }
+7 LOD 0 4 { load FieldAccess }
+8 OPR 0 2 { binary + }
+9 STO 0 5 { store FieldAccess }
+10 LOD 0 5 { load FieldAccess }
+11 LIT 0 2 { literal }
+12 OPR 0 5 { binary / }
+13 STO 0 6 { store FieldAccess }
+14 LOD 0 6 { load FieldAccess }
+15 LIT 0 7 { literal }
+16 OPR 0 10 { binary >= }
+17 STO 0 7 { store FieldAccess }
+18 LOD 0 7 { load FieldAccess }
+19 JPC 0 23 { if false }
+20 LIT 0 1 { literal }
+21 STO 0 8 { store Variable }
+22 JMP 0 25 { end if }
+23 LIT 0 0 { literal }
+24 STO 0 8 { store Variable }
+25 LOD 0 8 { load Variable }
+26 LIT 0 0 { literal }
+27 OPR 0 7 { case compare }
+28 JPC 0 33 { next case label }
+29 JMP 0 30 { case matched }
+30 LIT 0 'record inactive' { literal }
+31 OPR 0 14 { writeln }
+32 JMP 0 41 { end case }
+33 LOD 0 8 { load Variable }
+34 LIT 0 1 { literal }
+35 OPR 0 7 { case compare }
+36 JPC 0 41 { next case label }
+37 JMP 0 38 { case matched }
+38 LIT 0 'record active' { literal }
+39 OPR 0 14 { writeln }
+40 JMP 0 41 { end case }
+41 LIT 0 'point = ' { literal }
+42 OPR 0 13 { write }
+43 LOD 0 3 { load FieldAccess }
+44 OPR 0 13 { write }
+45 LIT 0 ',' { literal }
+46 OPR 0 13 { write }
+47 LOD 0 4 { load FieldAccess }
+48 OPR 0 14 { writeln }
+49 LIT 0 'total = ' { literal }
+50 OPR 0 13 { write }
+51 LOD 0 5 { load FieldAccess }
+52 OPR 0 14 { writeln }
+53 LIT 0 'average = ' { literal }
+54 OPR 0 13 { write }
+55 LOD 0 6 { load FieldAccess }
+56 OPR 0 14 { writeln }
+57 RET { return }

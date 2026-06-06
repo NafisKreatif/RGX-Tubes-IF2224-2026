@@ -1,0 +1,38 @@
+program Arrays;
+
+type
+  Numbers == array[1 .. 5] of integer;
+  Matrix == array[1 .. 2] of array[1 .. 3] of integer;
+  CharScoreArray == array['a' .. 'c'] of integer;
+  BoolScoreArray == array[false .. true] of integer;
+
+var
+  nums: Numbers;
+  grid: Matrix;
+  charScores: CharScoreArray;
+  flagScores: BoolScoreArray;
+  i, total: integer;
+  ch: char;
+  state: boolean;
+
+begin
+  total := 0;
+  for i := 1 to 5 do
+  begin
+    nums[i] := i * i;
+    total := total + nums[i]
+  end;
+
+  grid[2, 3] := nums[5] + total;
+  ch := 'b';
+  charScores[ch] := grid[2, 3];
+  state := true;
+  flagScores[false] := 7;
+  flagScores[state] := charScores['b'] div 10;
+
+  writeln('array total = ', total);
+  writeln('matrix[2,3] = ', grid[2, 3]);
+  writeln('letters[b] = ', charScores[ch]);
+  writeln('flags[true] = ', flagScores[true]);
+  writeln('flags[false] = ', flagScores[false])
+end.

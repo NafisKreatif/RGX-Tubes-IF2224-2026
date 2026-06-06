@@ -1,0 +1,42 @@
+program Subprograms;
+
+var
+  total: integer;
+  average, half: real;
+
+procedure Add(delta: integer);
+begin
+  total := total + delta
+end;
+
+function Inc(value: integer): integer;
+begin
+  Inc := value + 1
+end;
+
+function Square(value: integer): integer;
+begin
+  Square := value * value
+end;
+
+function AverageOf(left, right: integer): real;
+begin
+  AverageOf := (left + right) / 2
+end;
+
+procedure ScaleAndStore(value: real);
+begin
+  half := value / 2
+end;
+
+begin
+  total := 0;
+  Add(3);
+  Add(Square(Inc(2)));
+  average := AverageOf(total, 5);
+  ScaleAndStore(total);
+  writeln('total = ', total);
+  writeln('average = ', average);
+  writeln('half = ', half);
+  writeln('nested = ', Square(Inc(4)))
+end.

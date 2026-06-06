@@ -1,0 +1,38 @@
+program Records;
+
+type
+  Point == record
+    x, y: integer
+  end;
+  Summary == record
+    total: integer;
+    average: real;
+    active: boolean
+  end;
+
+var
+  p: Point;
+  stats: Summary;
+  classification: integer;
+
+begin
+  p.x := 6;
+  p.y := 8;
+  stats.total := p.x + p.y;
+  stats.average := stats.total / 2;
+  stats.active := stats.average >= 7;
+
+  if stats.active then
+    classification := 1
+  else
+    classification := 0;
+
+  case classification of
+    0: writeln('record inactive');
+    1: writeln('record active')
+  end;
+
+  writeln('point = ', p.x, ',', p.y);
+  writeln('total = ', stats.total);
+  writeln('average = ', stats.average)
+end.
