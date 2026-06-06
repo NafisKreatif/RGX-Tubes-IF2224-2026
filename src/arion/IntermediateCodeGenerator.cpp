@@ -233,16 +233,21 @@ void IntermediateCodeGenerator::generateCaseStatement(const ASTNode &node) {
 
         const ASTNode &branch = branchChild.node;
         std::vector<std::size_t> jumpToBody;
+        std::vector<std::size_t> jumpToNextLabel;
         for (const ASTChild &labelChild : branch.getChildren()) {
             if (labelChild.role != ASTChildRole::Label) {
                 continue;
             }
+            for (std::size_t jump : jumpToNextLabel) {
+                code_.patchInstructionOperand(jump, static_cast<int>(code_.getNextInstructionIndex()));
+            }
+            jumpToNextLabel.clear();
+
             generateExpression(*expression);
             generateExpression(labelChild.node);
             code_.emitOPR(OperationCode::EQL, "case compare");
-            std::size_t jumpToNextLabel = code_.emitJPC(0, "next case label");
+            jumpToNextLabel.push_back(code_.emitJPC(0, "next case label"));
             jumpToBody.push_back(code_.emitJMP(0, "case matched"));
-            code_.patchInstructionOperand(jumpToNextLabel, static_cast<int>(code_.getNextInstructionIndex()));
         }
 
         if (!jumpToBody.empty()) {
@@ -263,6 +268,10 @@ void IntermediateCodeGenerator::generateCaseStatement(const ASTNode &node) {
             if (emittedStatement) {
                 jumpToEnd.push_back(code_.emitJMP(0, "end case"));
             }
+        }
+
+        for (std::size_t jump : jumpToNextLabel) {
+            code_.patchInstructionOperand(jump, static_cast<int>(code_.getNextInstructionIndex()));
         }
     }
 
